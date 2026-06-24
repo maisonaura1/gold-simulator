@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String        @map("password_hash")
+  name         String?
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  account      SimAccount?
+  trades       Trade[]
+  userMissions UserMission[]
+  statsSnaps   StatsSnapshot[]
+
+  @@map("users")
+}
+
+model SimAccount {
+  id             String   @id @default(uuid())
+  userId         String   @unique @map("user_id")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  initialBalance Float    @default(10000) @map("initial_balance")
+  currentBalance Float    @default(10000) @map("current_balance")
+  equity         Float    @default(10000)
+  level          Int      @default(1)
+  xp             Int      @default(0)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("sim_accounts")
+}
+
+model Trade {
+  id           String      @id @default(uuid())
+  userId       String      @map("user_id")
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         TradeType
+  lot          Float
+  entryPrice   Float       @map("entry_price")
+  exitPrice    Float?      @map("exit_price")
+  sl           Float?
+  tp           Float?
+  resultUsd    Float?      @map("result_usd")
+  resultPct    Float?      @map("result_pct")
+  rrRatio      Float?      @map("rr_ratio")
+  riskPct      Float?      @map("risk_pct")
+  status       TradeStatus @default(OPEN)
+  notes        String?
+  entryAt      DateTime    @default(now()) @map("entry_at")
+  exitAt       DateTime?   @map("exit_at")
+
+  @@map("trades")
+}
+
+enum TradeType {
+  BUY
+  SELL
+}
+
+enum TradeStatus {
+  OPEN
+  CLOSED
+  SIMULATED
+}
+
+model Mission {
+  id           String        @id @default(uuid())
+  name         String        @unique
+  description  String
+  type         MissionType
+  targetValue  Float         @map("target_value")
+  xpReward     Int           @default(50) @map("xp_reward")
+  isDaily      Boolean       @default(false) @map("is_daily")
+  userMissions UserMission[]
+
+  @@map("missions")
+}
+
+enum MissionType {
+  RISK_MAX_PCT
+  MIN_RR_RATIO
+  TRADES_COUNT
+  WIN_STREAK
+  NO_REVENGE_TRADE
+  MAX_DAILY_LOSS_PCT
+}
+
+model UserMission {
+  id              String        @id @default(uuid())
+  userId          String        @map("user_id")
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  missionId       String        @map("mission_id")
+  mission         Mission       @relation(fields: [missionId], references: [id])
+  status          MissionStatus @default(ACTIVE)
+  currentProgress Float         @default(0) @map("current_progress")
+  targetProgress  Float         @map("target_progress")
+  assignedAt      DateTime      @default(now()) @map("assigned_at")
+  completedAt     DateTime?     @map("completed_at")
+
+  @@unique([userId, missionId])
+  @@map("user_missions")
+}
+
+enum MissionStatus {
+  ACTIVE
+  COMPLETED
+  FAILED
+}
+
+model StatsSnapshot {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date          DateTime @default(now())
+  winRate       Float    @map("win_rate")
+  avgRisk       Float    @map("avg_risk")
+  avgRR         Float    @map("avg_rr")
+  winStreak     Int      @map("win_streak")
+  lossStreak    Int      @map("loss_streak")
+  totalTrades   Int      @map("total_trades")
+  totalPnl      Float    @map("total_pnl")
+  avgPnlPerTrade Float   @map("avg_pnl_per_trade")
+
+  @@map("stats_snapshots")
+}

@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap');
+
+/* ── MT4/MT5 Color System ─────────────────────────────── */
+:root {
+  /* Backgrounds — layered like MT */
+  --mt-bg:         #1a1d23;   /* main window */
+  --mt-panel:      #22262e;   /* side panels */
+  --mt-toolbar:    #1e2128;   /* top toolbar */
+  --mt-chart:      #131722;   /* chart area  */
+  --mt-tab:        #2a2e38;   /* tab bars    */
+  --mt-tab-active: #1a1d23;
+  --mt-input:      #12151a;
+  --mt-hover:      #2d3240;
+
+  /* Borders */
+  --mt-border:     #2e3340;
+  --mt-sep:        #3a3f4d;
+
+  /* Text */
+  --mt-text:       #c8cdd8;
+  --mt-text-dim:   #6b7385;
+  --mt-text-label: #8893a8;
+  --mt-white:      #e8ecf4;
+
+  /* Accent */
+  --mt-blue:       #4a6cf7;
+  --mt-blue-dim:   #2a3a7a;
+
+  /* Trade colors */
+  --mt-buy:        #1a6b3a;
+  --mt-buy-hover:  #1e7d44;
+  --mt-buy-text:   #2dcc6f;
+  --mt-sell:       #7a1a1a;
+  --mt-sell-hover: #8f1f1f;
+  --mt-sell-text:  #e84040;
+
+  /* P&L */
+  --mt-green:      #2dcc6f;
+  --mt-red:        #e84040;
+  --mt-yellow:     #f0b429;
+  --mt-cyan:       #33c2ff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; width: 100%; overflow: hidden; }
+
+body {
+  background: var(--mt-bg);
+  color: var(--mt-text);
+  font-family: 'Roboto', 'Segoe UI', system-ui, sans-serif;
+  font-size: 12px;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* ── MT-style scrollbar ─────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--mt-panel); }
+::-webkit-scrollbar-thumb { background: var(--mt-sep); border-radius: 0; }
+::-webkit-scrollbar-corner { background: var(--mt-panel); }
+
+/* ── Utility ─────────────────────────────────────────────── */
+@layer components {
+  /* Toolbar button — flat, icon+text like MT */
+  .mt-btn {
+    @apply flex items-center gap-1.5 px-3 py-1.5 text-[var(--mt-text)]
+           hover:bg-[var(--mt-hover)] border border-transparent
+           hover:border-[var(--mt-sep)] transition-colors duration-100 cursor-pointer text-xs;
+  }
+
+  /* BUY button — characteristic MT green */
+  .mt-btn-buy {
+    @apply px-5 py-2.5 font-bold text-sm text-[var(--mt-buy-text)]
+           bg-[var(--mt-buy)] hover:bg-[var(--mt-buy-hover)]
+           border border-[#1e7d44]/50 transition-colors duration-100 cursor-pointer;
+  }
+
+  /* SELL button — characteristic MT red */
+  .mt-btn-sell {
+    @apply px-5 py-2.5 font-bold text-sm text-[var(--mt-sell-text)]
+           bg-[var(--mt-sell)] hover:bg-[var(--mt-sell-hover)]
+           border border-[#8f1f1f]/50 transition-colors duration-100 cursor-pointer;
+  }
+
+  /* Input field — dark MT style */
+  .mt-input {
+    @apply bg-[var(--mt-input)] border border-[var(--mt-border)]
+           text-[var(--mt-white)] px-2 py-1.5 text-xs w-full
+           focus:outline-none focus:border-[var(--mt-blue)] transition-colors;
+  }
+
+  /* Panel with header bar */
+  .mt-panel {
+    @apply bg-[var(--mt-panel)] border border-[var(--mt-border)] flex flex-col overflow-hidden;
+  }
+
+  .mt-panel-header {
+    @apply bg-[var(--mt-toolbar)] border-b border-[var(--mt-border)] px-3 py-1.5
+           text-[var(--mt-text-label)] text-xs font-medium tracking-wide uppercase flex items-center justify-between;
+  }
+
+  /* Tab bar like MT bottom panel */
+  .mt-tab {
+    @apply px-4 py-1.5 text-xs text-[var(--mt-text-dim)] cursor-pointer
+           border-b-2 border-transparent hover:text-[var(--mt-text)] transition-colors;
+  }
+
+  .mt-tab-active {
+    @apply text-[var(--mt-white)] border-b-2 border-[var(--mt-blue)];
+  }
+
+  /* Table row */
+  .mt-row {
+    @apply flex items-center border-b border-[var(--mt-border)]/40
+           hover:bg-[var(--mt-hover)] transition-colors;
+  }
+
+  .mt-cell {
+    @apply px-2 py-1.5 text-xs font-mono truncate;
+  }
+
+  /* Price display — large numbers like MT order ticket */
+  .mt-price-big {
+    @apply font-mono font-bold text-[var(--mt-white)] tracking-tight;
+  }
+}

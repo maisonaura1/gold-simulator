@@ -1,0 +1,43 @@
+import type { Config } from 'tailwindcss';
+
+const config: Config = {
+  content: ['./src/**/*.{ts,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        mt: {
+          bg:       '#1a1d23',
+          panel:    '#22262e',
+          toolbar:  '#1e2128',
+          chart:    '#131722',
+          tab:      '#2a2e38',
+          border:   '#2e3340',
+          sep:      '#3a3f4d',
+          hover:    '#2d3240',
+          text:     '#c8cdd8',
+          dim:      '#6b7385',
+          label:    '#8893a8',
+          white:    '#e8ecf4',
+          blue:     '#4a6cf7',
+          buy:      '#1a6b3a',
+          buyhover: '#1e7d44',
+          buytext:  '#2dcc6f',
+          sell:     '#7a1a1a',
+          sellhvr:  '#8f1f1f',
+          selltext: '#e84040',
+          green:    '#2dcc6f',
+          red:      '#e84040',
+          yellow:   '#f0b429',
+          cyan:     '#33c2ff',
+        },
+      },
+      fontFamily: {
+        sans: ['Roboto', 'Segoe UI', 'system-ui', 'sans-serif'],
+        mono: ['Roboto Mono', 'Consolas', 'monospace'],
+      },
+    },
+  },
+  plugins: [],
+};
+
+export default config;

@@ -1,0 +1,8 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "npx prisma migrate deploy && node dist/src/main"
+healthcheckPath = "/api/prices/current"
+healthcheckTimeout = 60
+restartPolicyType = "on_failure"

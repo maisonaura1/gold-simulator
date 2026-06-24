@@ -1,0 +1,22 @@
+# General
+node_modules/
+.env
+.env.local
+*.log
+.DS_Store
+
+# Build
+dist/
+.next/
+build/
+
+# Data cache
+data/
+backend/data/
+
+# Docker
+.dockerignore
+
+# IDE
+.idea/
+.vscode/
