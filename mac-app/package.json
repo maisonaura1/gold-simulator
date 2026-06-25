@@ -1,0 +1,35 @@
+{
+  "name": "goldtrader-mac",
+  "version": "1.0.0",
+  "description": "GoldTrader Simulator — macOS Desktop App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "npm run copy-web && electron-builder --mac",
+    "copy-web": "cp -r ../frontend/out ./web"
+  },
+  "build": {
+    "appId": "com.goldtrader.simulator",
+    "productName": "GoldTrader",
+    "mac": {
+      "category": "public.app-category.finance",
+      "icon": "icons/icon.icns",
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] },
+        { "target": "zip", "arch": ["arm64", "x64"] }
+      ]
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "web/**"
+    ],
+    "directories": {
+      "output": "dist"
+    }
+  },
+  "devDependencies": {
+    "electron": "^36.4.0",
+    "electron-builder": "^26.0.12"
+  }
+}
