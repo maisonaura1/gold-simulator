@@ -20,6 +20,10 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
+  // Fast health endpoint outside the /api prefix for Railway healthcheck
+  const httpAdapter = app.getHttpAdapter();
+  httpAdapter.get('/health', (_req: any, res: any) => res.status(200).json({ status: 'ok' }));
+
   const port = process.env.PORT || 3001;
   await app.listen(port);
   console.log(`🚀 Backend running on http://localhost:${port}/api`);
