@@ -3,16 +3,15 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { usePricesStore } from '@/store/prices.store';
 import { useAuthStore } from '@/store/auth.store';
+import { useLangStore } from '@/store/lang.store';
+import { useT } from '@/hooks/useT';
+import type { Lang } from '@/lib/i18n';
 import clsx from 'clsx';
 
-const MENUS = ['Archivo', 'Ver', 'Insertar', 'Gráficos', 'Herramientas', 'Ventana', 'Ayuda'];
-
-const TOOLBAR_ACTIONS = [
-  { icon: '📈', label: 'Gráfico',       href: '/dashboard' },
-  { icon: '⚡', label: 'Nueva orden',   href: '/trade' },
-  { icon: '📋', label: 'Historial',     href: '/history' },
-  { icon: '🎯', label: 'Misiones',      href: '/learn' },
-  { icon: '📊', label: 'Estadísticas',  href: '/stats' },
+const LANG_OPTIONS: { code: 'es' | Lang; flag: string }[] = [
+  { code: 'es', flag: '🇪🇸' },
+  { code: 'en', flag: '🇬🇧' },
+  { code: 'nl', flag: '🇳🇱' },
 ];
 
 export function MTToolbar() {
@@ -20,7 +19,19 @@ export function MTToolbar() {
   const pathname = usePathname();
   const { currentPrice, connected } = usePricesStore();
   const { clearTokens } = useAuthStore();
+  const { lang, setLang } = useLangStore();
+  const t = useT();
   const [time, setTime] = useState('');
+
+  const MENUS = [t.menuFile, t.menuView, t.menuInsert, t.menuCharts, t.menuTools, t.menuWindow, t.menuHelp];
+
+  const TOOLBAR_ACTIONS = [
+    { icon: '📈', label: t.navChart,    href: '/dashboard' },
+    { icon: '⚡', label: t.navNewOrder, href: '/trade' },
+    { icon: '📋', label: t.navHistory,  href: '/history' },
+    { icon: '🎯', label: t.navMissions, href: '/learn' },
+    { icon: '📊', label: t.navStats,    href: '/stats' },
+  ];
 
   useEffect(() => {
     const tick = () => setTime(new Date().toLocaleTimeString('es', { hour12: false }));
@@ -39,15 +50,35 @@ export function MTToolbar() {
           </button>
         ))}
         <div className="flex-1" />
+
+        {/* Language selector */}
+        <div className="flex items-center gap-0.5 px-2 border-r border-[var(--mt-border)]">
+          {LANG_OPTIONS.map(({ code, flag }) => (
+            <button
+              key={code}
+              onClick={() => setLang(code)}
+              title={code.toUpperCase()}
+              className={clsx(
+                'px-1.5 h-5 text-[11px] transition-colors rounded-sm',
+                lang === code
+                  ? 'bg-[var(--mt-blue)]/30 text-[var(--mt-white)]'
+                  : 'text-[var(--mt-text-dim)] hover:bg-[var(--mt-hover)]',
+              )}
+            >
+              {flag}
+            </button>
+          ))}
+        </div>
+
         <div className="flex items-center gap-2 px-3 text-[10px] text-[var(--mt-text-dim)]">
           <span className={clsx('w-1.5 h-1.5 rounded-full', connected ? 'bg-[var(--mt-green)]' : 'bg-[var(--mt-red)]')} />
-          {connected ? 'Conectado — Servidor Demo' : 'Sin conexión'}
+          {connected ? t.connected : t.disconnected}
         </div>
         <button
           onClick={() => { clearTokens(); router.replace('/auth/login'); }}
           className="px-3 h-full text-[var(--mt-text-dim)] hover:text-[var(--mt-red)] transition-colors"
         >
-          Salir
+          {t.logout}
         </button>
       </div>
 

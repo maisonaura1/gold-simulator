@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useT } from '@/hooks/useT';
 
 interface TreeNode {
   label: string;
@@ -8,44 +9,6 @@ interface TreeNode {
   href?: string;
   children?: TreeNode[];
 }
-
-const TREE: TreeNode[] = [
-  {
-    label: 'Cuenta Demo',
-    icon: '👤',
-    children: [
-      { label: 'Datos de cuenta', href: '/dashboard' },
-      { label: 'Resetear cuenta', href: '/dashboard' },
-    ],
-  },
-  {
-    label: 'Indicadores',
-    icon: '📐',
-    children: [
-      { label: 'Media Móvil (MA)', icon: '〰️' },
-      { label: 'RSI', icon: '〰️' },
-      { label: 'MACD', icon: '〰️' },
-      { label: 'Bandas Bollinger', icon: '〰️' },
-    ],
-  },
-  {
-    label: 'Misiones',
-    icon: '🎯',
-    children: [
-      { label: 'Misiones activas', href: '/learn' },
-      { label: 'Completadas',      href: '/learn' },
-    ],
-  },
-  {
-    label: 'Estadísticas',
-    icon: '📊',
-    children: [
-      { label: 'Winrate', href: '/stats' },
-      { label: 'Análisis de riesgo', href: '/stats' },
-      { label: 'Historial completo', href: '/history' },
-    ],
-  },
-];
 
 function TreeItem({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
   const [open, setOpen] = useState(depth === 0);
@@ -83,9 +46,49 @@ function TreeItem({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
 }
 
 export function Navigator() {
+  const t = useT();
+
+  const TREE: TreeNode[] = [
+    {
+      label: t.demoAccount,
+      icon: '👤',
+      children: [
+        { label: t.accountData,  href: '/dashboard' },
+        { label: t.resetAccount, href: '/dashboard' },
+      ],
+    },
+    {
+      label: t.indicators,
+      icon: '📐',
+      children: [
+        { label: 'Media Móvil (MA)', icon: '〰️' },
+        { label: 'RSI', icon: '〰️' },
+        { label: 'MACD', icon: '〰️' },
+        { label: 'Bandas Bollinger', icon: '〰️' },
+      ],
+    },
+    {
+      label: t.missions,
+      icon: '🎯',
+      children: [
+        { label: t.activeMissions,    href: '/learn' },
+        { label: t.completedMissions, href: '/learn' },
+      ],
+    },
+    {
+      label: t.stats,
+      icon: '📊',
+      children: [
+        { label: t.winrate,     href: '/stats' },
+        { label: t.riskAnalysis, href: '/stats' },
+        { label: t.fullHistory, href: '/history' },
+      ],
+    },
+  ];
+
   return (
     <div className="mt-panel w-44 shrink-0 flex flex-col">
-      <div className="mt-panel-header">Navigator</div>
+      <div className="mt-panel-header">{t.navigator}</div>
       <div className="flex-1 overflow-y-auto py-1">
         {TREE.map((node) => (
           <TreeItem key={node.label} node={node} />

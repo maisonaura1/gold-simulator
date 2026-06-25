@@ -4,10 +4,22 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
+import { useLangStore } from '@/store/lang.store';
+import { useT } from '@/hooks/useT';
+import type { Lang } from '@/lib/i18n';
+import clsx from 'clsx';
+
+const LANG_OPTIONS: { code: 'es' | Lang; flag: string }[] = [
+  { code: 'es', flag: '🇪🇸' },
+  { code: 'en', flag: '🇬🇧' },
+  { code: 'nl', flag: '🇳🇱' },
+];
 
 export default function LoginPage() {
   const router = useRouter();
   const { setTokens } = useAuthStore();
+  const { lang, setLang } = useLangStore();
+  const t = useT();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +33,7 @@ export default function LoginPage() {
       setTokens(data);
       router.replace('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Credenciales inválidas');
+      setError(err.response?.data?.message || t.loginInvalid);
     } finally {
       setLoading(false);
     }
@@ -32,32 +44,46 @@ export default function LoginPage() {
       className="min-h-screen flex items-center justify-center"
       style={{ background: 'linear-gradient(135deg, #0d1117 0%, #1a1d23 100%)' }}
     >
-      {/* Window frame — exactamente como el login de MT */}
       <div className="w-80 border border-[var(--mt-sep)] shadow-2xl" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
         {/* Title bar */}
         <div className="flex items-center justify-between px-3 py-2 bg-[#12151a] border-b border-[var(--mt-border)]">
           <div className="flex items-center gap-2">
             <span style={{ fontSize: 14 }}>🪙</span>
-            <span className="text-[var(--mt-text)] text-xs font-medium">GoldTrader — Conexión a cuenta demo</span>
+            <span className="text-[var(--mt-text)] text-xs font-medium">{t.loginTitle}</span>
           </div>
-          <div className="flex gap-1">
-            <div className="w-3 h-3 rounded-full bg-[var(--mt-sep)]" />
-            <div className="w-3 h-3 rounded-full bg-[var(--mt-sep)]" />
-            <div className="w-3 h-3 rounded-full bg-[var(--mt-sep)]" />
+          <div className="flex items-center gap-2">
+            {/* Language selector */}
+            <div className="flex gap-0.5">
+              {LANG_OPTIONS.map(({ code, flag }) => (
+                <button
+                  key={code}
+                  onClick={() => setLang(code)}
+                  className={clsx(
+                    'px-1 text-[11px] rounded-sm transition-colors',
+                    lang === code ? 'bg-[var(--mt-blue)]/30' : 'opacity-50 hover:opacity-100',
+                  )}
+                >
+                  {flag}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-1">
+              <div className="w-3 h-3 rounded-full bg-[var(--mt-sep)]" />
+              <div className="w-3 h-3 rounded-full bg-[var(--mt-sep)]" />
+              <div className="w-3 h-3 rounded-full bg-[var(--mt-sep)]" />
+            </div>
           </div>
         </div>
 
-        {/* Form body */}
         <div className="bg-[var(--mt-panel)] p-5">
-          {/* Server info like MT */}
           <div className="flex items-center gap-2 mb-4 p-2 bg-[var(--mt-bg)] border border-[var(--mt-border)]" style={{ fontSize: 10 }}>
             <span className="w-2 h-2 rounded-full bg-[var(--mt-green)]" />
-            <span className="text-[var(--mt-text-dim)]">Servidor: Demo-XAUUSD-001 · Latencia: 2ms</span>
+            <span className="text-[var(--mt-text-dim)]">{t.loginServer}</span>
           </div>
 
           <form onSubmit={submit} className="space-y-3">
             <div>
-              <label className="block text-[10px] text-[var(--mt-text-dim)] mb-1">Login (email)</label>
+              <label className="block text-[10px] text-[var(--mt-text-dim)] mb-1">{t.loginEmail}</label>
               <input
                 type="email"
                 className="mt-input"
@@ -68,7 +94,7 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="block text-[10px] text-[var(--mt-text-dim)] mb-1">Contraseña</label>
+              <label className="block text-[10px] text-[var(--mt-text-dim)] mb-1">{t.loginPassword}</label>
               <input
                 type="password"
                 className="mt-input"
@@ -81,7 +107,7 @@ export default function LoginPage() {
 
             <div className="flex items-center gap-2" style={{ fontSize: 10 }}>
               <input type="checkbox" id="save" className="accent-[var(--mt-blue)]" defaultChecked />
-              <label htmlFor="save" className="text-[var(--mt-text-dim)]">Guardar contraseña</label>
+              <label htmlFor="save" className="text-[var(--mt-text-dim)]">{t.loginSave}</label>
             </div>
 
             {error && (
@@ -92,18 +118,17 @@ export default function LoginPage() {
 
             <div className="flex gap-2 pt-1">
               <button type="submit" disabled={loading} className="flex-1 py-2 text-xs font-medium bg-[var(--mt-blue)] hover:bg-blue-600 text-white transition-colors disabled:opacity-50">
-                {loading ? 'Conectando...' : 'Conectar'}
+                {loading ? t.loginConnecting : t.loginConnect}
               </button>
               <Link href="/auth/register" className="flex-1 py-2 text-xs font-medium text-center text-[var(--mt-text-dim)] border border-[var(--mt-border)] hover:bg-[var(--mt-hover)] transition-colors">
-                Nueva cuenta
+                {t.loginNewAccount}
               </Link>
             </div>
           </form>
         </div>
 
-        {/* Status bar */}
         <div className="flex items-center px-3 py-1.5 bg-[#12151a] border-t border-[var(--mt-border)]" style={{ fontSize: 9 }}>
-          <span className="text-[var(--mt-text-dim)]">GoldTrader Simulator v1.0 · XAUUSD · Cuenta demo ilimitada</span>
+          <span className="text-[var(--mt-text-dim)]">{t.loginFooter}</span>
         </div>
       </div>
     </div>

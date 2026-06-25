@@ -5,6 +5,7 @@ import { usePricesStore }  from '@/store/prices.store';
 import { useChartLines }   from '@/store/chart-lines.store';
 import { useTrades }       from '@/hooks/useTrades';
 import { useAccount }      from '@/hooks/useAccount';
+import { useT }            from '@/hooks/useT';
 import type { SimulationResult } from '@/types';
 
 interface Props {
@@ -14,10 +15,11 @@ interface Props {
 const SPREAD = 0.30;
 
 export function OrderTicket({ onResult }: Props) {
-  const { currentPrice }           = usePricesStore();
-  const { simulate }               = useTrades();
-  const { account, refetch }       = useAccount();
+  const { currentPrice }             = usePricesStore();
+  const { simulate }                 = useTrades();
+  const { account, refetch }         = useAccount();
   const { setPreview, clearPreview } = useChartLines();
+  const t                            = useT();
 
   const bid = currentPrice > 0 ? +(currentPrice - SPREAD / 2).toFixed(2) : 0;
   const ask = currentPrice > 0 ? +(currentPrice + SPREAD / 2).toFixed(2) : 0;
@@ -31,7 +33,6 @@ export function OrderTicket({ onResult }: Props) {
   const [result,  setResult]  = useState<SimulationResult | null>(null);
   const [error,   setError]   = useState('');
 
-  // ── Sync preview lines to chart in real time ──────────────
   useEffect(() => {
     const entry = hovered === 'BUY' ? ask : hovered === 'SELL' ? bid : currentPrice;
     setPreview({
@@ -42,43 +43,37 @@ export function OrderTicket({ onResult }: Props) {
     });
   }, [sl, tp, hovered, ask, bid, currentPrice, setPreview]);
 
-  // Clear lines when unmount
   useEffect(() => () => clearPreview(), [clearPreview]);
 
-  // ── Live risk calc ────────────────────────────────────────
   const lotNum  = parseFloat(lot)  || 0;
   const slNum   = parseFloat(sl)   || 0;
   const tpNum   = parseFloat(tp)   || 0;
   const balance = account?.currentBalance ?? 10000;
   const entry   = hovered === 'BUY' ? ask : bid;
 
-  const slDist   = slNum && entry ? Math.abs(entry - slNum) : 0;
-  const tpDist   = tpNum && entry ? Math.abs(tpNum - entry) : 0;
-  const riskUsd  = slDist * lotNum * 100;
-  const rewardUsd= tpDist * lotNum * 100;
-  const riskPct  = balance > 0 ? (riskUsd / balance) * 100 : 0;
-  const rr       = riskUsd > 0 ? rewardUsd / riskUsd : 0;
+  const slDist    = slNum && entry ? Math.abs(entry - slNum) : 0;
+  const tpDist    = tpNum && entry ? Math.abs(tpNum - entry) : 0;
+  const riskUsd   = slDist * lotNum * 100;
+  const rewardUsd = tpDist * lotNum * 100;
+  const riskPct   = balance > 0 ? (riskUsd / balance) * 100 : 0;
+  const rr        = riskUsd > 0 ? rewardUsd / riskUsd : 0;
 
   const riskColor =
     riskPct > 3 ? 'text-[var(--mt-red)]' :
     riskPct > 2 ? 'text-[var(--mt-yellow)]' :
                   'text-[var(--mt-green)]';
 
-  // ── Quick SL/TP helpers ───────────────────────────────────
   const applySuggestion = useCallback((pips: number, direction: 'BUY' | 'SELL') => {
     const base = direction === 'BUY' ? ask : bid;
     if (!base) return;
-    const slPrice = direction === 'BUY' ? base - pips : base + pips;
-    const tpPrice = direction === 'BUY' ? base + pips * 2 : base - pips * 2;
-    setSl(slPrice.toFixed(2));
-    setTp(tpPrice.toFixed(2));
+    setSl((direction === 'BUY' ? base - pips : base + pips).toFixed(2));
+    setTp((direction === 'BUY' ? base + pips * 2 : base - pips * 2).toFixed(2));
   }, [ask, bid]);
 
-  // ── Execute ───────────────────────────────────────────────
   const exec = async (type: 'BUY' | 'SELL') => {
     setError('');
     setResult(null);
-    if (!slNum || !tpNum) { setError('SL y TP son obligatorios'); return; }
+    if (!slNum || !tpNum) { setError(t.slRequired); return; }
     setLoading(true);
     try {
       const entryPrice = type === 'BUY' ? ask : bid;
@@ -88,7 +83,7 @@ export function OrderTicket({ onResult }: Props) {
       refetch();
       clearPreview();
     } catch (e: any) {
-      setError(e.response?.data?.message ?? 'Error al simular');
+      setError(e.response?.data?.message ?? t.simulateError);
     } finally {
       setLoading(false);
     }
@@ -99,13 +94,11 @@ export function OrderTicket({ onResult }: Props) {
       className="flex flex-col h-full bg-[var(--mt-panel)] border-l border-[var(--mt-border)] shrink-0"
       style={{ width: 272 }}
     >
-      {/* Header */}
       <div className="mt-panel-header shrink-0">
-        <span>Nueva Orden</span>
+        <span>{t.orderTicket}</span>
         <span className="text-[var(--mt-yellow)] normal-case tracking-normal font-normal">XAUUSD</span>
       </div>
 
-      {/* Bid / Ask display */}
       <div className="grid grid-cols-2 border-b border-[var(--mt-border)] shrink-0">
         <div
           className={clsx(
@@ -135,18 +128,16 @@ export function OrderTicket({ onResult }: Props) {
         </div>
       </div>
 
-      {/* Spread bar */}
       <div className="flex justify-center items-center py-1 bg-[#0e1118] border-b border-[var(--mt-border)] shrink-0" style={{ fontSize: 10 }}>
         <span className="text-[var(--mt-text-dim)]">Spread: </span>
         <span className="font-mono text-[var(--mt-text)] ml-1">{SPREAD.toFixed(2)}</span>
       </div>
 
-      {/* Form */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-3 space-y-3" style={{ fontSize: 11 }}>
           {/* Volume */}
           <div>
-            <label className="block text-[var(--mt-text-dim)] mb-1">Volumen (lotes)</label>
+            <label className="block text-[var(--mt-text-dim)] mb-1">{t.lots}</label>
             <div className="flex gap-1">
               <button
                 onClick={() => setLot((v) => Math.max(0.01, +(parseFloat(v) - 0.01).toFixed(2)).toFixed(2))}
@@ -154,8 +145,7 @@ export function OrderTicket({ onResult }: Props) {
               >−</button>
               <input
                 type="number" step="0.01" min="0.01" max="10"
-                value={lot}
-                onChange={(e) => setLot(e.target.value)}
+                value={lot} onChange={(e) => setLot(e.target.value)}
                 className="mt-input text-center flex-1 font-mono font-bold text-[var(--mt-white)]"
               />
               <button
@@ -174,9 +164,7 @@ export function OrderTicket({ onResult }: Props) {
                       ? 'border-[var(--mt-blue)] text-[var(--mt-blue)] bg-[var(--mt-blue)]/10'
                       : 'border-[var(--mt-border)] text-[var(--mt-text-dim)] hover:bg-[var(--mt-hover)]',
                   )}
-                >
-                  {v}
-                </button>
+                >{v}</button>
               ))}
             </div>
           </div>
@@ -184,7 +172,7 @@ export function OrderTicket({ onResult }: Props) {
           {/* SL */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-[var(--mt-text-dim)]">Stop Loss</label>
+              <label className="text-[var(--mt-text-dim)]">{t.stopLoss}</label>
               {slDist > 0 && (
                 <span className="font-mono text-[var(--mt-red)] text-[10px]">
                   {slDist.toFixed(2)} pts · ${riskUsd.toFixed(2)}
@@ -201,7 +189,7 @@ export function OrderTicket({ onResult }: Props) {
           {/* TP */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-[var(--mt-text-dim)]">Take Profit</label>
+              <label className="text-[var(--mt-text-dim)]">{t.takeProfit}</label>
               {tpDist > 0 && (
                 <span className="font-mono text-[var(--mt-green)] text-[10px]">
                   {tpDist.toFixed(2)} pts · ${rewardUsd.toFixed(2)}
@@ -215,10 +203,10 @@ export function OrderTicket({ onResult }: Props) {
             />
           </div>
 
-          {/* SL/TP quick suggestions */}
+          {/* Quick SL/TP */}
           {hovered && (
             <div>
-              <div className="text-[var(--mt-text-dim)] mb-1 text-[10px]">Sugerencias rápidas ({hovered})</div>
+              <div className="text-[var(--mt-text-dim)] mb-1 text-[10px]">{t.quickSL} ({hovered})</div>
               <div className="grid grid-cols-3 gap-1">
                 {[10, 20, 30, 50, 80, 100].map((pts) => (
                   <button
@@ -235,12 +223,12 @@ export function OrderTicket({ onResult }: Props) {
 
           {/* Risk calculator */}
           <div className="border border-[var(--mt-border)] p-2 space-y-1.5 bg-[var(--mt-bg)]" style={{ fontSize: 10 }}>
-            <div className="text-[var(--mt-text-label)] font-medium text-[11px] mb-1">Calculadora de riesgo</div>
+            <div className="text-[var(--mt-text-label)] font-medium text-[11px] mb-1">{t.riskCalc}</div>
             {[
-              { label: 'Riesgo ($)',   value: riskUsd   > 0 ? `$${riskUsd.toFixed(2)}`    : '—', cls: riskColor },
-              { label: 'Riesgo (%)',   value: riskPct   > 0 ? `${riskPct.toFixed(2)}%`    : '—', cls: riskColor },
-              { label: 'Beneficio',    value: rewardUsd > 0 ? `$${rewardUsd.toFixed(2)}`  : '—', cls: 'text-[var(--mt-green)]' },
-              { label: 'R/R',          value: rr        > 0 ? `${rr.toFixed(2)}:1`         : '—',
+              { label: `${t.risk} ($)`,  value: riskUsd   > 0 ? `$${riskUsd.toFixed(2)}`   : '—', cls: riskColor },
+              { label: `${t.risk} (%)`,  value: riskPct   > 0 ? `${riskPct.toFixed(2)}%`   : '—', cls: riskColor },
+              { label: t.reward,         value: rewardUsd > 0 ? `$${rewardUsd.toFixed(2)}` : '—', cls: 'text-[var(--mt-green)]' },
+              { label: t.rrRatio,        value: rr        > 0 ? `${rr.toFixed(2)}:1`        : '—',
                 cls: rr >= 2 ? 'text-[var(--mt-green)]' : rr >= 1 ? 'text-[var(--mt-yellow)]' : 'text-[var(--mt-red)]' },
             ].map((row) => (
               <div key={row.label} className="flex justify-between">
@@ -250,16 +238,16 @@ export function OrderTicket({ onResult }: Props) {
             ))}
             {riskPct > 2 && (
               <div className="text-[var(--mt-red)] text-[10px] mt-1 pt-1 border-t border-[var(--mt-border)]">
-                ⚠ Riesgo supera el 2% recomendado
+                ⚠ {t.riskPct} &gt; 2%
               </div>
             )}
           </div>
 
-          {/* Comment */}
+          {/* Notes */}
           <div>
-            <label className="block text-[var(--mt-text-dim)] mb-1">Comentario</label>
+            <label className="block text-[var(--mt-text-dim)] mb-1">{t.notes}</label>
             <input
-              type="text" placeholder="Análisis de entrada..."
+              type="text" placeholder={t.placeholderNotes}
               value={notes} onChange={(e) => setNotes(e.target.value)}
               className="mt-input"
             />
@@ -299,7 +287,7 @@ export function OrderTicket({ onResult }: Props) {
 
       {loading && (
         <div className="shrink-0 px-3 py-1.5 bg-[var(--mt-blue)]/20 border-t border-[var(--mt-blue)]/30 text-center text-[10px] text-[var(--mt-cyan)]">
-          Simulando sobre datos reales XAUUSD...
+          Simulating XAUUSD real data...
         </div>
       )}
     </div>
