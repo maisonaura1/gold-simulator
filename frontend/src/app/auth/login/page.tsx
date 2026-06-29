@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
@@ -8,6 +8,8 @@ import { useLangStore } from '@/store/lang.store';
 import { useT } from '@/hooks/useT';
 import type { Lang } from '@/lib/i18n';
 import clsx from 'clsx';
+
+const CRED_KEY = 'gold-saved-creds';
 
 const LANG_OPTIONS: { code: 'es' | Lang; flag: string }[] = [
   { code: 'es', flag: '🇪🇸' },
@@ -20,16 +22,41 @@ export default function LoginPage() {
   const { setTokens } = useAuthStore();
   const { lang, setLang } = useLangStore();
   const t = useT();
-  const [form, setForm] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
+
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passRef  = useRef<HTMLInputElement>(null);
+
+  const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
+  const [savePass, setSave]   = useState(true);
+
+  // Pre-fill from saved credentials
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(CRED_KEY);
+      if (saved) {
+        const { email, password } = JSON.parse(saved);
+        if (emailRef.current) emailRef.current.value = email ?? '';
+        if (passRef.current)  passRef.current.value  = password ?? '';
+      }
+    } catch {}
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    const email    = emailRef.current?.value ?? '';
+    const password = passRef.current?.value  ?? '';
+
     try {
-      const { data } = await api.post('/auth/login', form);
+      const { data } = await api.post('/auth/login', { email, password });
+      if (savePass) {
+        localStorage.setItem(CRED_KEY, JSON.stringify({ email, password }));
+      } else {
+        localStorage.removeItem(CRED_KEY);
+      }
       setTokens(data);
       router.replace('/dashboard');
     } catch (err: any) {
@@ -52,7 +79,6 @@ export default function LoginPage() {
             <span className="text-[var(--mt-text)] text-xs font-medium">{t.loginTitle}</span>
           </div>
           <div className="flex items-center gap-2">
-            {/* Language selector */}
             <div className="flex gap-0.5">
               {LANG_OPTIONS.map(({ code, flag }) => (
                 <button
@@ -81,32 +107,36 @@ export default function LoginPage() {
             <span className="text-[var(--mt-text-dim)]">{t.loginServer}</span>
           </div>
 
-          <form onSubmit={submit} className="space-y-3">
+          <form onSubmit={submit} className="space-y-3" autoComplete="off">
             <div>
               <label className="block text-[10px] text-[var(--mt-text-dim)] mb-1">{t.loginEmail}</label>
               <input
+                ref={emailRef}
                 type="email"
                 className="mt-input"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
                 required
-                autoComplete="email"
+                autoComplete="off"
               />
             </div>
             <div>
               <label className="block text-[10px] text-[var(--mt-text-dim)] mb-1">{t.loginPassword}</label>
               <input
+                ref={passRef}
                 type="password"
                 className="mt-input"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
                 required
-                autoComplete="current-password"
+                autoComplete="off"
               />
             </div>
 
             <div className="flex items-center gap-2" style={{ fontSize: 10 }}>
-              <input type="checkbox" id="save" className="accent-[var(--mt-blue)]" defaultChecked />
+              <input
+                type="checkbox"
+                id="save"
+                className="accent-[var(--mt-blue)]"
+                checked={savePass}
+                onChange={(e) => setSave(e.target.checked)}
+              />
               <label htmlFor="save" className="text-[var(--mt-text-dim)]">{t.loginSave}</label>
             </div>
 

@@ -28,8 +28,8 @@ export function useSocket() {
 
     socket.on('disconnect', () => setConnected(false));
 
-    // Backend emits OhlcCandle {time, open, high, low, close} — normalize to PriceTick
-    socket.on('candles', (data: Array<{ time: number; open: number; high: number; low: number; close: number }>) => {
+    // Backend emits OhlcCandle {time, open, high, low, close, volume?} — normalize to PriceTick
+    socket.on('candles', (data: Array<{ time: number; open: number; high: number; low: number; close: number; volume?: number }>) => {
       const ticks: PriceTick[] = data.map((c) => ({
         timestamp: c.time,
         price: c.close,
@@ -37,6 +37,7 @@ export function useSocket() {
         high: c.high,
         low: c.low,
         close: c.close,
+        volume: c.volume,
       }));
       if (!replayRef.current) setCandles(ticks);
     });

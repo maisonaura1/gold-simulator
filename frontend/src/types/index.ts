@@ -82,6 +82,8 @@ export interface Stats {
   losses: number;
   behaviours: string[];
   weeklyPnl: { week: string; pnl: number }[];
+  equityCurve: { date: string; balance: number }[];
+  maxDrawdown: number;
 }
 
 export interface PriceTick {
@@ -91,6 +93,7 @@ export interface PriceTick {
   high: number;
   low: number;
   close: number;
+  volume?: number;
 }
 
 export interface AuthTokens {

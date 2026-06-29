@@ -6,10 +6,12 @@ import { usePriceData } from '@/hooks/usePriceData';
 const TIMEFRAMES: Timeframe[] = ['M5', 'M15', 'H1', 'H4', 'D1'];
 
 const INDICATOR_BTNS = [
-  { key: 'showMA20' as const, label: 'MA20', color: 'text-[#f0b429]', toggle: 'toggleMA20' as const },
-  { key: 'showMA50' as const, label: 'MA50', color: 'text-[#4a6cf7]', toggle: 'toggleMA50' as const },
-  { key: 'showBB'   as const, label: 'BB',   color: 'text-[#8b5cf6]', toggle: 'toggleBB'   as const },
-  { key: 'showRSI'  as const, label: 'RSI',  color: 'text-[var(--mt-cyan)]', toggle: 'toggleRSI' as const },
+  { key: 'showMA20'   as const, label: 'MA20', color: 'text-[#f0b429]',            toggle: 'toggleMA20'   as const },
+  { key: 'showMA50'   as const, label: 'MA50', color: 'text-[#4a6cf7]',            toggle: 'toggleMA50'   as const },
+  { key: 'showBB'     as const, label: 'BB',   color: 'text-[#8b5cf6]',            toggle: 'toggleBB'     as const },
+  { key: 'showRSI'    as const, label: 'RSI',  color: 'text-[var(--mt-cyan)]',     toggle: 'toggleRSI'    as const },
+  { key: 'showMACD'   as const, label: 'MACD', color: 'text-[#f97316]',            toggle: 'toggleMACD'   as const },
+  { key: 'showVolume' as const, label: 'Vol',  color: 'text-[var(--mt-text-dim)]', toggle: 'toggleVolume' as const },
 ];
 
 export function ChartToolbar() {

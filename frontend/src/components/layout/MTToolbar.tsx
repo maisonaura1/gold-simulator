@@ -4,6 +4,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { usePricesStore } from '@/store/prices.store';
 import { useAuthStore } from '@/store/auth.store';
 import { useLangStore } from '@/store/lang.store';
+import { useAccount } from '@/hooks/useAccount';
+import { useTrades } from '@/hooks/useTrades';
 import { useT } from '@/hooks/useT';
 import type { Lang } from '@/lib/i18n';
 import clsx from 'clsx';
@@ -20,8 +22,18 @@ export function MTToolbar() {
   const { currentPrice, connected } = usePricesStore();
   const { clearTokens } = useAuthStore();
   const { lang, setLang } = useLangStore();
+  const { account } = useAccount();
+  const { openTrades } = useTrades();
   const t = useT();
   const [time, setTime] = useState('');
+
+  const totalLivePnl = openTrades.reduce((sum, tr) => {
+    if (currentPrice <= 0) return sum;
+    return sum + (tr.type === 'BUY'
+      ? (currentPrice - tr.entryPrice) * tr.lot * 100
+      : (tr.entryPrice - currentPrice) * tr.lot * 100);
+  }, 0);
+  const equity = (account?.currentBalance ?? 0) + totalLivePnl;
 
   const MENUS = [t.menuFile, t.menuView, t.menuInsert, t.menuCharts, t.menuTools, t.menuWindow, t.menuHelp];
 
@@ -114,6 +126,23 @@ export function MTToolbar() {
         </div>
 
         <div className="flex-1" />
+
+        {/* Account quick-view */}
+        {account && (
+          <div className="flex items-center gap-3 px-3 border-r border-[var(--mt-sep)] text-[11px]">
+            <span className="text-[var(--mt-text-dim)]">
+              {t.balance}: <span className="font-mono text-[var(--mt-white)] tabular-nums">${account.currentBalance.toFixed(2)}</span>
+            </span>
+            <span className="text-[var(--mt-text-dim)]">
+              {t.equity}: <span className={clsx('font-mono tabular-nums', equity >= account.currentBalance ? 'text-[var(--mt-green)]' : 'text-[var(--mt-red)]')}>${equity.toFixed(2)}</span>
+            </span>
+            {totalLivePnl !== 0 && (
+              <span className={clsx('font-mono tabular-nums text-[10px]', totalLivePnl >= 0 ? 'text-[var(--mt-green)]' : 'text-[var(--mt-red)]')}>
+                {totalLivePnl >= 0 ? '+' : ''}{totalLivePnl.toFixed(2)}
+              </span>
+            )}
+          </div>
+        )}
 
         <div className="font-mono text-[11px] text-[var(--mt-text-dim)] px-3 tabular-nums">
           {time} GMT+0

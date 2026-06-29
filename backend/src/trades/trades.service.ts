@@ -20,6 +20,7 @@ export class TradesService {
     const acct = await this.prisma.simAccount.findUnique({ where: { userId } });
     if (!acct) throw new NotFoundException('Account not found');
     if (!dto.sl || !dto.tp) throw new BadRequestException('SL y TP son obligatorios para simular');
+    this.validateSlTp(dto.type, dto.entryPrice, dto.sl, dto.tp);
 
     const result = this.simulator.simulate({
       type: dto.type, lot: dto.lot,
@@ -49,11 +50,32 @@ export class TradesService {
     return { trade, simulation: result };
   }
 
+  private validateSlTp(type: 'BUY' | 'SELL', entry: number, sl: number, tp: number) {
+    if (type === 'BUY') {
+      if (sl >= entry)
+        throw new BadRequestException(`SL (${sl}) debe estar por debajo del precio de entrada (${entry}) en operaciones BUY`);
+      if (tp <= entry)
+        throw new BadRequestException(`TP (${tp}) debe estar por encima del precio de entrada (${entry}) en operaciones BUY`);
+    } else {
+      if (sl <= entry)
+        throw new BadRequestException(`SL (${sl}) debe estar por encima del precio de entrada (${entry}) en operaciones SELL`);
+      if (tp >= entry)
+        throw new BadRequestException(`TP (${tp}) debe estar por debajo del precio de entrada (${entry}) en operaciones SELL`);
+    }
+    const slDist = Math.abs(entry - sl);
+    const tpDist = Math.abs(tp - entry);
+    if (slDist < 0.10)
+      throw new BadRequestException('SL demasiado cerca del precio de entrada (mínimo 10 pips / $0.10)');
+    if (tpDist < 0.10)
+      throw new BadRequestException('TP demasiado cerca del precio de entrada (mínimo 10 pips / $0.10)');
+  }
+
   async openTrade(userId: string, dto: CreateTradeDto) {
     const acct = await this.prisma.simAccount.findUnique({ where: { userId } });
     if (!acct) throw new NotFoundException('Account not found');
 
     const entry   = dto.entryPrice || this.prices.getCurrentPrice();
+    if (dto.sl && dto.tp) this.validateSlTp(dto.type, entry, dto.sl, dto.tp);
     const slDist  = dto.sl ? Math.abs(entry - dto.sl) : 0;
     const tpDist  = dto.tp ? Math.abs(dto.tp - entry) : 0;
     const riskUsd = slDist * dto.lot * LOT_SIZE_XAU;

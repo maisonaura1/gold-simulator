@@ -3,6 +3,47 @@ import type { PriceTick } from '@/types';
 export interface LinePoint { time: number; value: number; }
 export interface BBPoint   { time: number; upper: number; middle: number; lower: number; }
 export interface RSIPoint  { time: number; value: number; }
+export interface MACDPoint { time: number; macd: number; signal: number; histogram: number; }
+
+export function calcEMA(candles: PriceTick[], period: number): LinePoint[] {
+  if (candles.length < period) return [];
+  const k = 2 / (period + 1);
+  let ema = candles.slice(0, period).reduce((s, c) => s + c.close, 0) / period;
+  const result: LinePoint[] = [{ time: candles[period - 1].timestamp, value: +ema.toFixed(4) }];
+  for (let i = period; i < candles.length; i++) {
+    ema = candles[i].close * k + ema * (1 - k);
+    result.push({ time: candles[i].timestamp, value: +ema.toFixed(4) });
+  }
+  return result;
+}
+
+export function calcMACD(candles: PriceTick[], fast = 12, slow = 26, signal = 9): MACDPoint[] {
+  const emaFast = calcEMA(candles, fast);
+  const emaSlow = calcEMA(candles, slow);
+  // align by timestamp
+  const slowMap = new Map(emaSlow.map((p) => [p.time, p.value]));
+  const macdLine = emaFast
+    .filter((p) => slowMap.has(p.time))
+    .map((p) => ({ time: p.time, value: +(p.value - slowMap.get(p.time)!).toFixed(4) }));
+
+  if (macdLine.length < signal) return [];
+
+  // EMA of macdLine for signal
+  const k = 2 / (signal + 1);
+  let sig = macdLine.slice(0, signal).reduce((s, p) => s + p.value, 0) / signal;
+  const result: MACDPoint[] = [];
+  for (let i = signal - 1; i < macdLine.length; i++) {
+    if (i > signal - 1) sig = macdLine[i].value * k + sig * (1 - k);
+    const macdVal = macdLine[i].value;
+    result.push({
+      time:      macdLine[i].time,
+      macd:      +macdVal.toFixed(4),
+      signal:    +sig.toFixed(4),
+      histogram: +(macdVal - sig).toFixed(4),
+    });
+  }
+  return result;
+}
 
 export function calcMA(candles: PriceTick[], period: number): LinePoint[] {
   const result: LinePoint[] = [];

@@ -32,6 +32,9 @@ export class StatsService {
     // Weekly PnL for chart
     const weeklyPnl = this.buildWeeklyPnl(closed);
 
+    // Equity curve + max drawdown (start from 10000 default)
+    const { equityCurve, maxDrawdown } = this.buildEquityCurve(closed);
+
     // Save snapshot
     await this.prisma.statsSnapshot.create({
       data: {
@@ -60,6 +63,8 @@ export class StatsService {
       losses: losses.length,
       behaviours,
       weeklyPnl,
+      equityCurve,
+      maxDrawdown: +maxDrawdown.toFixed(2),
     };
   }
 
@@ -132,12 +137,36 @@ export class StatsService {
     return d.toISOString().slice(0, 10);
   }
 
+  private buildEquityCurve(trades: { resultUsd: number | null; entryAt: Date }[]) {
+    const INITIAL = 10000;
+    let balance = INITIAL;
+    let peak = INITIAL;
+    let maxDrawdown = 0;
+
+    const equityCurve: { date: string; balance: number }[] = [
+      { date: new Date(trades[0]?.entryAt ?? new Date()).toISOString().slice(0, 10), balance: INITIAL },
+    ];
+
+    for (const t of trades) {
+      balance += t.resultUsd ?? 0;
+      if (balance > peak) peak = balance;
+      const dd = peak > 0 ? ((peak - balance) / peak) * 100 : 0;
+      if (dd > maxDrawdown) maxDrawdown = dd;
+      equityCurve.push({
+        date: new Date(t.entryAt).toISOString().slice(0, 10),
+        balance: +balance.toFixed(2),
+      });
+    }
+
+    return { equityCurve, maxDrawdown };
+  }
+
   private emptyStats() {
     return {
       winRate: 0, totalPnl: 0, avgPnl: 0, avgRisk: 0, avgRR: 0,
       winStreak: 0, lossStreak: 0, totalTrades: 0, wins: 0, losses: 0,
       behaviours: ['Aún no tienes operaciones. ¡Empieza a simular!'],
-      weeklyPnl: [],
+      weeklyPnl: [], equityCurve: [], maxDrawdown: 0,
     };
   }
 }

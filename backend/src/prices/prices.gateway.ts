@@ -9,8 +9,15 @@ import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { DataFetcherService } from './data-fetcher.service';
 
+const wsOrigin = (origin: string | undefined, cb: (err: Error | null, ok: boolean) => void) => {
+  if (!origin) return cb(null, true);
+  const allowed = [process.env.FRONTEND_URL, 'http://localhost:3000', 'http://127.0.0.1:3000'].filter(Boolean);
+  const ok = /^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin) || allowed.includes(origin);
+  cb(ok ? null : new Error(`WS CORS blocked: ${origin}`), ok);
+};
+
 @WebSocketGateway({
-  cors: { origin: process.env.FRONTEND_URL || 'http://localhost:3000', credentials: true },
+  cors: { origin: wsOrigin, credentials: true },
   namespace: '/prices',
 })
 export class PricesGateway implements OnGatewayConnection, OnGatewayDisconnect {

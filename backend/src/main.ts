@@ -5,8 +5,19 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+  ].filter(Boolean) as string[];
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true);
+      const isElectron = /^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin);
+      const isAllowed = isElectron || allowedOrigins.includes(origin);
+      cb(isAllowed ? null : new Error(`CORS blocked: ${origin}`), isAllowed);
+    },
     credentials: true,
   });
 

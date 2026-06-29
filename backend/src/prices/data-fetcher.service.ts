@@ -8,6 +8,7 @@ export interface OhlcCandle {
   high: number;
   low: number;
   close: number;
+  volume?: number;
 }
 
 const DATA_DIR  = join(process.cwd(), '..', 'data');
@@ -133,10 +134,11 @@ export class DataFetcherService implements OnModuleInit {
 
     const timestamps: number[]   = result.timestamp ?? [];
     const quote = result.indicators?.quote?.[0] ?? {};
-    const opens:  number[] = quote.open  ?? [];
-    const highs:  number[] = quote.high  ?? [];
-    const lows:   number[] = quote.low   ?? [];
-    const closes: number[] = quote.close ?? [];
+    const opens:   number[] = quote.open   ?? [];
+    const highs:   number[] = quote.high   ?? [];
+    const lows:    number[] = quote.low    ?? [];
+    const closes:  number[] = quote.close  ?? [];
+    const volumes: number[] = quote.volume ?? [];
 
     const candles: OhlcCandle[] = [];
 
@@ -144,11 +146,12 @@ export class DataFetcherService implements OnModuleInit {
       const o = opens[i], h = highs[i], l = lows[i], c = closes[i];
       if (!o || !h || !l || !c) continue;
       candles.push({
-        time:  timestamps[i] * 1000,
-        open:  +o.toFixed(2),
-        high:  +h.toFixed(2),
-        low:   +l.toFixed(2),
-        close: +c.toFixed(2),
+        time:   timestamps[i] * 1000,
+        open:   +o.toFixed(2),
+        high:   +h.toFixed(2),
+        low:    +l.toFixed(2),
+        close:  +c.toFixed(2),
+        volume: volumes[i] ? Math.round(volumes[i]) : undefined,
       });
     }
 
