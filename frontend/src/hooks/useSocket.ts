@@ -19,7 +19,10 @@ export function useSocket() {
 
     const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
 
-    socket = io(`${WS_URL}/prices`, { transports: ['websocket'] });
+    socket = io(`${WS_URL}/prices`, {
+      transports: ['websocket', 'polling'],
+      upgrade: true,
+    });
 
     socket.on('connect', () => {
       setConnected(true);
