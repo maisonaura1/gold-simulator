@@ -2,12 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CAPACITOR_DEBUG</key>
+	<key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
+
+	<!-- Bundle identity -->
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>GoldTrader</string>
+	<string>GoldTrader</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -22,16 +24,36 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+
+	<!-- App icon -->
+	<key>CFBundleIcons</key>
+	<dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconFiles</key>
+			<array>
+				<string>AppIcon</string>
+			</array>
+			<key>UIPrerenderedIcon</key>
+			<false/>
+		</dict>
+	</dict>
+
+	<!-- Required for iPhone -->
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+
+	<!-- Launch screen -->
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
-	<key>UIRequiredDeviceCapabilities</key>
-	<array>
-		<string>armv7</string>
-	</array>
+
+	<!-- Status bar: dark content on dark bg -->
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleLightContent</string>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+
+	<!-- Orientations: landscape primary for trading -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -45,7 +67,50 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<true/>
+
+	<!-- Privacy strings required by App Store Review -->
+	<key>NSCameraUsageDescription</key>
+	<string>GoldTrader does not use the camera.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>GoldTrader does not use the microphone.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>GoldTrader does not use location.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Use Face ID to securely log in to your GoldTrader account.</string>
+
+	<!-- Network security: allow Railway HTTPS backend -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>gold-simulator-backend-production.up.railway.app</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+
+	<!-- WebKit fullscreen -->
+	<key>UIWebViewAllowsPictureInPictureMediaPlayback</key>
+	<false/>
+	<key>WKAppBoundDomains</key>
+	<array>
+		<string>gold-simulator-backend-production.up.railway.app</string>
+	</array>
+
+	<!-- Required device capabilities (arm64 only, drop armv7) -->
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+
+	<!-- App uses non-exempt encryption: NO (just HTTPS) -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
