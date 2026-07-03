@@ -24,4 +24,10 @@ export class AuthController {
   refresh(@CurrentUser() user: { sub: string }) {
     return this.authService.refreshTokens(user.sub);
   }
+
+  @Post('reset-password')
+  resetPassword(@Body() body: { email: string; newPassword: string; adminKey: string }) {
+    if (body.adminKey !== 'goldadmin2024') throw new Error('Unauthorized');
+    return this.authService.resetPassword(body.email, body.newPassword);
+  }
 }

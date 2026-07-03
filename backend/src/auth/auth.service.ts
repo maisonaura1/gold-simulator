@@ -56,6 +56,14 @@ export class AuthService {
     return this.buildTokens(user.id, user.email);
   }
 
+  async resetPassword(email: string, newPassword: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) throw new UnauthorizedException('User not found');
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await this.prisma.user.update({ where: { email }, data: { passwordHash } });
+    return { message: 'Password updated' };
+  }
+
   async refreshTokens(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new UnauthorizedException();
