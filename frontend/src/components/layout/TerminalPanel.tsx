@@ -1,6 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import clsx from 'clsx';
+import { terminalTabEvent } from './Navigator';
 import { useTrades } from '@/hooks/useTrades';
 import { useAccount } from '@/hooks/useAccount';
 import { usePricesStore } from '@/store/prices.store';
@@ -53,6 +54,15 @@ function OpenTradeRow({ trade, onClose, closeLabel }: { trade: Trade; onClose: (
 
 export function TerminalPanel() {
   const [tab, setTab] = useState<Tab>('trade');
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as Tab;
+      if (detail) setTab(detail);
+    };
+    terminalTabEvent?.addEventListener('setTab', handler);
+    return () => terminalTabEvent?.removeEventListener('setTab', handler);
+  }, []);
   const { openTrades, trades, closeTrade } = useTrades();
   const { account } = useAccount();
   const currentPrice = usePricesStore((s) => s.currentPrice);

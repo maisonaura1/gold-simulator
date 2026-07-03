@@ -5,6 +5,7 @@
       "name": "frontend",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
+      "cwd": "/Users/maisonaura/gold-simulator/frontend",
       "port": 3000,
       "autoPort": false
     }

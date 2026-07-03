@@ -1,12 +1,22 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useChartStore } from '@/store/chart.store';
+import { useAccount } from '@/hooks/useAccount';
 import { useT } from '@/hooks/useT';
+import clsx from 'clsx';
+
+// Global event to switch TerminalPanel to the "account" tab
+export const terminalTabEvent = typeof window !== 'undefined'
+  ? new EventTarget()
+  : null;
 
 interface TreeNode {
   label: string;
   icon?: string;
   href?: string;
+  action?: () => void;
+  active?: boolean;
   children?: TreeNode[];
 }
 
@@ -18,10 +28,14 @@ function TreeItem({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
   return (
     <div>
       <div
-        className="flex items-center gap-1 px-2 py-1 hover:bg-[var(--mt-hover)] cursor-pointer transition-colors"
+        className={clsx(
+          'flex items-center gap-1 py-1 hover:bg-[var(--mt-hover)] cursor-pointer transition-colors',
+          node.active && 'bg-[var(--mt-hover)]',
+        )}
         style={{ paddingLeft: `${8 + depth * 12}px`, fontSize: 11 }}
         onClick={() => {
           if (hasChildren) setOpen((v) => !v);
+          else if (node.action) node.action();
           else if (node.href) router.push(node.href);
         }}
       >
@@ -32,7 +46,12 @@ function TreeItem({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
         )}
         {!hasChildren && <span className="w-3" />}
         {node.icon && <span style={{ fontSize: 12 }}>{node.icon}</span>}
-        <span className="text-[var(--mt-text)]">{node.label}</span>
+        <span className={clsx('flex-1', node.active ? 'text-[var(--mt-cyan)]' : 'text-[var(--mt-text)]')}>
+          {node.label}
+        </span>
+        {node.active !== undefined && !hasChildren && (
+          <span className={clsx('w-2 h-2 rounded-full mr-2', node.active ? 'bg-[var(--mt-cyan)]' : 'bg-[var(--mt-border)]')} />
+        )}
       </div>
       {hasChildren && open && (
         <div>
@@ -47,24 +66,79 @@ function TreeItem({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
 
 export function Navigator() {
   const t = useT();
+  const router = useRouter();
+  const chart = useChartStore();
+  const { reset } = useAccount();
+  const [resetting, setResetting] = useState(false);
+
+  const handleReset = async () => {
+    if (!confirm('¿Reiniciar la cuenta a $10,000? Se perderán todos los trades abiertos.')) return;
+    setResetting(true);
+    await reset();
+    setResetting(false);
+    // Switch terminal to account tab
+    terminalTabEvent?.dispatchEvent(new CustomEvent('setTab', { detail: 'account' }));
+  };
+
+  const handleAccountData = () => {
+    terminalTabEvent?.dispatchEvent(new CustomEvent('setTab', { detail: 'account' }));
+  };
 
   const TREE: TreeNode[] = [
     {
       label: t.demoAccount,
       icon: '👤',
       children: [
-        { label: t.accountData,  href: '/dashboard' },
-        { label: t.resetAccount, href: '/dashboard' },
+        {
+          label: t.accountData,
+          action: handleAccountData,
+        },
+        {
+          label: resetting ? 'Reiniciando...' : t.resetAccount,
+          action: handleReset,
+        },
       ],
     },
     {
       label: t.indicators,
       icon: '📐',
       children: [
-        { label: 'Media Móvil (MA)', icon: '〰️' },
-        { label: 'RSI', icon: '〰️' },
-        { label: 'MACD', icon: '〰️' },
-        { label: 'Bandas Bollinger', icon: '〰️' },
+        {
+          label: 'Media Móvil MA20',
+          icon: '〰️',
+          active: chart.showMA20,
+          action: chart.toggleMA20,
+        },
+        {
+          label: 'Media Móvil MA50',
+          icon: '〰️',
+          active: chart.showMA50,
+          action: chart.toggleMA50,
+        },
+        {
+          label: 'RSI',
+          icon: '〰️',
+          active: chart.showRSI,
+          action: chart.toggleRSI,
+        },
+        {
+          label: 'MACD',
+          icon: '〰️',
+          active: chart.showMACD,
+          action: chart.toggleMACD,
+        },
+        {
+          label: 'Bandas Bollinger',
+          icon: '〰️',
+          active: chart.showBB,
+          action: chart.toggleBB,
+        },
+        {
+          label: 'Volumen',
+          icon: '〰️',
+          active: chart.showVolume,
+          action: chart.toggleVolume,
+        },
       ],
     },
     {
@@ -76,12 +150,21 @@ export function Navigator() {
       ],
     },
     {
+      label: 'Academia XAU',
+      icon: '🎓',
+      children: [
+        { label: 'Nivel 1 — Principiante', href: '/academy' },
+        { label: 'Nivel 2 — Intermedio',   href: '/academy' },
+        { label: 'Nivel 3 — Avanzado',     href: '/academy' },
+      ],
+    },
+    {
       label: t.stats,
       icon: '📊',
       children: [
-        { label: t.winrate,     href: '/stats' },
+        { label: t.winrate,      href: '/stats' },
         { label: t.riskAnalysis, href: '/stats' },
-        { label: t.fullHistory, href: '/history' },
+        { label: t.fullHistory,  href: '/history' },
       ],
     },
   ];

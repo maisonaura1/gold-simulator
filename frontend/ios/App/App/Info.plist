@@ -43,6 +43,10 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 
+	<!-- Main storyboard (loads CAPBridgeViewController) -->
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+
 	<!-- Launch screen -->
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
@@ -94,14 +98,6 @@
 			</dict>
 		</dict>
 	</dict>
-
-	<!-- WebKit fullscreen -->
-	<key>UIWebViewAllowsPictureInPictureMediaPlayback</key>
-	<false/>
-	<key>WKAppBoundDomains</key>
-	<array>
-		<string>gold-simulator-backend-production.up.railway.app</string>
-	</array>
 
 	<!-- Required device capabilities (arm64 only, drop armv7) -->
 	<key>UIRequiredDeviceCapabilities</key>

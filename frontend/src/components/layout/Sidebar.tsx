@@ -10,6 +10,7 @@ const NAV = [
   { href: '/trade',      label: 'Simular',        icon: '⚡' },
   { href: '/history',    label: 'Historial',      icon: '📋' },
   { href: '/learn',      label: 'Misiones',       icon: '🎯' },
+  { href: '/academy',    label: 'Academia XAU',   icon: '🎓' },
   { href: '/stats',      label: 'Estadísticas',   icon: '📈' },
 ];
 

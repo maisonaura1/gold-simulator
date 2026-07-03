@@ -42,6 +42,7 @@ export function MTToolbar() {
     { icon: '⚡', label: t.navNewOrder, href: '/trade' },
     { icon: '📋', label: t.navHistory,  href: '/history' },
     { icon: '🎯', label: t.navMissions, href: '/learn' },
+    { icon: '🎓', label: 'Academia',    href: '/academy' },
     { icon: '📊', label: t.navStats,    href: '/stats' },
   ];
 
