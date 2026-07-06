@@ -150,6 +150,93 @@ async function main() {
   }
 
   console.log(`✅ Seed completado — ${missions.length} misiones insertadas`);
+
+  // ─── Trade Desk demo data ──────────────────────────────────────────────
+  const ownerEmail  = 'demo@goldtrader.io';
+  const traderEmail = 'trader@goldtrader.io';
+  const auditorEmail = 'auditor@goldtrader.io';
+
+  const book = await prisma.tradeBook.upsert({
+    where: { id: 'demo-gold-spot-book' },
+    update: { name: 'Gold Spot Book' },
+    create: { id: 'demo-gold-spot-book', name: 'Gold Spot Book' },
+  });
+
+  const memberships = [
+    { bookId: book.id, userEmail: ownerEmail,   role: 'OWNER'   as const },
+    { bookId: book.id, userEmail: traderEmail,  role: 'TRADER'  as const },
+    { bookId: book.id, userEmail: auditorEmail, role: 'AUDITOR' as const },
+  ];
+  for (const m of memberships) {
+    await prisma.tradeBookMember.upsert({
+      where: { bookId_userEmail: { bookId: m.bookId, userEmail: m.userEmail } },
+      update: { role: m.role },
+      create: m,
+    });
+  }
+
+  // Demo orders: DRAFT, SUBMITTED, APPROVED (with approver)
+  const orders = [
+    {
+      id: 'demo-order-draft',
+      bookId: book.id,
+      symbol: 'XAUUSD',
+      side: 'BUY'  as const,
+      quantity: 10,
+      price: 3340.00,
+      status: 'DRAFT' as const,
+      creatorEmail: traderEmail,
+      notes: 'Support retest — DCA entry',
+    },
+    {
+      id: 'demo-order-submitted',
+      bookId: book.id,
+      symbol: 'XAUUSD',
+      side: 'SELL' as const,
+      quantity: 5,
+      price: 3358.50,
+      status: 'SUBMITTED' as const,
+      creatorEmail: traderEmail,
+      notes: 'Resistance confluence — short setup',
+    },
+    {
+      id: 'demo-order-approved',
+      bookId: book.id,
+      symbol: 'XAUUSD',
+      side: 'BUY'  as const,
+      quantity: 20,
+      price: 3320.00,
+      status: 'APPROVED' as const,
+      creatorEmail: traderEmail,
+      approvedByEmail: ownerEmail,
+      notes: 'Monthly low retest — institutional level',
+    },
+  ];
+
+  for (const o of orders) {
+    await prisma.tradeOrder.upsert({
+      where: { id: o.id },
+      update: { status: o.status, approvedByEmail: o.approvedByEmail ?? null },
+      create: o,
+    });
+  }
+
+  // Audit log events
+  const auditEvents = [
+    { bookId: book.id, orderId: 'demo-order-draft',      actorEmail: traderEmail,  action: 'ORDER_CREATED',   detail: 'DRAFT BUY 10 oz @ 3340.00' },
+    { bookId: book.id, orderId: 'demo-order-submitted',  actorEmail: traderEmail,  action: 'ORDER_CREATED',   detail: 'DRAFT SELL 5 oz @ 3358.50' },
+    { bookId: book.id, orderId: 'demo-order-submitted',  actorEmail: traderEmail,  action: 'ORDER_SUBMITTED', detail: 'DRAFT → SUBMITTED' },
+    { bookId: book.id, orderId: 'demo-order-approved',   actorEmail: traderEmail,  action: 'ORDER_CREATED',   detail: 'DRAFT BUY 20 oz @ 3320.00' },
+    { bookId: book.id, orderId: 'demo-order-approved',   actorEmail: traderEmail,  action: 'ORDER_SUBMITTED', detail: 'DRAFT → SUBMITTED' },
+    { bookId: book.id, orderId: 'demo-order-approved',   actorEmail: ownerEmail,   action: 'ORDER_APPROVED',  detail: 'SUBMITTED → APPROVED by ' + ownerEmail },
+  ];
+
+  for (const e of auditEvents) {
+    const exists = await prisma.tradeAuditLog.findFirst({ where: { bookId: e.bookId, orderId: e.orderId, action: e.action } });
+    if (!exists) await prisma.tradeAuditLog.create({ data: e });
+  }
+
+  console.log('✅ Trade Desk seed — 1 book, 3 members, 3 orders, 6 audit events');
 }
 
 main()

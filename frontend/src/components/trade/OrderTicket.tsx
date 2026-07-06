@@ -69,7 +69,7 @@ function RRBar({ rr }: { rr: number }) {
 
 // ─── Risk traffic light ───────────────────────────────────────────────────────
 
-function RiskLight({ pct }: { pct: number }) {
+function RiskLight({ pct, t }: { pct: number; t: ReturnType<typeof import('@/hooks/useT').useT> }) {
   const level =
     pct === 0   ? 'neutral' :
     pct <= 1    ? 'great' :
@@ -77,11 +77,11 @@ function RiskLight({ pct }: { pct: number }) {
     pct <= 3    ? 'warn' : 'danger';
 
   const cfg = {
-    neutral: { color: '#4a5568', label: 'Sin SL = sin riesgo calculado',         icon: '⚪' },
-    great:   { color: '#22c55e', label: `${pct.toFixed(2)}% — Gestión perfecta`, icon: '🟢' },
-    ok:      { color: '#22c55e', label: `${pct.toFixed(2)}% — Dentro del límite`, icon: '🟡' },
-    warn:    { color: '#f59e0b', label: `${pct.toFixed(2)}% — Límite FTMO: 2%`,   icon: '🟠' },
-    danger:  { color: '#ef4444', label: `${pct.toFixed(2)}% — ¡Demasiado riesgo!`,icon: '🔴' },
+    neutral: { color: '#4a5568', label: t.otNoSl,          icon: '⚪' },
+    great:   { color: '#22c55e', label: t.otGreat(pct),    icon: '🟢' },
+    ok:      { color: '#22c55e', label: t.otOk(pct),       icon: '🟡' },
+    warn:    { color: '#f59e0b', label: t.otWarn(pct),     icon: '🟠' },
+    danger:  { color: '#ef4444', label: t.otDanger(pct),   icon: '🔴' },
   }[level];
 
   return (
@@ -94,21 +94,21 @@ function RiskLight({ pct }: { pct: number }) {
 
 // ─── Setup score ──────────────────────────────────────────────────────────────
 
-function SetupScore({ hasSl, hasTp, rr, riskPct }: { hasSl: boolean; hasTp: boolean; rr: number; riskPct: number }) {
+function SetupScore({ hasSl, hasTp, rr, riskPct, t }: { hasSl: boolean; hasTp: boolean; rr: number; riskPct: number; t: ReturnType<typeof import('@/hooks/useT').useT> }) {
   const checks = [
-    { ok: hasSl,         label: 'Stop Loss configurado' },
-    { ok: hasTp,         label: 'Take Profit configurado' },
+    { ok: hasSl,         label: t.otSlLabel },
+    { ok: hasTp,         label: t.otTpLabel },
     { ok: rr >= 2,       label: 'R:R ≥ 2:1' },
-    { ok: riskPct <= 2 && riskPct > 0, label: 'Riesgo ≤ 2%' },
+    { ok: riskPct <= 2 && riskPct > 0, label: t.otRiskLabel },
   ];
   const score = checks.filter((c) => c.ok).length;
   const color = score === 4 ? '#22c55e' : score >= 2 ? '#f59e0b' : '#ef4444';
-  const label = score === 4 ? 'Setup ideal' : score === 3 ? 'Buen setup' : score === 2 ? 'Setup básico' : 'Setup incompleto';
+  const label = score === 4 ? t.otIdeal : score === 3 ? t.otGood : score === 2 ? t.otBasic : t.otIncomplete;
 
   return (
     <div className="border border-[var(--mt-border)] bg-[var(--mt-bg)] p-2">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] text-[var(--mt-text-dim)] font-medium uppercase tracking-wide">Calidad del setup</span>
+        <span className="text-[10px] text-[var(--mt-text-dim)] font-medium uppercase tracking-wide">{t.otQuality}</span>
         <span className="font-mono font-bold text-[11px]" style={{ color }}>{score}/4 — {label}</span>
       </div>
       <div className="space-y-1">
@@ -281,11 +281,11 @@ export function OrderTicket({ onResult }: Props) {
             <div className="flex items-center justify-between mb-1">
               <label className="flex items-center text-[var(--mt-text-dim)]">
                 {t.stopLoss} <span className="text-[var(--mt-red)] ml-1 text-[9px]">*obligatorio</span>
-                <Tip text="El Stop Loss cierra tu trade automáticamente si el mercado va en tu contra. Sin SL, una pérdida puede destruir tu cuenta mientras duermes." />
+                <Tip text={t.otSlTooltip} />
               </label>
               {slDist > 0 && <span className="font-mono text-[var(--mt-red)] text-[10px]">{slDist.toFixed(2)} pts · ${riskUsd.toFixed(2)}</span>}
             </div>
-            <input type="number" step="0.01" placeholder="Precio de stop loss"
+            <input type="number" step="0.01" placeholder={t.otSlPlaceholder}
               value={sl} onChange={(e) => setSl(e.target.value)}
               className={clsx('mt-input font-mono', sl ? 'text-[var(--mt-red)]' : 'text-[var(--mt-text-dim)]')} />
           </div>
@@ -299,7 +299,7 @@ export function OrderTicket({ onResult }: Props) {
               </label>
               {tpDist > 0 && <span className="font-mono text-[var(--mt-green)] text-[10px]">{tpDist.toFixed(2)} pts · ${rewardUsd.toFixed(2)}</span>}
             </div>
-            <input type="number" step="0.01" placeholder="Precio de take profit"
+            <input type="number" step="0.01" placeholder={t.otTpPlaceholder}
               value={tp} onChange={(e) => setTp(e.target.value)}
               className={clsx('mt-input font-mono', tp ? 'text-[var(--mt-green)]' : 'text-[var(--mt-text-dim)]')} />
           </div>
@@ -329,21 +329,21 @@ export function OrderTicket({ onResult }: Props) {
           {(slNum > 0 || tpNum > 0) && <RRBar rr={rr} />}
 
           {/* Risk traffic light */}
-          <RiskLight pct={riskPct} />
+          <RiskLight pct={riskPct} t={t} />
 
           {/* Risk calc detail */}
           <div className="border border-[var(--mt-border)] p-2 space-y-1.5 bg-[var(--mt-bg)]" style={{ fontSize: 10 }}>
             <div className="flex items-center justify-between">
               <span className="text-[var(--mt-text-label)] font-medium text-[11px]">{t.riskCalc}</span>
               <button onClick={() => setShowTips((v) => !v)} className="text-[var(--mt-text-dim)] text-[9px] hover:text-[var(--mt-cyan)]">
-                {showTips ? 'ocultar' : 'ayuda'}
+                {showTips ? t.otHide : t.otHelp}
               </button>
             </div>
             {[
-              { label: 'Balance',       value: `$${balance.toFixed(2)}`,                              cls: 'text-[var(--mt-white)]'  },
-              { label: 'Riesgo ($)',    value: riskUsd   > 0 ? `$${riskUsd.toFixed(2)}`   : '—',      cls: riskPct > 2 ? 'text-[var(--mt-red)]' : 'text-[var(--mt-green)]' },
-              { label: 'Riesgo (%)',    value: riskPct   > 0 ? `${riskPct.toFixed(2)}%`   : '—',      cls: riskPct > 2 ? 'text-[var(--mt-red)]' : riskPct > 0 ? 'text-[var(--mt-green)]' : 'text-[var(--mt-text-dim)]' },
-              { label: 'Beneficio pot.',value: rewardUsd > 0 ? `$${rewardUsd.toFixed(2)}` : '—',      cls: 'text-[var(--mt-green)]'  },
+              { label: t.otBalanceLabel, value: `$${balance.toFixed(2)}`,                              cls: 'text-[var(--mt-white)]'  },
+              { label: t.otRiskUsd,     value: riskUsd   > 0 ? `$${riskUsd.toFixed(2)}`   : '—',      cls: riskPct > 2 ? 'text-[var(--mt-red)]' : 'text-[var(--mt-green)]' },
+              { label: t.otRiskPct,     value: riskPct   > 0 ? `${riskPct.toFixed(2)}%`   : '—',      cls: riskPct > 2 ? 'text-[var(--mt-red)]' : riskPct > 0 ? 'text-[var(--mt-green)]' : 'text-[var(--mt-text-dim)]' },
+              { label: t.otReward,      value: rewardUsd > 0 ? `$${rewardUsd.toFixed(2)}` : '—',      cls: 'text-[var(--mt-green)]'  },
             ].map((row) => (
               <div key={row.label} className="flex justify-between">
                 <span className="text-[var(--mt-text-dim)]">{row.label}</span>
@@ -361,7 +361,7 @@ export function OrderTicket({ onResult }: Props) {
           </div>
 
           {/* Setup score */}
-          <SetupScore hasSl={slNum > 0} hasTp={tpNum > 0} rr={rr} riskPct={riskPct} />
+          <SetupScore hasSl={slNum > 0} hasTp={tpNum > 0} rr={rr} riskPct={riskPct} t={t} />
 
           {/* Notes */}
           <div>

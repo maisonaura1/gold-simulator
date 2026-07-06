@@ -2,12 +2,14 @@
 import { useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAccount } from '@/hooks/useAccount';
+import { useLangStore } from '@/store/lang.store';
+import { ACADEMY_CONTENT } from '@/lib/academy-content';
 import clsx from 'clsx';
 import Link from 'next/link';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
-const LEVELS = [
+const LEVELS_PLACEHOLDER = [
   {
     id: 1,
     name: 'Principiante',
@@ -826,6 +828,8 @@ Esta estrategia produce 1 trade claro al día, perfecta para fondeo.`,
 
 // ─── Components ───────────────────────────────────────────────────────────────
 
+// LEVELS_PLACEHOLDER is kept above for reference only — actual data comes from ACADEMY_CONTENT
+
 function QuizModal({ questions, onClose }: { questions: { q: string; options: string[]; answer: number }[]; onClose: (passed: boolean) => void }) {
   const [answers, setAnswers] = useState<(number | null)[]>(questions.map(() => null));
   const [submitted, setSubmitted] = useState(false);
@@ -883,8 +887,10 @@ function QuizModal({ questions, onClose }: { questions: { q: string; options: st
   );
 }
 
+import type { AcademyModule } from '@/lib/academy-content';
+
 function ModuleViewer({ module: mod, onComplete, onClose }: {
-  module: typeof LEVELS[0]['modules'][0];
+  module: AcademyModule;
   onComplete: () => void;
   onClose: () => void;
 }) {
@@ -965,6 +971,8 @@ function ModuleViewer({ module: mod, onComplete, onClose }: {
 
 export default function AcademyPage() {
   const { account } = useAccount();
+  const { lang } = useLangStore();
+  const LEVELS = ACADEMY_CONTENT[(lang as 'es' | 'en' | 'nl')] ?? ACADEMY_CONTENT.es;
   const [activeLevel, setActiveLevel] = useState(0);
   const [activeModule, setActiveModule] = useState<typeof LEVELS[0]['modules'][0] | null>(null);
   const [completedModules, setCompletedModules] = useState<Set<string>>(() => {

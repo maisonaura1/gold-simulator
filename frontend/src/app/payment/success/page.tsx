@@ -2,11 +2,8 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth.store';
-
 export default function PaymentSuccessPage() {
   const router = useRouter();
-  const { token } = useAuthStore();
 
   useEffect(() => {
     const timer = setTimeout(() => router.replace('/'), 4000);

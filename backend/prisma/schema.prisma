@@ -116,6 +116,91 @@ enum MissionStatus {
   FAILED
 }
 
+// ─── Trade Desk domain ───────────────────────────────────────────────
+
+model TradeBook {
+  id        String            @id @default(uuid())
+  name      String
+  createdAt DateTime          @default(now()) @map("created_at")
+  members   TradeBookMember[]
+  orders    TradeOrder[]
+  auditLogs TradeAuditLog[]
+
+  @@map("trade_books")
+}
+
+model TradeBookMember {
+  id        String    @id @default(uuid())
+  bookId    String    @map("book_id")
+  book      TradeBook @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  userEmail String    @map("user_email")
+  role      BookRole
+  joinedAt  DateTime  @default(now()) @map("joined_at")
+
+  @@unique([bookId, userEmail])
+  @@index([bookId])
+  @@index([userEmail])
+  @@map("trade_book_members")
+}
+
+enum BookRole {
+  OWNER
+  TRADER
+  VIEWER
+  AUDITOR
+}
+
+model TradeOrder {
+  id              String      @id @default(uuid())
+  bookId          String      @map("book_id")
+  book            TradeBook   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  symbol          String      @default("XAUUSD")
+  side            DeskSide
+  quantity        Float
+  price           Float
+  status          DeskStatus  @default(DRAFT)
+  creatorEmail    String      @map("creator_email")
+  approvedByEmail String?     @map("approved_by_email")
+  notes           String?
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  auditLogs       TradeAuditLog[]
+
+  @@index([bookId, status])
+  @@index([creatorEmail])
+  @@map("trade_orders")
+}
+
+enum DeskSide {
+  BUY
+  SELL
+}
+
+enum DeskStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+model TradeAuditLog {
+  id         String      @id @default(uuid())
+  orderId    String?     @map("order_id")
+  order      TradeOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  bookId     String      @map("book_id")
+  book       TradeBook   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  actorEmail String      @map("actor_email")
+  action     String
+  detail     String?
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  @@index([bookId])
+  @@index([orderId])
+  @@map("trade_audit_log")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+
 model StatsSnapshot {
   id            String   @id @default(uuid())
   userId        String   @map("user_id")

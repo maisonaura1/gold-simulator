@@ -8,6 +8,7 @@ import { MissionsModule } from './missions/missions.module';
 import { StatsModule } from './stats/stats.module';
 import { PricesModule } from './prices/prices.module';
 import { PaymentsModule } from './payments/payments.module';
+import { TradeDeskModule } from './trade-desk/trade-desk.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { PaymentsModule } from './payments/payments.module';
     StatsModule,
     PricesModule,
     PaymentsModule,
+    TradeDeskModule,
   ],
 })
 export class AppModule {}

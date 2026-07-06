@@ -5,6 +5,28 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        gold: {
+          50:  '#fdf9ee',
+          100: '#f7edca',
+          200: '#edd98a',
+          300: '#e8c96d',
+          400: '#d4a843',
+          500: '#c9a84c',
+          600: '#a8893c',
+          700: '#8a6e30',
+          800: '#5a4820',
+          900: '#2a1f0a',
+          950: '#130e03',
+        },
+        desk: {
+          bg:     '#07080b',
+          base:   '#0b0d11',
+          panel:  '#0f1117',
+          card:   '#141720',
+          border: '#1d2029',
+          'border-gold': '#2c2410',
+          hover:  '#181c26',
+        },
         mt: {
           bg:       '#1a1d23',
           panel:    '#22262e',
