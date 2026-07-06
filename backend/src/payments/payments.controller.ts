@@ -6,15 +6,13 @@
  */
 
 import {
-  Controller, Post, Get, Body, Req, Res, Headers,
-  UseGuards, RawBodyRequest, Query,
+  Controller, Post, Get, Req, Res, Headers,
+  UseGuards, RawBodyRequest,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-
-type Plan = 'monthly' | 'annual' | 'lifetime';
 
 @Controller('payments')
 export class PaymentsController {
@@ -22,18 +20,12 @@ export class PaymentsController {
 
   /**
    * POST /payments/checkout
-   * Body opcional: { plan: 'monthly' | 'annual' | 'lifetime' }
-   *
-   * Superwall delega aquí cuando el usuario acepta comprar.
-   * Devuelve { url, sessionId } para redirigir a Stripe Checkout.
+   * Genera sesión de Stripe Checkout para el pago único €9.95 lifetime.
    */
   @UseGuards(JwtAuthGuard)
   @Post('checkout')
-  checkout(
-    @CurrentUser() user: { sub: string; email: string },
-    @Body('plan') plan?: Plan,
-  ) {
-    return this.payments.createCheckoutSession(user.sub, user.email, plan ?? 'lifetime');
+  checkout(@CurrentUser() user: { sub: string; email: string }) {
+    return this.payments.createCheckoutSession(user.sub, user.email);
   }
 
   /**

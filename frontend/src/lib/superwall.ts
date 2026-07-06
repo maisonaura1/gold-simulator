@@ -26,7 +26,7 @@ import { api } from '@/lib/api';
 // ── Tipos públicos ─────────────────────────────────────────────────────────────
 
 export type SubscriptionStatus = 'FREE' | 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'EXPIRED';
-export type Plan = 'free' | 'monthly' | 'annual' | 'lifetime';
+export type Plan = 'free' | 'lifetime';
 
 export interface PaymentStatus {
   paid:               boolean;
@@ -191,11 +191,10 @@ class SuperwallAdapter {
    * pasará a ser el `purchaseController.purchase(product)` que
    * Superwall invoca al pulsar "Comprar" en el paywall.
    */
-  async purchase(plan: Plan = 'lifetime'): Promise<PurchaseResult> {
+  async purchase(_plan: Plan = 'lifetime'): Promise<PurchaseResult> {
     try {
       const res = await api.post<{ url: string; sessionId: string }>(
         '/payments/checkout',
-        { plan },
       );
 
       // Redirigir a Stripe Checkout

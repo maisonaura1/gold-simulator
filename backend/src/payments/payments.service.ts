@@ -16,15 +16,10 @@ import Stripe from 'stripe';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionStatus } from '@prisma/client';
 
-// ── Stripe product IDs ────────────────────────────────────────────────────────
-// Configura estos precios en el dashboard de Stripe y pon los IDs en .env
-const PRICE_IDS = {
-  monthly:  process.env.STRIPE_PRICE_MONTHLY  ?? '',   // e.g. price_1Abc...
-  annual:   process.env.STRIPE_PRICE_ANNUAL   ?? '',   // e.g. price_1Xyz...
-  lifetime: process.env.STRIPE_PRICE_LIFETIME ?? '',   // e.g. price_1Def... (one_time)
-} as const;
-
-type PlanKey = keyof typeof PRICE_IDS;
+// ── Stripe product ID ─────────────────────────────────────────────────────────
+// Un solo precio: €9.95 pago único, acceso de por vida
+// Configurar en Railway: STRIPE_PRICE_LIFETIME=price_1...
+const PRICE_LIFETIME = process.env.STRIPE_PRICE_LIFETIME ?? '';
 
 @Injectable()
 export class PaymentsService {
@@ -76,24 +71,20 @@ export class PaymentsService {
   async createCheckoutSession(
     userId: string,
     userEmail: string,
-    plan: PlanKey = 'lifetime',
   ): Promise<{ url: string; sessionId: string }> {
-    const priceId = PRICE_IDS[plan];
-    if (!priceId) {
-      throw new BadRequestException(`Plan "${plan}" no tiene PRICE_ID configurado en .env`);
+    if (!PRICE_LIFETIME) {
+      throw new BadRequestException('STRIPE_PRICE_LIFETIME no está configurado en las variables de entorno');
     }
 
     const customerId = await this.getOrCreateCustomer(userId, userEmail);
-    const isSubscription = plan !== 'lifetime';
 
     const session = await this.stripe.checkout.sessions.create({
-      mode: isSubscription ? 'subscription' : 'payment',
+      mode: 'payment',           // pago único, no suscripción
       customer: customerId,
       payment_method_types: ['card', 'ideal'],
-      line_items: [{ price: priceId, quantity: 1 }],
-      metadata: { userId, plan },
-      // allow_promotion_codes: true, // habilitar si usas cupones
-      success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
+      line_items: [{ price: PRICE_LIFETIME, quantity: 1 }],
+      metadata: { userId },
+      success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${process.env.FRONTEND_URL}/payment/cancelled`,
     });
 
@@ -287,7 +278,7 @@ export class PaymentsService {
     simulationsUsed:   number;
     simulationsLimit:  number;
     canSimulate:       boolean;
-    plan:              'free' | 'monthly' | 'annual' | 'lifetime';
+    plan:              'free' | 'lifetime';
   }> {
     const [user, simCount] = await Promise.all([
       this.prisma.user.findUnique({
@@ -322,10 +313,7 @@ export class PaymentsService {
     const canSimulate = paid || simCount < 10;
 
     // Inferir el plan a partir del estado
-    let plan: 'free' | 'monthly' | 'annual' | 'lifetime' = 'free';
-    if (isActive && !user.subscriptionId) plan = 'lifetime';
-    else if (isActive && user.subscriptionId) plan = 'monthly'; // simplificado
-    else if (!isActive && user.paidAt) plan = 'lifetime';
+    const plan: 'free' | 'lifetime' = isActive || user.paidAt ? 'lifetime' : 'free';
 
     return {
       paid,
