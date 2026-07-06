@@ -64,18 +64,24 @@ export class PaymentsService {
   }
 
   async getStatus(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { createdAt: true, paidAt: true },
-    });
-    if (!user) return { paid: false, trialActive: false, trialDaysLeft: 0 };
+    const [user, simCount] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { createdAt: true, paidAt: true },
+      }),
+      this.prisma.trade.count({ where: { userId } }),
+    ]);
+    if (!user) return { paid: false, trialActive: false, trialDaysLeft: 0, simulationsUsed: 0, simulationsLimit: 10 };
 
     const paid = !!user.paidAt;
     const msPerDay = 1000 * 60 * 60 * 24;
     const daysSinceCreation = (Date.now() - user.createdAt.getTime()) / msPerDay;
     const trialDaysLeft = Math.max(0, Math.ceil(7 - daysSinceCreation));
     const trialActive = trialDaysLeft > 0;
+    const simulationsLimit = 10;
+    const simulationsUsed = simCount;
+    const canSimulate = paid || simulationsUsed < simulationsLimit;
 
-    return { paid, trialActive, trialDaysLeft };
+    return { paid, trialActive, trialDaysLeft, simulationsUsed, simulationsLimit, canSimulate };
   }
 }
