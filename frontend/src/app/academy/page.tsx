@@ -844,7 +844,7 @@ function QuizModal({ questions, onClose }: { questions: { q: string; options: st
             <div className="space-y-5">
               {questions.map((q, qi) => (
                 <div key={qi}>
-                  <div className="text-[12px] text-white mb-2 font-medium">{q.q}</div>
+                  <div className="text-[9px] text-white mb-2 font-medium">{q.q}</div>
                   <div className="space-y-1">
                     {q.options.map((opt, oi) => (
                       <button
@@ -900,7 +900,7 @@ function ModuleViewer({ module: mod, onComplete, onClose }: {
         <div className="flex items-center justify-between px-5 py-3 bg-[#1a1d24] border-b border-[#2e3340] shrink-0">
           <div className="flex items-center gap-2">
             <span>{mod.icon}</span>
-            <span className="text-[12px] font-medium text-white">{mod.title}</span>
+            <span className="text-[9px] font-medium text-white">{mod.title}</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-[10px] text-[#8892a4]">{page + 1} / {content.length}</span>
@@ -915,7 +915,7 @@ function ModuleViewer({ module: mod, onComplete, onClose }: {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          <h2 className="text-[14px] font-bold text-[#60a5fa] mb-4">{current.heading}</h2>
+          <h2 className="text-[11px] font-bold text-[#60a5fa] mb-4">{current.heading}</h2>
           <div className="text-[11px] text-[#c8cdd8] leading-relaxed whitespace-pre-line">{current.body}</div>
 
           {mod.isPractice && (

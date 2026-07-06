@@ -90,7 +90,7 @@ body {
   /* Input field — dark MT style */
   .mt-input {
     @apply bg-[var(--mt-input)] border border-[var(--mt-border)]
-           text-[var(--mt-white)] px-2 py-1.5 text-xs w-full
+           text-[var(--mt-white)] px-2 py-1.5 text-sm w-full
            focus:outline-none focus:border-[var(--mt-blue)] transition-colors;
   }
 
@@ -101,12 +101,12 @@ body {
 
   .mt-panel-header {
     @apply bg-[var(--mt-toolbar)] border-b border-[var(--mt-border)] px-3 py-1.5
-           text-[var(--mt-text-label)] text-xs font-medium tracking-wide uppercase flex items-center justify-between;
+           text-[var(--mt-text-label)] text-sm font-medium tracking-wide uppercase flex items-center justify-between;
   }
 
   /* Tab bar like MT bottom panel */
   .mt-tab {
-    @apply px-4 py-1.5 text-xs text-[var(--mt-text-dim)] cursor-pointer
+    @apply px-4 py-1.5 text-sm text-[var(--mt-text-dim)] cursor-pointer
            border-b-2 border-transparent hover:text-[var(--mt-text)] transition-colors;
   }
 
@@ -121,7 +121,7 @@ body {
   }
 
   .mt-cell {
-    @apply px-2 py-1.5 text-xs font-mono truncate;
+    @apply px-2 py-1.5 text-sm font-mono truncate;
   }
 
   /* Price display — large numbers like MT order ticket */

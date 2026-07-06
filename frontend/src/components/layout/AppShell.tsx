@@ -5,6 +5,8 @@ import { MTToolbar } from './MTToolbar';
 import { MarketWatch } from './MarketWatch';
 import { Navigator } from './Navigator';
 import { TerminalPanel } from './TerminalPanel';
+import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
+import { TrialBanner } from '@/components/TrialBanner';
 import { useAuthStore } from '@/store/auth.store';
 import { useSocket } from '@/hooks/useSocket';
 import { useT } from '@/hooks/useT';
@@ -40,6 +42,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-[var(--mt-bg)]">
+      <OnboardingWizard />
+      <TrialBanner />
       <MTToolbar />
       <div className="flex flex-1 overflow-hidden min-h-0">
         <div className="flex flex-col border-r border-[var(--mt-border)] shrink-0 overflow-hidden">

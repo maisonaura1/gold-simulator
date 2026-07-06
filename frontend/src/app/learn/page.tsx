@@ -33,7 +33,7 @@ function XpBar({ xp }: { xp: number }) {
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-medium text-[var(--mt-text-dim)] uppercase tracking-wide">XP Total</span>
-          <span className="font-mono text-[12px] font-bold text-[var(--mt-yellow)]">⚡ {xp}</span>
+          <span className="font-mono text-[9px] font-bold text-[var(--mt-yellow)]">⚡ {xp}</span>
         </div>
         <div className="flex items-center gap-3">
           {levels.map((l) => (
