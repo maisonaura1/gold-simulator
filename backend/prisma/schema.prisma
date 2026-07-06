@@ -8,20 +8,41 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
-  passwordHash String        @map("password_hash")
-  name         String?
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
-  paidAt       DateTime?     @map("paid_at")
-  stripeSessionId String?    @map("stripe_session_id")
+  id                 String             @id @default(uuid())
+  email              String             @unique
+  passwordHash       String             @map("password_hash")
+  name               String?
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  // ── legacy one-time payment (kept for backwards compat) ──
+  paidAt             DateTime?          @map("paid_at")
+  stripeSessionId    String?            @map("stripe_session_id")
+  // ── subscription fields ──────────────────────────────────
+  stripeCustomerId   String?            @unique @map("stripe_customer_id")
+  subscriptionId     String?            @map("subscription_id")
+  subscriptionStatus SubscriptionStatus @default(FREE) @map("subscription_status")
+  subscriptionEndsAt DateTime?          @map("subscription_ends_at")
+  superwallUserId    String?            @map("superwall_user_id")
+
   account      SimAccount?
   trades       Trade[]
   userMissions UserMission[]
   statsSnaps   StatsSnapshot[]
 
   @@map("users")
+}
+
+// FREE   = no pagó nunca
+// ACTIVE = suscripción o lifetime activa
+// PAST_DUE = pago fallido, período de gracia
+// CANCELLED = canceló, acceso hasta subscriptionEndsAt
+// EXPIRED = período terminado
+enum SubscriptionStatus {
+  FREE
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
 }
 
 model SimAccount {

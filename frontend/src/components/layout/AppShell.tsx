@@ -7,9 +7,12 @@ import { Navigator } from './Navigator';
 import { TerminalPanel } from './TerminalPanel';
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 import { TrialBanner } from '@/components/TrialBanner';
+import { PaywallModal } from '@/components/PaywallModal';
 import { useAuthStore } from '@/store/auth.store';
 import { useSocket } from '@/hooks/useSocket';
 import { useT } from '@/hooks/useT';
+import { useSuperwall } from '@/hooks/useSuperwall';
+import Superwall from '@/lib/superwall';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -17,10 +20,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const t = useT();
 
+  // Inicializar Superwall y exponer el paywall global
+  const { showPaywall, closePaywall } = useSuperwall();
+
   useSocket();
 
   useEffect(() => {
     useAuthStore.persist.rehydrate();
+    // Configurar Superwall con la API key (cuando exista SDK real)
+    Superwall.configure(
+      process.env.NEXT_PUBLIC_SUPERWALL_API_KEY ?? 'pk_dev_placeholder',
+    );
     setReady(true);
   }, []);
 
@@ -42,6 +52,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-[var(--mt-bg)]">
+      {/* Paywall global — controlado por Superwall.register() */}
+      {showPaywall && <PaywallModal onClose={closePaywall} />}
       <OnboardingWizard />
       <TrialBanner />
       <MTToolbar />
