@@ -27,7 +27,7 @@ export class PaymentsService {
 
   constructor(private prisma: PrismaService) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2024-12-18.acacia' as any,
+      apiVersion: '2026-06-24.dahlia' as any,
     });
   }
 
