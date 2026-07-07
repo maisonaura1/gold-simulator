@@ -53,6 +53,10 @@ export function PriceChart() {
   const lineTpRef       = useRef<IPriceLine | null>(null);
   const openLinesRef    = useRef<IPriceLine[]>([]);
   const candleMapRef    = useRef<Map<number, PriceTick>>(new Map());
+  // Refs for autoscale provider — updated from effects, read at render time
+  const scaleSlRef      = useRef<number | null>(null);
+  const scaleTpRef      = useRef<number | null>(null);
+  const candleRangeRef  = useRef<{ min: number; max: number } | null>(null);
 
   const [hoverOHLC, setHoverOHLC] = useState<HoverOHLC | null>(null);
 
@@ -127,6 +131,25 @@ export function PriceChart() {
       upColor: '#2dcc6f', downColor: '#e84040',
       borderUpColor: '#2dcc6f', borderDownColor: '#e84040',
       wickUpColor: '#2dcc6f', wickDownColor: '#e84040',
+      // Prevent price lines (ENTRY, SL, TP) from stretching the Y-axis when
+      // they are far from the current candle range (e.g. entry from a prior
+      // session hundreds of points away from replay candles).
+      autoscaleInfoProvider: () => {
+        const range = candleRangeRef.current;
+        if (!range) return null;
+        const pad = (range.max - range.min) * 0.15 || range.min * 0.01;
+        let min = range.min - pad;
+        let max = range.max + pad;
+        // Extend scale to include SL/TP only when they are within 2× the pad
+        const threshold = pad * 2;
+        if (scaleSlRef.current != null && Math.abs(scaleSlRef.current - range.min) < threshold) {
+          min = Math.min(min, scaleSlRef.current - pad * 0.5);
+        }
+        if (scaleTpRef.current != null && Math.abs(scaleTpRef.current - range.max) < threshold) {
+          max = Math.max(max, scaleTpRef.current + pad * 0.5);
+        }
+        return { priceRange: { minValue: min, maxValue: max }, margins: { above: 0.1, below: 0.1 } };
+      },
     });
 
     volRef.current = chart.addHistogramSeries({
@@ -177,9 +200,15 @@ export function PriceChart() {
     candles.forEach((c) => map.set(Math.floor(c.timestamp / 1000), c));
     candleMapRef.current = map;
 
-    candleRef.current.setData(
-      candles.map((c) => ({ time: toTime(c.timestamp), open: c.open, high: c.high, low: c.low, close: c.close })),
-    );
+    const candleData = candles.map((c) => ({ time: toTime(c.timestamp), open: c.open, high: c.high, low: c.low, close: c.close }));
+    candleRef.current.setData(candleData);
+    // Update range ref so autoscaleInfoProvider has current candle bounds
+    if (candles.length > 0) {
+      candleRangeRef.current = {
+        min: Math.min(...candles.map((c) => c.low)),
+        max: Math.max(...candles.map((c) => c.high)),
+      };
+    }
 
     const volData = candles.map((c) => ({
       time:  toTime(c.timestamp),
@@ -220,10 +249,12 @@ export function PriceChart() {
     if (sl && sl > 0) {
       const dist = Math.abs(entryPrice - sl);
       lineSlRef.current = series.createPriceLine({ price: sl, color: '#e84040', lineWidth: 1, lineStyle: LineStyle.Solid, axisLabelVisible: true, title: `SL ${sl.toFixed(2)}  –${dist.toFixed(2)} pts` });
+      scaleSlRef.current = sl;
     }
     if (tp && tp > 0) {
       const dist = Math.abs(tp - entryPrice);
       lineTpRef.current = series.createPriceLine({ price: tp, color: '#2dcc6f', lineWidth: 1, lineStyle: LineStyle.Solid, axisLabelVisible: true, title: `TP ${tp.toFixed(2)}  +${dist.toFixed(2)} pts` });
+      scaleTpRef.current = tp;
     }
   }, [entryPrice, sl, tp, tradeType]);
 
