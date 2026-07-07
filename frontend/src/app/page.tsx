@@ -41,7 +41,6 @@ const PROPFIRM_FEATURES = [
   'Max drawdown tracker (< 10%)',
   'Consistency score per session',
   'CSV export — blotter + P/L history',
-  'Team seats: up to 5 (coming Q3 2026)',
   'Dedicated onboarding call',
 ];
 
@@ -274,7 +273,7 @@ function PricingSection() {
           <div style={{ color: '#8893a8', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Prop Firm</div>
           <div style={{ color: '#a8b8f0', fontSize: 36, fontWeight: 800, fontFamily: 'monospace', lineHeight: 1 }}>€149</div>
           <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 2 }}>per year · per firm</div>
-          <div style={{ color: '#4a6cf7', fontSize: 10, marginBottom: 16 }}>≈ €12.40/mo · team seats Q3 2026</div>
+          <div style={{ color: '#4a6cf7', fontSize: 10, marginBottom: 16 }}>≈ €12.40/mo · billed annually</div>
           <ul className="space-y-2 mb-6 flex-1">
             {PROPFIRM_FEATURES.map((f) => (
               <li key={f} className="flex items-start gap-2 text-xs" style={{ color: f === 'Everything in Pro' ? '#8893a8' : '#c8cdd8' }}>
@@ -724,7 +723,7 @@ export default function LandingPage() {
                 Run your prop firm's screening process with a simulator that enforces FTMO-style rules — daily drawdown &lt;5%, max drawdown &lt;10%, consistency score — on real XAUUSD data. Give every candidate an equal baseline before they trade real capital.
               </p>
               <div className="flex flex-wrap gap-2">
-                {['FTMO-style rules enforced', 'Real XAUUSD data', 'CSV blotter export', 'Up to 5 seats', 'Consistency scoring'].map((tag) => (
+                {['FTMO-style rules enforced', 'Real XAUUSD data', 'CSV blotter export', 'Consistency scoring', 'Daily DD alerts'].map((tag) => (
                   <span key={tag} className="text-xs px-2 py-1 rounded-sm font-mono"
                     style={{ background: '#0f1520', color: '#8893a8', border: '1px solid #4a6cf733' }}>
                     {tag}
