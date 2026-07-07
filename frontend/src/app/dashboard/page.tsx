@@ -255,11 +255,75 @@ function ReferralCard({ referral }: { referral: ReturnType<typeof useReferral> }
   );
 }
 
+interface PaymentStatus {
+  plan: 'free' | 'monthly' | 'annual' | 'lifetime' | 'propfirm';
+  paid: boolean;
+  simulationsUsed: number;
+  simulationsLimit: number;
+}
+
+function PropFirmPanel({ stats }: { stats: Stats | null }) {
+  const dd = stats?.maxDrawdown ?? 0;
+  const rr = stats?.avgRR ?? 0;
+  const winRate = stats?.winRate ?? 0;
+  const total = stats?.totalTrades ?? 0;
+
+  const consistencyScore = Math.min(100, Math.round(
+    (winRate >= 50 ? 30 : winRate >= 40 ? 20 : 10) +
+    (rr >= 2 ? 30 : rr >= 1.5 ? 20 : 10) +
+    (dd <= 5 ? 40 : dd <= 10 ? 25 : 10)
+  ));
+
+  const rows = [
+    { label: 'Max drawdown',      value: `${dd.toFixed(1)}%`,  ok: dd <= 10,      limit: '< 10%' },
+    { label: 'Daily drawdown',    value: `~${(dd / Math.max(total, 1) * 2).toFixed(1)}%`, ok: dd / Math.max(total, 1) * 2 <= 5, limit: '< 5%' },
+    { label: 'Consistency score', value: `${consistencyScore}/100`, ok: consistencyScore >= 70, limit: '≥ 70' },
+    { label: 'Win rate',          value: `${winRate}%`,         ok: winRate >= 50, limit: '≥ 50%' },
+    { label: 'Avg R:R',           value: `${rr.toFixed(2)}:1`,  ok: rr >= 2,       limit: '≥ 2:1' },
+  ];
+
+  const passing = rows.filter((r) => r.ok).length;
+
+  return (
+    <div className="p-4 rounded-sm" style={{ background: '#080d14', border: '1px solid #4a6cf755' }}>
+      <div className="flex items-center justify-between mb-3">
+        <div style={{ color: '#4a6cf7', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase' }}>
+          ◈ Prop Firm Challenge Mode
+        </div>
+        <span className="px-2 py-0.5 rounded-sm text-xs font-mono font-bold"
+          style={{
+            background: passing >= 4 ? '#0a1a0e' : '#1a0808',
+            color: passing >= 4 ? '#2dcc6f' : '#e84040',
+            border: `1px solid ${passing >= 4 ? '#2dcc6f33' : '#e8404033'}`,
+          }}>
+          {passing}/{rows.length} PASSING
+        </span>
+      </div>
+      <div className="space-y-2">
+        {rows.map(({ label, value, ok, limit }) => (
+          <div key={label} className="flex items-center justify-between text-xs font-mono">
+            <span style={{ color: '#8893a8' }}>{label}</span>
+            <div className="flex items-center gap-2">
+              <span style={{ color: ok ? '#2dcc6f' : '#e84040', fontWeight: 600 }}>{value}</span>
+              <span style={{ color: '#3a3f4d', fontSize: 9 }}>{limit}</span>
+              <span style={{ color: ok ? '#2dcc6f' : '#e84040', fontSize: 10 }}>{ok ? '✓' : '✗'}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      {!stats && (
+        <div style={{ color: '#3a3f4d', fontSize: 11, marginTop: 8 }}>Complete simulations to populate challenge metrics.</div>
+      )}
+    </div>
+  );
+}
+
 function DashboardInner() {
   const { accessToken } = useAuthStore();
   const t = useT();
   const referral = useReferral();
-  const [stats, setStats]     = useState<Stats | null>(null);
+  const [stats, setStats]         = useState<Stats | null>(null);
+  const [payStatus, setPayStatus] = useState<PaymentStatus | null>(null);
 
   // Launch checkout if user registered via a pricing CTA
   useEffect(() => {
@@ -280,10 +344,12 @@ function DashboardInner() {
       api.get<Stats>('/stats').catch(() => null),
       api.get<AccountData>('/account').catch(() => null),
       api.get<RecentTrade[]>('/trades/history').catch(() => null),
-    ]).then(([s, a, tr]) => {
+      api.get<PaymentStatus>('/payments/status').catch(() => null),
+    ]).then(([s, a, tr, ps]) => {
       if (s) setStats(s.data);
       if (a) setAccount(a.data);
       if (tr) setTrades(tr.data.slice(0, 6));
+      if (ps) setPayStatus(ps.data);
     });
   }, [accessToken]);
 
@@ -471,6 +537,9 @@ function DashboardInner() {
             )}
           </div>
         </div>
+
+        {/* Prop Firm challenge panel — only for propfirm plan */}
+        {payStatus?.plan === 'propfirm' && <PropFirmPanel stats={stats} />}
 
         {/* Referral card */}
         <ReferralCard referral={referral} />

@@ -34,9 +34,20 @@ const PRO_FEATURES = [
   'Priority support',
 ];
 
+const PROPFIRM_FEATURES = [
+  'Everything in Pro',
+  'Challenge mode — FTMO / Funded Next rules',
+  'Daily drawdown alert (< 5% threshold)',
+  'Max drawdown tracker (< 10%)',
+  'Consistency score per session',
+  'CSV export — blotter + P/L history',
+  'Multi-account: up to 5 seats',
+  'Dedicated onboarding call',
+];
+
 const FAQS = [
   { q: 'Is this a real brokerage or demo account?',         a: 'Neither — it\'s a pure simulator. No real money, no broker connection. You practice using historical XAUUSD data in a completely safe environment. Nothing connects to any live market.' },
-  { q: 'What happens after I use my 20 free simulations?',  a: 'You\'ll see an upgrade prompt. Choose the plan that fits you: Monthly (€4.95/mo), Annual (€39/yr — best value), or Lifetime (€9.95 once, forever). All plans unlock the same Pro features.' },
+  { q: 'What happens after I use my 20 free simulations?',  a: 'You\'ll see an upgrade prompt. Choose the plan that fits you: Monthly (€4.95/mo), Annual (€39/yr — best value), or Lifetime (€9.95 once, forever). All Pro plans unlock the same features. For prop firm operators, the Prop Firm plan (€149/yr) adds challenge-mode metrics, CSV export and up to 5 seats.' },
   { q: 'Is the market data real?',                          a: 'Yes. We source real historical XAUUSD spot price data with authentic bid/ask spreads. Scenarios replay at real market timing. The only thing that isn\'t real is the capital at risk.' },
   { q: 'Can I track my progress over time?',                a: 'Pro users get a full analytics dashboard: equity curve, drawdown history, Trader Score trend and session-by-session breakdown. You can see exactly which sessions you improved and where you still lose money.' },
   { q: 'Do I need trading experience to start?',            a: 'No. The missions and academy section cover everything from reading a candlestick chart to building a complete trading plan with risk rules. Beginners start with the guided modules; experienced traders go straight to the simulator.' },
@@ -200,7 +211,7 @@ function PricingSection() {
 
       <div className="flex gap-4 flex-wrap justify-center">
         {/* Free */}
-        <div className="p-6 rounded-sm flex flex-col" style={{ background: '#0b0d11', border: '1px solid #1d2029', minWidth: 220, flex: 1, maxWidth: 280 }}>
+        <div className="p-6 rounded-sm flex flex-col" style={{ background: '#0b0d11', border: '1px solid #1d2029', minWidth: 210, flex: 1, maxWidth: 260 }}>
           <div style={{ color: '#6b7385', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Free</div>
           <div style={{ color: '#c8cdd8', fontSize: 36, fontWeight: 800, fontFamily: 'monospace', lineHeight: 1 }}>€0</div>
           <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 20 }}>forever · no card required</div>
@@ -222,7 +233,7 @@ function PricingSection() {
         </div>
 
         {/* Pro subscription */}
-        <div className="p-6 rounded-sm flex flex-col" style={{ background: '#0d1008', border: '1px solid #c9a84c55', boxShadow: '0 0 60px rgba(201,168,76,0.08)', minWidth: 220, flex: 1, maxWidth: 280 }}>
+        <div className="p-6 rounded-sm flex flex-col" style={{ background: '#0d1008', border: '1px solid #c9a84c55', boxShadow: '0 0 60px rgba(201,168,76,0.08)', minWidth: 210, flex: 1, maxWidth: 260 }}>
           <div className="text-center text-xs font-mono uppercase tracking-widest mb-4 py-1 rounded-sm"
             style={{ background: '#c9a84c22', color: '#c9a84c', border: '1px solid #c9a84c44' }}>
             {billing === 'annual' ? '◆ Best value' : '◆ Pro'}
@@ -255,7 +266,7 @@ function PricingSection() {
         </div>
 
         {/* Lifetime */}
-        <div className="p-6 rounded-sm flex flex-col" style={{ background: '#0b0d11', border: '1px solid #1d2029', minWidth: 220, flex: 1, maxWidth: 280 }}>
+        <div className="p-6 rounded-sm flex flex-col" style={{ background: '#0b0d11', border: '1px solid #1d2029', minWidth: 210, flex: 1, maxWidth: 260 }}>
           <div style={{ color: '#6b7385', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Lifetime</div>
           <div style={{ color: '#c8cdd8', fontSize: 36, fontWeight: 800, fontFamily: 'monospace', lineHeight: 1 }}>€9.95</div>
           <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 20 }}>one-time · no recurring fees ever</div>
@@ -272,6 +283,33 @@ function PricingSection() {
           <Link href="/auth/register?plan=lifetime" className="block text-center py-2.5 rounded-sm text-xs font-bold" style={{ background: '#141720', color: '#c9a84c', border: '1px solid #2c2410', textDecoration: 'none' }}>
             Get lifetime access →
           </Link>
+        </div>
+
+        {/* Prop Firm */}
+        <div className="p-6 rounded-sm flex flex-col" style={{ background: '#080d14', border: '1px solid #4a6cf755', boxShadow: '0 0 60px rgba(74,108,247,0.06)', minWidth: 210, flex: 1, maxWidth: 260 }}>
+          <div className="text-center text-xs font-mono uppercase tracking-widest mb-4 py-1 rounded-sm"
+            style={{ background: '#4a6cf722', color: '#4a6cf7', border: '1px solid #4a6cf744' }}>
+            ◈ B2B · Prop Firm
+          </div>
+          <div style={{ color: '#8893a8', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Prop Firm</div>
+          <div style={{ color: '#a8b8f0', fontSize: 36, fontWeight: 800, fontFamily: 'monospace', lineHeight: 1 }}>€149</div>
+          <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 2 }}>per year · per firm</div>
+          <div style={{ color: '#4a6cf7', fontSize: 10, marginBottom: 16 }}>≈ €12.40/mo · up to 5 seats included</div>
+          <ul className="space-y-2 mb-6 flex-1">
+            {PROPFIRM_FEATURES.map((f) => (
+              <li key={f} className="flex items-start gap-2 text-xs" style={{ color: f === 'Everything in Pro' ? '#8893a8' : '#c8cdd8' }}>
+                <span style={{ color: '#4a6cf7', flexShrink: 0 }}>✓</span> {f}
+              </li>
+            ))}
+          </ul>
+          <a
+            href="mailto:hello@goldtrader.app?subject=Prop%20Firm%20Plan%20enquiry"
+            className="block text-center py-2.5 rounded-sm text-xs font-bold"
+            style={{ background: 'linear-gradient(135deg,#4a6cf7,#2d4ed8)', color: '#fff', textDecoration: 'none' }}
+          >
+            Contact us →
+          </a>
+          <p className="text-center mt-2" style={{ color: '#3a3f4d', fontSize: 10 }}>Custom volume pricing for &gt;5 seats</p>
         </div>
       </div>
 
@@ -687,6 +725,62 @@ export default function LandingPage() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ── Prop Firm B2B Banner ── */}
+      <section className="border-y py-12" style={{ borderColor: '#4a6cf733', background: 'linear-gradient(135deg,#07080b 0%,#080d14 100%)' }}>
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <div className="flex-1">
+              <div className="text-xs font-mono uppercase tracking-widest mb-3 px-2 py-1 inline-block rounded-sm"
+                style={{ background: '#4a6cf722', color: '#4a6cf7', border: '1px solid #4a6cf744' }}>
+                ◈ For Prop Firm Operators
+              </div>
+              <h2 className="font-bold mb-3" style={{ color: '#e8ecf4', fontSize: 20 }}>
+                Prepare your candidates before they hit the challenge.
+              </h2>
+              <p style={{ color: '#6b7385', fontSize: 13, lineHeight: 1.8, marginBottom: 16 }}>
+                Run your prop firm's screening process with a simulator that enforces FTMO-style rules — daily drawdown &lt;5%, max drawdown &lt;10%, consistency score — on real XAUUSD data. Give every candidate an equal baseline before they trade real capital.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {['FTMO-style rules enforced', 'Real XAUUSD data', 'CSV blotter export', 'Up to 5 seats', 'Consistency scoring'].map((tag) => (
+                  <span key={tag} className="text-xs px-2 py-1 rounded-sm font-mono"
+                    style={{ background: '#0f1520', color: '#8893a8', border: '1px solid #4a6cf733' }}>
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="shrink-0 p-6 rounded-sm" style={{ background: '#0b0e1a', border: '1px solid #4a6cf744', minWidth: 260 }}>
+              <div className="font-mono text-xs space-y-3">
+                {[
+                  { label: 'Daily drawdown',   value: '-2.3%',  limit: '< 5%',  ok: true },
+                  { label: 'Max drawdown',      value: '-6.1%',  limit: '< 10%', ok: true },
+                  { label: 'Consistency score', value: '78/100', limit: '≥ 70',  ok: true },
+                  { label: 'Winning days',      value: '9 / 14', limit: '',       ok: true },
+                ].map(({ label, value, limit, ok }) => (
+                  <div key={label} className="flex items-center justify-between gap-4">
+                    <span style={{ color: '#6b7385' }}>{label}</span>
+                    <div className="flex items-center gap-2">
+                      <span style={{ color: ok ? '#2dcc6f' : '#e84040', fontWeight: 700 }}>{value}</span>
+                      {limit && <span style={{ color: '#3a3f4d', fontSize: 9 }}>{limit}</span>}
+                      <span style={{ color: ok ? '#2dcc6f' : '#e84040', fontSize: 10 }}>{ok ? '✓' : '✗'}</span>
+                    </div>
+                  </div>
+                ))}
+                <div className="pt-2 mt-2" style={{ borderTop: '1px solid #1d2029' }}>
+                  <div className="flex items-center justify-between">
+                    <span style={{ color: '#8893a8', fontSize: 11 }}>Challenge status</span>
+                    <span className="px-2 py-0.5 rounded-sm font-bold text-xs"
+                      style={{ background: '#0a1a0e', color: '#2dcc6f', border: '1px solid #2dcc6f33' }}>
+                      PASSING ✓
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

@@ -21,11 +21,13 @@ import { SubscriptionStatus } from '@prisma/client';
 //   STRIPE_PRICE_LIFETIME=price_1...   (€9.95 one-time)
 //   STRIPE_PRICE_MONTHLY=price_1...    (€4.95/month recurring)
 //   STRIPE_PRICE_ANNUAL=price_1...     (€39/year recurring)
-const PRICE_LIFETIME = process.env.STRIPE_PRICE_LIFETIME ?? '';
-const PRICE_MONTHLY  = process.env.STRIPE_PRICE_MONTHLY  ?? '';
-const PRICE_ANNUAL   = process.env.STRIPE_PRICE_ANNUAL   ?? '';
+//   STRIPE_PRICE_PROPFIRM=price_1...   (€149/year B2B recurring)
+const PRICE_LIFETIME  = process.env.STRIPE_PRICE_LIFETIME  ?? '';
+const PRICE_MONTHLY   = process.env.STRIPE_PRICE_MONTHLY   ?? '';
+const PRICE_ANNUAL    = process.env.STRIPE_PRICE_ANNUAL    ?? '';
+const PRICE_PROPFIRM  = process.env.STRIPE_PRICE_PROPFIRM  ?? '';
 
-type PlanType = 'lifetime' | 'monthly' | 'annual';
+type PlanType = 'lifetime' | 'monthly' | 'annual' | 'propfirm';
 
 @Injectable()
 export class PaymentsService {
@@ -83,8 +85,8 @@ export class PaymentsService {
 
     let session: Stripe.Checkout.Session;
 
-    if (plan === 'monthly' || plan === 'annual') {
-      const priceId = plan === 'monthly' ? PRICE_MONTHLY : PRICE_ANNUAL;
+    if (plan === 'monthly' || plan === 'annual' || plan === 'propfirm') {
+      const priceId = plan === 'monthly' ? PRICE_MONTHLY : plan === 'annual' ? PRICE_ANNUAL : PRICE_PROPFIRM;
       if (!priceId) throw new BadRequestException(`STRIPE_PRICE_${plan.toUpperCase()} not configured`);
 
       session = await this.stripe.checkout.sessions.create({
@@ -301,7 +303,7 @@ export class PaymentsService {
     simulationsUsed:   number;
     simulationsLimit:  number;
     canSimulate:       boolean;
-    plan:              'free' | 'monthly' | 'annual' | 'lifetime';
+    plan:              'free' | 'monthly' | 'annual' | 'lifetime' | 'propfirm';
   }> {
     const [user, simCount] = await Promise.all([
       this.prisma.user.findUnique({
@@ -325,7 +327,7 @@ export class PaymentsService {
         simulationsUsed:  0,
         simulationsLimit: 20,
         canSimulate:      true,
-        plan:             'free',
+        plan:             'free' as const,
       };
     }
 
@@ -338,12 +340,20 @@ export class PaymentsService {
     const canSimulate  = paid || simCount < limit;
 
     // Infer billing period from Stripe subscription interval if available
-    let plan: 'free' | 'monthly' | 'annual' | 'lifetime' = 'free';
+    let plan: 'free' | 'monthly' | 'annual' | 'lifetime' | 'propfirm' = 'free';
     if (user.paidAt && !user.subscriptionId) {
       plan = 'lifetime';
-    } else if (isActive || isPastDue) {
-      // Will be enriched by subscription metadata in future; default to monthly
-      plan = 'monthly';
+    } else if ((isActive || isPastDue) && user.subscriptionId) {
+      // Try to read plan from subscription metadata stored at creation
+      try {
+        const sub = await this.stripe.subscriptions.retrieve(user.subscriptionId, { expand: ['items'] });
+        const meta = sub.metadata?.plan as string | undefined;
+        if (meta === 'propfirm') plan = 'propfirm';
+        else if (meta === 'annual') plan = 'annual';
+        else plan = 'monthly';
+      } catch {
+        plan = 'monthly';
+      }
     }
 
     return {

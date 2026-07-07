@@ -14,8 +14,8 @@ import { IsOptional, IsIn } from 'class-validator';
 
 class CheckoutDto {
   @IsOptional()
-  @IsIn(['monthly', 'annual', 'lifetime'])
-  plan?: 'monthly' | 'annual' | 'lifetime';
+  @IsIn(['monthly', 'annual', 'lifetime', 'propfirm'])
+  plan?: 'monthly' | 'annual' | 'lifetime' | 'propfirm';
 }
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -35,7 +35,7 @@ export class PaymentsController {
     @CurrentUser() user: { sub: string; email: string },
     @Body() body: CheckoutDto,
   ) {
-    return this.payments.createCheckoutSession(user.sub, user.email, body.plan ?? 'lifetime');
+    return this.payments.createCheckoutSession(user.sub, user.email, (body.plan ?? 'lifetime') as any);
   }
 
   /**
