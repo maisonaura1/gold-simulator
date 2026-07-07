@@ -47,7 +47,7 @@ const PROPFIRM_FEATURES = [
 
 const FAQS = [
   { q: 'Is this a real brokerage or demo account?',         a: 'Neither — it\'s a pure simulator. No real money, no broker connection. You practice using historical XAUUSD data in a completely safe environment. Nothing connects to any live market.' },
-  { q: 'What happens after I use my 20 free simulations?',  a: 'You\'ll see an upgrade prompt. Choose the plan that fits you: Monthly (€4.95/mo), Annual (€39/yr — best value), or Lifetime (€9.95 once, forever). All Pro plans unlock the same features. For prop firm operators, the Prop Firm plan (€149/yr) adds challenge-mode metrics, CSV export and up to 5 seats.' },
+  { q: 'What happens after I use my 20 free simulations?',  a: 'You\'ll see an upgrade prompt. Choose the plan that fits you: Monthly (€4.95/mo) or Annual (€39/yr — best value, saves €20 vs monthly). For prop firm operators, the Prop Firm plan (€149/yr) adds challenge-mode metrics, CSV export and up to 5 seats.' },
   { q: 'Is the market data real?',                          a: 'Yes. We source real historical XAUUSD spot price data with authentic bid/ask spreads. Scenarios replay at real market timing. The only thing that isn\'t real is the capital at risk.' },
   { q: 'Can I track my progress over time?',                a: 'Pro users get a full analytics dashboard: equity curve, drawdown history, Trader Score trend and session-by-session breakdown. You can see exactly which sessions you improved and where you still lose money.' },
   { q: 'Do I need trading experience to start?',            a: 'No. The missions and academy section cover everything from reading a candlestick chart to building a complete trading plan with risk rules. Beginners start with the guided modules; experienced traders go straight to the simulator.' },
@@ -262,26 +262,6 @@ function PricingSection() {
             style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}
           >
             {billing === 'annual' ? 'Get annual access →' : 'Get monthly access →'}
-          </Link>
-        </div>
-
-        {/* Lifetime */}
-        <div className="p-6 rounded-sm flex flex-col" style={{ background: '#0b0d11', border: '1px solid #1d2029', minWidth: 210, flex: 1, maxWidth: 260 }}>
-          <div style={{ color: '#6b7385', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Lifetime</div>
-          <div style={{ color: '#c8cdd8', fontSize: 36, fontWeight: 800, fontFamily: 'monospace', lineHeight: 1 }}>€9.95</div>
-          <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 20 }}>one-time · no recurring fees ever</div>
-          <ul className="space-y-2 mb-6 flex-1">
-            {PRO_FEATURES.map((f) => (
-              <li key={f} className="flex items-start gap-2 text-xs" style={{ color: '#c8cdd8' }}>
-                <span style={{ color: '#2dcc6f', flexShrink: 0 }}>✓</span> {f}
-              </li>
-            ))}
-            <li className="flex items-start gap-2 text-xs" style={{ color: '#c9a84c' }}>
-              <span style={{ flexShrink: 0 }}>★</span> Pay once, own forever
-            </li>
-          </ul>
-          <Link href="/auth/register?plan=lifetime" className="block text-center py-2.5 rounded-sm text-xs font-bold" style={{ background: '#141720', color: '#c9a84c', border: '1px solid #2c2410', textDecoration: 'none' }}>
-            Get lifetime access →
           </Link>
         </div>
 
@@ -642,7 +622,7 @@ export default function LandingPage() {
             ['XAUUSD',      'Gold Spot — one instrument, mastered'],
             ['8 timeframes','M1 · M5 · M15 · H1 · H4 · D1 · W1 · MN'],
             ['2yr history', 'Real historical price data'],
-            ['€9.95',       'Full Pro access — one-time, lifetime'],
+            ['€39/yr',       'Full Pro access — annual plan, cancel anytime'],
           ].map(([val, label]) => (
             <div key={label} className="text-center">
               <div style={{ color: '#c9a84c', fontWeight: 700, fontSize: 14, fontFamily: 'monospace' }}>{val}</div>
