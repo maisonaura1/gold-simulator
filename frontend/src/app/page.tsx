@@ -229,13 +229,13 @@ function PricingSection() {
           </div>
           <div style={{ color: '#6b7385', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Pro</div>
           <div style={{ color: '#e8c96d', fontSize: 36, fontWeight: 800, fontFamily: 'monospace', lineHeight: 1 }}>
-            {billing === 'monthly' ? '€4.95' : '€3.25'}
+            {billing === 'monthly' ? '€4.95' : '€39'}
           </div>
           <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 2 }}>
-            {billing === 'monthly' ? 'per month · cancel anytime' : 'per month · billed €39/year'}
+            {billing === 'monthly' ? 'per month · cancel anytime' : 'per year · cancel anytime'}
           </div>
           {billing === 'annual' && (
-            <div style={{ color: '#2dcc6f', fontSize: 10, marginBottom: 16 }}>You save €20.40 vs monthly</div>
+            <div style={{ color: '#2dcc6f', fontSize: 10, marginBottom: 16 }}>≈ €3.25/mo · save €20.40 vs monthly</div>
           )}
           {billing === 'monthly' && <div style={{ marginBottom: 16 }} />}
           <ul className="space-y-2 mb-6 flex-1">
