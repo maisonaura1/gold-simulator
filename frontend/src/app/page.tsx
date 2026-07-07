@@ -426,7 +426,7 @@ export default function LandingPage() {
   useEffect(() => {
     useAuthStore.persist.rehydrate();
     setReady(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/stats/public`)
+    fetch('/api/stats/public')
       .then((r) => r.ok ? r.json() : null)
       .then((d) => d && setPublicStats(d))
       .catch(() => null);
