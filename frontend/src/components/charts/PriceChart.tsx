@@ -205,7 +205,13 @@ export function PriceChart() {
     candles.forEach((c) => map.set(Math.floor(c.timestamp / 1000), c));
     candleMapRef.current = map;
 
-    const candleData = candles.map((c) => ({ time: toTime(c.timestamp), open: c.open, high: c.high, low: c.low, close: c.close }));
+    // Deduplicate by time (same second) and ensure ascending order
+    // Yahoo data occasionally contains duplicate or out-of-order entries
+    const seen = new Set<number>();
+    const candleData = candles
+      .map((c) => ({ time: toTime(c.timestamp), open: c.open, high: c.high, low: c.low, close: c.close }))
+      .sort((a, b) => (a.time as number) - (b.time as number))
+      .filter((c) => { const t = c.time as number; if (seen.has(t)) return false; seen.add(t); return true; });
     candleRef.current.setData(candleData);
     // Update range ref so autoscaleInfoProvider has current candle bounds
     if (candles.length > 0) {
