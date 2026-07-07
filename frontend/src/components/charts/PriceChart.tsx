@@ -158,11 +158,16 @@ export function PriceChart() {
     });
     chart.priceScale('vol').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
 
-    ma20Ref.current = chart.addLineSeries({ color: '#f0b429', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
-    ma50Ref.current = chart.addLineSeries({ color: '#4a6cf7', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
-    bbUpperRef.current = chart.addLineSeries({ color: '#8b5cf6', lineWidth: 1, lineStyle: LineStyle.Dashed, priceLineVisible: false, lastValueVisible: false });
-    bbMidRef.current   = chart.addLineSeries({ color: '#8b5cf6', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
-    bbLowerRef.current = chart.addLineSeries({ color: '#8b5cf6', lineWidth: 1, lineStyle: LineStyle.Dashed, priceLineVisible: false, lastValueVisible: false });
+    // autoscaleInfoProvider: () => null means these series do NOT affect the
+    // Y-axis scale — only the candlestick series (with its custom provider)
+    // controls the visible price range. MA/BB lines still draw at their
+    // correct prices but never stretch the axis.
+    const noScale = { autoscaleInfoProvider: () => null };
+    ma20Ref.current = chart.addLineSeries({ color: '#f0b429', lineWidth: 1, priceLineVisible: false, lastValueVisible: false, ...noScale });
+    ma50Ref.current = chart.addLineSeries({ color: '#4a6cf7', lineWidth: 1, priceLineVisible: false, lastValueVisible: false, ...noScale });
+    bbUpperRef.current = chart.addLineSeries({ color: '#8b5cf6', lineWidth: 1, lineStyle: LineStyle.Dashed, priceLineVisible: false, lastValueVisible: false, ...noScale });
+    bbMidRef.current   = chart.addLineSeries({ color: '#8b5cf6', lineWidth: 1, priceLineVisible: false, lastValueVisible: false, ...noScale });
+    bbLowerRef.current = chart.addLineSeries({ color: '#8b5cf6', lineWidth: 1, lineStyle: LineStyle.Dashed, priceLineVisible: false, lastValueVisible: false, ...noScale });
 
     chart.subscribeCrosshairMove((param) => {
       if (!param.time || !param.point) { setHoverOHLC(null); return; }
