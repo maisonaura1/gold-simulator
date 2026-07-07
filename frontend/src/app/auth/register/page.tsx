@@ -45,7 +45,7 @@ function RegisterInner() {
       const payload = refCode ? { ...form, referralCode: refCode } : form;
       const { data } = await api.post('/auth/register', payload);
       setTokens(data);
-      router.replace('/dashboard');
+      router.replace('/onboarding');
     } catch (err: any) {
       setError(err.response?.data?.message || t.registerError);
     } finally {
