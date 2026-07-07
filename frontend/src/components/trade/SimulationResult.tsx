@@ -21,16 +21,18 @@ function grade(result: SimulationResult, t: T): {
   color: string;
   items: { ok: boolean; text: string; tip: string }[];
 } {
-  const won = result.outcome === 'TP_HIT';
+  const won     = result.outcome === 'TP_HIT';
+  const riskPct = result.riskPct ?? 0;
+  const rrRatio = result.rrRatio ?? 0;
   const items = [
     {
-      ok:  result.riskPct > 0 && result.riskPct <= 2,
-      text: result.riskPct <= 2 ? t.criteriaRiskOk(result.riskPct.toFixed(2)) : t.criteriaRiskBad(result.riskPct.toFixed(2)),
+      ok:  riskPct > 0 && riskPct <= 2,
+      text: riskPct <= 2 ? t.criteriaRiskOk(riskPct.toFixed(2)) : t.criteriaRiskBad(riskPct.toFixed(2)),
       tip: t.criteriaRiskTip,
     },
     {
-      ok:  result.rrRatio >= 2,
-      text: result.rrRatio >= 2 ? t.criteriaRROk(result.rrRatio.toFixed(2)) : t.criteriaRRBad(result.rrRatio.toFixed(2)),
+      ok:  rrRatio >= 2,
+      text: rrRatio >= 2 ? t.criteriaRROk(rrRatio.toFixed(2)) : t.criteriaRRBad(rrRatio.toFixed(2)),
       tip: t.criteriaRRTip,
     },
     {
@@ -39,8 +41,8 @@ function grade(result: SimulationResult, t: T): {
       tip: won ? t.criteriaWinTip : t.criteriaSLTip,
     },
     {
-      ok:  result.riskPct > 0,
-      text: result.riskPct > 0 ? t.criteriaSLSet : t.criteriaSLMissing,
+      ok:  riskPct > 0,
+      text: riskPct > 0 ? t.criteriaSLSet : t.criteriaSLMissing,
       tip: t.criteriaSLSetTip,
     },
   ];
@@ -69,8 +71,8 @@ function ftmoStatus(result: SimulationResult, balance: number) {
 }
 
 function getLessonLink(result: SimulationResult) {
-  if (result.riskPct > 2) return { href: '/academy', text: '📖 Risk management → Academy Level 1' };
-  if (result.rrRatio < 2)  return { href: '/academy', text: '📖 R:R ratio → Academy Level 1' };
+  if ((result.riskPct ?? 0) > 2) return { href: '/academy', text: '📖 Risk management → Academy Level 1' };
+  if ((result.rrRatio ?? 0) < 2)  return { href: '/academy', text: '📖 R:R ratio → Academy Level 1' };
   if (result.outcome === 'SL_HIT') return { href: '/academy', text: '📖 Why did the SL trigger? → Support & Resistance' };
   return { href: '/learn', text: '🎯 Evaluate missions →' };
 }
@@ -86,6 +88,8 @@ export function SimulationResultPanel({ result, onClose }: Props) {
   const slHit   = result.outcome === 'SL_HIT';
   const grading = grade(result, t);
   const balance = account?.currentBalance ?? 10000;
+  const riskPct = result.riskPct ?? 0;
+  const rrRatio = result.rrRatio ?? 0;
   const ftmo    = ftmoStatus(result, balance);
   const lesson  = getLessonLink(result);
 
@@ -96,10 +100,10 @@ export function SimulationResultPanel({ result, onClose }: Props) {
     : 'bg-[var(--mt-toolbar)]';
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center z-50 bg-black/70 backdrop-blur-sm">
+    <div className="fixed inset-0 flex items-start justify-center z-50 bg-black/70 backdrop-blur-sm overflow-y-auto py-4 px-4">
       <div
-        className="bg-[#141720] border border-[#2e3340] shadow-2xl flex flex-col w-full mx-4"
-        style={{ maxWidth: 480, maxHeight: '92vh' }}
+        className="bg-[#141720] border border-[#2e3340] shadow-2xl flex flex-col w-full my-auto"
+        style={{ maxWidth: 480 }}
       >
         {/* ── Header ── */}
         <div className={clsx('flex items-center justify-between px-4 py-3 border-b border-[#2e3340] shrink-0', headerBg)}>
@@ -153,7 +157,7 @@ export function SimulationResultPanel({ result, onClose }: Props) {
         </div>
 
         {/* ── Content ── */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="overflow-y-auto" style={{ maxHeight: '60vh' }}>
 
           {/* ANÁLISIS */}
           {tab === 'analysis' && (
@@ -163,8 +167,8 @@ export function SimulationResultPanel({ result, onClose }: Props) {
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { label: t.resultUsd,         value: `${result.resultUsd >= 0 ? '+' : ''}$${result.resultUsd.toFixed(2)}`, color: won ? '#4ade80' : '#f87171' },
-                  { label: t.rrLabel,           value: `${result.rrRatio.toFixed(2)}:1`, color: result.rrRatio >= 2 ? '#4ade80' : result.rrRatio >= 1 ? '#f59e0b' : '#f87171' },
-                  { label: t.riskPct,           value: `${result.riskPct.toFixed(2)}%`,  color: result.riskPct <= 2 ? '#4ade80' : '#f59e0b' },
+                  { label: t.rrLabel,           value: `${rrRatio.toFixed(2)}:1`, color: rrRatio >= 2 ? '#4ade80' : rrRatio >= 1 ? '#f59e0b' : '#f87171' },
+                  { label: t.riskPct,           value: `${riskPct.toFixed(2)}%`,  color: riskPct <= 2 ? '#4ade80' : '#f59e0b' },
                   { label: t.exitPrice,         value: result.exitPrice.toFixed(2),       color: '#c8cdd8' },
                   { label: t.candlesTraversed,  value: String(result.candlesTraversed),   color: '#60a5fa' },
                   { label: t.balance,           value: `$${balance.toFixed(0)}`,          color: '#c8cdd8' },
@@ -273,9 +277,9 @@ export function SimulationResultPanel({ result, onClose }: Props) {
                 {[
                   { rule: t.ftmoTargetRule,   value: '+8% = +$800', ok: result.resultUsd > 0,  detail: result.resultUsd > 0 ? `+$${result.resultUsd.toFixed(2)}` : t.ftmoInsideLimits },
                   { rule: t.ftmoDailyRule,    value: '-5% = -$500', ok: ftmo.dailyOk,          detail: ftmo.dailyOk ? t.ftmoInsideLimits : t.ftmoLimitExceeded },
-                  { rule: t.ftmoDrawdownRule, value: '-10% = -$1K', ok: result.riskPct <= 2,   detail: `${t.riskPct}: ${result.riskPct.toFixed(2)}%` },
-                  { rule: t.criteriaSLSet,    value: '—',           ok: result.riskPct > 0,    detail: result.riskPct > 0 ? t.criteriaSLSet : t.criteriaSLMissing },
-                  { rule: t.rrLabel,          value: '≥ 2:1',       ok: result.rrRatio >= 2,   detail: `${result.rrRatio.toFixed(2)}:1` },
+                  { rule: t.ftmoDrawdownRule, value: '-10% = -$1K', ok: riskPct <= 2,   detail: `${t.riskPct}: ${riskPct.toFixed(2)}%` },
+                  { rule: t.criteriaSLSet,    value: '—',           ok: riskPct > 0,    detail: riskPct > 0 ? t.criteriaSLSet : t.criteriaSLMissing },
+                  { rule: t.rrLabel,          value: '≥ 2:1',       ok: rrRatio >= 2,   detail: `${rrRatio.toFixed(2)}:1` },
                 ].map((item) => (
                   <div key={item.rule} className="flex items-start gap-3 px-3 py-2 border-b border-[#2e3340] last:border-0">
                     <span className="shrink-0 text-[9px] mt-0.5">{item.ok ? '✅' : '❌'}</span>
