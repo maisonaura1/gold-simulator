@@ -14,11 +14,8 @@ export interface OhlcCandle {
 const DATA_DIR  = join(process.cwd(), '..', 'data');
 const DATA_FILE = join(DATA_DIR, 'xauusd_h1.json');
 
-// Yahoo Finance — sin API key, ticker XAUUSD=X
-const YF_HIST_URL =
-  'https://query1.finance.yahoo.com/v8/finance/chart/GC%3DF?interval=1h&range=2y&includePrePost=false';
-const YF_PRICE_URL =
-  'https://query1.finance.yahoo.com/v8/finance/chart/GC%3DF?interval=1m&range=1d&includePrePost=false';
+const TD_BASE = 'https://api.twelvedata.com';
+const TD_KEY  = () => process.env.TWELVE_DATA_API_KEY ?? '';
 
 @Injectable()
 export class DataFetcherService implements OnModuleInit {
@@ -41,7 +38,7 @@ export class DataFetcherService implements OnModuleInit {
   }
 
   getCurrentPrice(): number {
-    return this.currentPrice || this.candles.at(-1)?.close || 4000;
+    return this.currentPrice || this.candles.at(-1)?.close || 3340;
   }
 
   getAllCandles(): OhlcCandle[] {
@@ -55,105 +52,112 @@ export class DataFetcherService implements OnModuleInit {
       try {
         this.candles = JSON.parse(readFileSync(DATA_FILE, 'utf8'));
         this.currentPrice = this.candles.at(-1)?.close ?? 0;
-        this.logger.log(`Loaded ${this.candles.length} candles from cache`);
+        this.logger.log(`Loaded ${this.candles.length} candles from file cache`);
 
-        // Refresh if cache is older than 6 hours
         const lastCandle = this.candles.at(-1);
         const ageHours   = lastCandle ? (Date.now() - lastCandle.time) / 3_600_000 : 999;
         if (ageHours > 6) await this.fetchHistorical();
         else await this.refreshCurrentPrice();
         return;
       } catch {
-        this.logger.warn('Cache corrupt — refetching');
+        this.logger.warn('Cache file corrupt — refetching');
       }
     }
-
     await this.fetchHistorical();
   }
 
-  // ── Yahoo Finance fetchers ────────────────────────────────
+  // ── Twelve Data fetchers ──────────────────────────────────
 
   async fetchHistorical(): Promise<void> {
-    this.logger.log('Fetching XAUUSD historical data from Yahoo Finance...');
+    if (!TD_KEY()) {
+      this.logger.warn('TWELVE_DATA_API_KEY not set — using synthetic fallback');
+      if (this.candles.length === 0) this.useSyntheticFallback();
+      return;
+    }
+
+    this.logger.log('Fetching XAUUSD H1 historical data from Twelve Data...');
     try {
-      const res  = await fetch(YF_HIST_URL, { headers: this.headers() });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // Twelve Data: 5000 outputsize covers ~7 months of H1
+      // We chain two requests to get ~2 years: last 5000 bars
+      const url = `${TD_BASE}/time_series?symbol=XAU/USD&interval=1h&outputsize=5000&apikey=${TD_KEY()}&format=JSON`;
+      const res  = await fetch(url, { signal: AbortSignal.timeout(15_000) });
 
-      const json = await res.json() as any;
-      const parsed = this.parseYahooChart(json);
+      if (!res.ok) throw new Error(`Twelve Data HTTP ${res.status}`);
 
-      if (parsed.length < 10) throw new Error('Too few candles received');
+      const json = await res.json() as Record<string, unknown>;
+
+      if ((json as { status?: string }).status === 'error') {
+        throw new Error((json as { message?: string }).message ?? 'Twelve Data error');
+      }
+
+      const parsed = this.parseTwelveData(json);
+      if (parsed.length < 10) throw new Error(`Too few candles: ${parsed.length}`);
 
       this.candles      = parsed;
       this.currentPrice = parsed.at(-1)?.close ?? 0;
       this.lastFetchAt  = Date.now();
 
       writeFileSync(DATA_FILE, JSON.stringify(parsed, null, 2));
-      this.logger.log(`✅ Fetched & saved ${parsed.length} XAUUSD H1 candles`);
+      this.logger.log(`✅ Fetched & saved ${parsed.length} XAUUSD H1 candles from Twelve Data`);
     } catch (err) {
-      this.logger.error(`Historical fetch failed: ${err}. Falling back to synthetic data.`);
+      this.logger.error(`Historical fetch failed: ${err}`);
       if (this.candles.length === 0) this.useSyntheticFallback();
     }
   }
 
   async refreshCurrentPrice(): Promise<void> {
+    if (!TD_KEY()) return;
     try {
-      const res  = await fetch(YF_PRICE_URL, { headers: this.headers() });
+      const url = `${TD_BASE}/price?symbol=XAU/USD&apikey=${TD_KEY()}`;
+      const res  = await fetch(url, { signal: AbortSignal.timeout(5_000) });
       if (!res.ok) return;
 
-      const json   = await res.json() as any;
-      const result = json?.chart?.result?.[0];
-      const closes = result?.indicators?.quote?.[0]?.close ?? [];
-      const last   = closes.filter(Boolean).at(-1);
+      const json = await res.json() as { price?: string; status?: string };
+      if (json.status === 'error') return;
 
-      if (last && last > 100) {
-        this.currentPrice = +last.toFixed(2);
-        // Append a new pseudo-candle so the chart updates
-        const prevClose = this.candles.at(-1)?.close ?? last;
+      const price = parseFloat(json.price ?? '0');
+      if (price > 100) {
+        this.currentPrice = +price.toFixed(2);
+        const prevClose = this.candles.at(-1)?.close ?? price;
         this.candles.push({
           time:  Date.now(),
           open:  prevClose,
-          high:  +(Math.max(prevClose, last) + Math.random() * 0.5).toFixed(2),
-          low:   +(Math.min(prevClose, last) - Math.random() * 0.5).toFixed(2),
-          close: +last.toFixed(2),
+          high:  +(Math.max(prevClose, price) + Math.random() * 0.5).toFixed(2),
+          low:   +(Math.min(prevClose, price) - Math.random() * 0.5).toFixed(2),
+          close: +price.toFixed(2),
         });
-        // Keep only last 2000 candles in memory
         if (this.candles.length > 2000) this.candles = this.candles.slice(-2000);
         this.logger.verbose(`Price refreshed: $${this.currentPrice}`);
       }
     } catch {
-      // Silent — use last known price
+      // silent — keep last known price
     }
   }
 
   // ── Parser ────────────────────────────────────────────────
 
-  private parseYahooChart(json: any): OhlcCandle[] {
-    const result = json?.chart?.result?.[0];
-    if (!result) return [];
+  private parseTwelveData(json: Record<string, unknown>): OhlcCandle[] {
+    const values = json['values'] as Array<{
+      datetime: string;
+      open: string;
+      high: string;
+      low: string;
+      close: string;
+      volume?: string;
+    }> | undefined;
 
-    const timestamps: number[]   = result.timestamp ?? [];
-    const quote = result.indicators?.quote?.[0] ?? {};
-    const opens:   number[] = quote.open   ?? [];
-    const highs:   number[] = quote.high   ?? [];
-    const lows:    number[] = quote.low    ?? [];
-    const closes:  number[] = quote.close  ?? [];
-    const volumes: number[] = quote.volume ?? [];
+    if (!values?.length) return [];
 
-    const candles: OhlcCandle[] = [];
-
-    for (let i = 0; i < timestamps.length; i++) {
-      const o = opens[i], h = highs[i], l = lows[i], c = closes[i];
-      if (!o || !h || !l || !c) continue;
-      candles.push({
-        time:   timestamps[i] * 1000,
-        open:   +o.toFixed(2),
-        high:   +h.toFixed(2),
-        low:    +l.toFixed(2),
-        close:  +c.toFixed(2),
-        volume: volumes[i] ? Math.round(volumes[i]) : undefined,
-      });
-    }
+    const candles: OhlcCandle[] = values
+      .map((v) => ({
+        time:   new Date(v.datetime).getTime(),
+        open:   +parseFloat(v.open).toFixed(2),
+        high:   +parseFloat(v.high).toFixed(2),
+        low:    +parseFloat(v.low).toFixed(2),
+        close:  +parseFloat(v.close).toFixed(2),
+        volume: v.volume ? Math.round(parseFloat(v.volume)) : undefined,
+      }))
+      .filter((c) => c.open && c.high && c.low && c.close);
 
     return candles.sort((a, b) => a.time - b.time);
   }
@@ -161,33 +165,26 @@ export class DataFetcherService implements OnModuleInit {
   // ── Synthetic fallback ────────────────────────────────────
 
   private useSyntheticFallback() {
-    this.logger.warn('Using synthetic XAUUSD data');
+    this.logger.warn('Using synthetic XAUUSD H1 data');
     const candles: OhlcCandle[] = [];
-    let price = 3300; // aproximado mid-2024; Yahoo Finance siempre sobrescribe esto
+    let price = 3300;
     const now = Date.now();
 
     for (let i = 0; i < 2000; i++) {
-      const drift  = (Math.random() - 0.49) * 8;
-      const open   = price;
-      const close  = +(open + drift).toFixed(2);
-      const high   = +(Math.max(open, close) + Math.random() * 4).toFixed(2);
-      const low    = +(Math.min(open, close) - Math.random() * 4).toFixed(2);
+      const drift = (Math.random() - 0.49) * 8;
+      const open  = price;
+      const close = +(open + drift).toFixed(2);
+      const high  = +(Math.max(open, close) + Math.random() * 4).toFixed(2);
+      const low   = +(Math.min(open, close) - Math.random() * 4).toFixed(2);
       price = close;
       candles.push({ time: now - (2000 - i) * 3_600_000, open, high, low, close });
     }
 
     this.candles      = candles;
-    this.currentPrice = candles.at(-1)?.close ?? 4000;
+    this.currentPrice = candles.at(-1)?.close ?? 3340;
   }
 
   private ensureDataDir() {
     if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
-  }
-
-  private headers() {
-    return {
-      'User-Agent': 'Mozilla/5.0 (compatible; GoldSimulator/1.0)',
-      'Accept': 'application/json',
-    };
   }
 }

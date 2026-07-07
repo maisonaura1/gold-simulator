@@ -13,37 +13,40 @@ export function useReplay(allCandles: PriceTick[]) {
   const { replayMode, replaySpeed } = useChartStore();
   const { setCandles }              = usePricesStore();
 
+  // Keep a ref so the effect can read the latest candles without re-triggering
+  const sourceRef   = useRef(allCandles);
+  useEffect(() => { sourceRef.current = allCandles; }, [allCandles]);
+
   const indexRef    = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    const src = sourceRef.current;
+
     if (!replayMode) {
-      // Restore full candles when replay stops
       if (intervalRef.current) clearInterval(intervalRef.current);
-      setCandles(allCandles);
+      setCandles(src);
       return;
     }
 
-    // Start replay from 50 candles back so user sees history
-    const startIdx = Math.max(0, allCandles.length - 200);
+    const startIdx = Math.max(0, src.length - 200);
     indexRef.current = startIdx + 50;
-
-    // Show initial slice
-    setCandles(allCandles.slice(startIdx, indexRef.current));
+    setCandles(src.slice(startIdx, indexRef.current));
 
     intervalRef.current = setInterval(() => {
-      if (indexRef.current >= allCandles.length) {
-        // Loop back
+      const s = sourceRef.current;
+      if (indexRef.current >= s.length) {
         indexRef.current = startIdx + 50;
-        setCandles(allCandles.slice(startIdx, indexRef.current));
+        setCandles(s.slice(startIdx, indexRef.current));
         return;
       }
       indexRef.current++;
-      setCandles(allCandles.slice(startIdx, indexRef.current));
+      setCandles(s.slice(startIdx, indexRef.current));
     }, replaySpeed);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [replayMode, replaySpeed, allCandles, setCandles]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [replayMode, replaySpeed, setCandles]);
 }

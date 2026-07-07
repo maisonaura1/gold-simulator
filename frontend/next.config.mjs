@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
-  trailingSlash: true,
+  trailingSlash: false,
   experimental: { typedRoutes: false },
   images: { unoptimized: true },
 };

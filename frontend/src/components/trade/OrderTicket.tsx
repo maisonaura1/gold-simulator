@@ -6,6 +6,8 @@ import { useChartLines }   from '@/store/chart-lines.store';
 import { useTrades }       from '@/hooks/useTrades';
 import { useAccount }      from '@/hooks/useAccount';
 import { useT }            from '@/hooks/useT';
+import { PaywallModal }    from '@/components/PaywallModal';
+import { useSuperwall }    from '@/hooks/useSuperwall';
 import type { SimulationResult } from '@/types';
 
 interface Props {
@@ -131,6 +133,7 @@ export function OrderTicket({ onResult }: Props) {
   const { account, refetch }         = useAccount();
   const { setPreview, clearPreview } = useChartLines();
   const t                            = useT();
+  const { status, showPaywall, openPaywall, closePaywall } = useSuperwall();
 
   const bid = currentPrice > 0 ? +(currentPrice - SPREAD / 2).toFixed(2) : 0;
   const ask = currentPrice > 0 ? +(currentPrice + SPREAD / 2).toFixed(2) : 0;
@@ -191,6 +194,7 @@ export function OrderTicket({ onResult }: Props) {
     if (!slNum) { setError('⚠ Stop Loss obligatorio. Protege tu cuenta.'); return; }
     if (!tpNum) { setError('⚠ Take Profit recomendado para R:R correcto.'); return; }
     setLoading(true);
+    setHovered(null);
     try {
       const entryPrice = type === 'BUY' ? ask : bid;
       const res = await simulate({ type, lot: lotNum, entryPrice, sl: slNum, tp: tpNum, notes });
@@ -199,20 +203,18 @@ export function OrderTicket({ onResult }: Props) {
       clearPreview();
       setSl(''); setTp(''); setNotes('');
     } catch (e: any) {
-      setError(e.response?.data?.message ?? t.simulateError);
+      if (e.response?.status === 403 && e.response?.data?.message === 'FREE_LIMIT_REACHED') {
+        openPaywall();
+      } else {
+        setError(e.response?.data?.message ?? t.simulateError);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-[var(--mt-panel)] border-l border-[var(--mt-border)] shrink-0" style={{ width: 272 }}>
-
-      {/* Header */}
-      <div className="mt-panel-header shrink-0">
-        <span>{t.orderTicket}</span>
-        <span className="text-[var(--mt-yellow)] normal-case tracking-normal font-normal">XAUUSD</span>
-      </div>
+    <div className="flex flex-col h-full bg-[var(--mt-panel)] w-full shrink-0">
 
       {/* Bid / Ask */}
       <div className="grid grid-cols-2 border-b border-[var(--mt-border)] shrink-0">
@@ -377,7 +379,7 @@ export function OrderTicket({ onResult }: Props) {
           {/* SL warning */}
           {!sl && (
             <div className="border border-[#ef4444]/30 bg-[#ef4444]/5 p-2.5 text-[10px] text-[#f87171]">
-              🛑 <strong>Stop Loss obligatorio.</strong> Sin él no puedes abrir el trade. Es la regla número 1 del trading profesional.
+              {t.otSlWarning}
             </div>
           )}
 
@@ -425,6 +427,14 @@ export function OrderTicket({ onResult }: Props) {
         <div className="shrink-0 px-3 py-1.5 bg-[var(--mt-blue)]/20 border-t border-[var(--mt-blue)]/30 text-center text-[10px] text-[var(--mt-cyan)]">
           Simulando con datos reales de XAUUSD...
         </div>
+      )}
+
+      {showPaywall && (
+        <PaywallModal
+          onClose={closePaywall}
+          used={status?.simulationsUsed}
+          limit={status?.simulationsLimit}
+        />
       )}
     </div>
   );

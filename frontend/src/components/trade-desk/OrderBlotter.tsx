@@ -58,15 +58,9 @@ export function OrderBlotter({ orders, myEmail, myRole, onUpdate }: Props) {
     <div className="flex flex-col h-full overflow-hidden" style={{ background: '#0b0d11' }}>
       {/* Toolbar */}
       <div
-        className="flex items-center gap-0 border-b px-3 pt-2 pb-0 shrink-0"
-        style={{ borderColor: '#1d2029' }}
+        className="flex items-center gap-0 border-b px-2 shrink-0"
+        style={{ borderColor: '#1d2029', height: 32 }}
       >
-        <span
-          className="text-xs font-mono uppercase tracking-widest mr-4 pb-2"
-          style={{ color: '#c9a84c', letterSpacing: 2 }}
-        >
-          Order Tape
-        </span>
         {(['ALL', ...TABS] as (DeskStatus | 'ALL')[]).map((tab) => {
           const count = tab === 'ALL' ? orders.length : orders.filter((o) => o.status === tab).length;
           const active = activeTab === tab;
@@ -74,13 +68,14 @@ export function OrderBlotter({ orders, myEmail, myRole, onUpdate }: Props) {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className="px-3 pb-2 text-xs font-mono uppercase tracking-widest border-b-2 transition-colors"
+              className="px-3 h-full font-mono uppercase tracking-widest border-b-2 transition-colors"
               style={{
+                fontSize: 11,
                 borderColor: active ? '#c9a84c' : 'transparent',
                 color: active ? '#c9a84c' : '#6b7385',
               }}
             >
-              {tab} {count > 0 && <span style={{ color: active ? '#c9a84c88' : '#3a3f4d' }}>·{count}</span>}
+              {tab}{count > 0 && <span style={{ color: active ? '#c9a84c88' : '#3a3f4d', marginLeft: 3 }}>·{count}</span>}
             </button>
           );
         })}
@@ -94,7 +89,7 @@ export function OrderBlotter({ orders, myEmail, myRole, onUpdate }: Props) {
       <div className="flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
           <div className="flex items-center justify-center h-16">
-            <span style={{ color: '#3a3f4d', fontSize: 11, letterSpacing: 1 }}>No orders in this queue</span>
+            <span style={{ color: '#3a3f4d', fontSize: 12, letterSpacing: 1 }}>— Sin órdenes en esta cola —</span>
           </div>
         ) : (
           <table className="w-full text-xs font-mono" style={{ borderCollapse: 'collapse' }}>

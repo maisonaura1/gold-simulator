@@ -1,23 +1,27 @@
 'use client';
-/**
- * /payment/success
- *
- * Stripe redirige aquí tras pago exitoso.
- * Responsabilidades:
- *  1. Llamar a /payments/sync para verificar el estado real con Stripe
- *  2. Notificar a Superwall que el acceso está activo
- *  3. Redirigir al dashboard
- *
- * URL esperada: /payment/success?session_id=cs_xxx&plan=lifetime
- */
-
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Superwall from '@/lib/superwall';
 
 type Phase = 'syncing' | 'success' | 'error';
 
 export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <PaymentSuccessInner />
+    </Suspense>
+  );
+}
+
+function LoadingScreen() {
+  return (
+    <div style={{ minHeight: '100vh', background: '#07080b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ color: '#c9a84c', fontSize: 24, fontFamily: 'monospace' }}>◆</div>
+    </div>
+  );
+}
+
+function PaymentSuccessInner() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const [phase,  setPhase]  = useState<Phase>('syncing');

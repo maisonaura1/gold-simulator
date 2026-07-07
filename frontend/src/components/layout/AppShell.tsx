@@ -28,9 +28,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     useAuthStore.persist.rehydrate();
     // Configurar Superwall con la API key (cuando exista SDK real)
-    Superwall.configure(
-      process.env.NEXT_PUBLIC_SUPERWALL_API_KEY ?? 'pk_dev_placeholder',
-    );
+    const superwallKey = process.env.NEXT_PUBLIC_SUPERWALL_API_KEY ?? '';
+    if (superwallKey && !superwallKey.startsWith('pk_dev')) {
+      Superwall.configure(superwallKey);
+    } else if (process.env.NODE_ENV === 'development') {
+      console.warn('[Superwall] No production API key — paywall running in permissive mode. Set NEXT_PUBLIC_SUPERWALL_API_KEY in Vercel env vars.');
+    }
     setReady(true);
   }, []);
 

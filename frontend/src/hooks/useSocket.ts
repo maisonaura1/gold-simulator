@@ -8,7 +8,7 @@ import type { PriceTick } from '@/types';
 let socket: Socket | null = null;
 
 export function useSocket() {
-  const { addCandle, setCandles, setConnected } = usePricesStore();
+  const { addCandle, setH1Candles, setConnected } = usePricesStore();
   const replayMode = useChartStore((s) => s.replayMode);
   const replayRef  = useRef(replayMode);
 
@@ -42,7 +42,7 @@ export function useSocket() {
         close: c.close,
         volume: c.volume,
       }));
-      if (!replayRef.current) setCandles(ticks);
+      if (!replayRef.current) setH1Candles(ticks);
     });
 
     // Live ticks only when NOT in replay mode
@@ -54,5 +54,5 @@ export function useSocket() {
       socket?.disconnect();
       socket = null;
     };
-  }, [addCandle, setCandles, setConnected]);
+  }, [addCandle, setH1Candles, setConnected]);
 }
