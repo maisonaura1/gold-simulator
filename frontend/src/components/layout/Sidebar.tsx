@@ -21,7 +21,7 @@ export function Sidebar() {
   const { currentPrice, connected } = usePricesStore();
 
   return (
-    <aside className="w-64 min-h-screen bg-[var(--card)] border-r border-[var(--border)] flex flex-col">
+    <aside className="w-64 h-screen sticky top-0 bg-[var(--card)] border-r border-[var(--border)] flex flex-col overflow-y-auto">
       {/* Logo */}
       <div className="px-5 py-4 border-b border-[var(--border)]">
         <div className="flex items-center gap-2.5">
