@@ -6,10 +6,17 @@
  */
 
 import {
-  Controller, Post, Get, Req, Res, Headers,
+  Controller, Post, Get, Req, Res, Headers, Body,
   UseGuards, RawBodyRequest,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { IsOptional, IsIn } from 'class-validator';
+
+class CheckoutDto {
+  @IsOptional()
+  @IsIn(['monthly', 'annual', 'lifetime'])
+  plan?: 'monthly' | 'annual' | 'lifetime';
+}
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -24,8 +31,11 @@ export class PaymentsController {
    */
   @UseGuards(JwtAuthGuard)
   @Post('checkout')
-  checkout(@CurrentUser() user: { sub: string; email: string }) {
-    return this.payments.createCheckoutSession(user.sub, user.email);
+  checkout(
+    @CurrentUser() user: { sub: string; email: string },
+    @Body() body: CheckoutDto,
+  ) {
+    return this.payments.createCheckoutSession(user.sub, user.email, body.plan ?? 'lifetime');
   }
 
   /**

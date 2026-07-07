@@ -260,6 +260,17 @@ function DashboardInner() {
   const t = useT();
   const referral = useReferral();
   const [stats, setStats]     = useState<Stats | null>(null);
+
+  // Launch checkout if user registered via a pricing CTA
+  useEffect(() => {
+    const plan = sessionStorage.getItem('pending_plan');
+    if (!plan || !accessToken) return;
+    sessionStorage.removeItem('pending_plan');
+    api.post<{ url: string }>('/payments/checkout', { plan })
+      .then((r) => { if (r.data.url) window.location.href = r.data.url; })
+      .catch(() => null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessToken]);
   const [account, setAccount] = useState<AccountData | null>(null);
   const [trades, setTrades]   = useState<RecentTrade[]>([]);
 

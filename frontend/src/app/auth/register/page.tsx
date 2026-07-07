@@ -33,6 +33,8 @@ function RegisterInner() {
   useEffect(() => {
     const ref = searchParams.get('ref');
     if (ref) setRefCode(ref.toUpperCase());
+    const plan = searchParams.get('plan');
+    if (plan) sessionStorage.setItem('pending_plan', plan);
   }, [searchParams]);
 
   const submit = async (e: React.FormEvent) => {

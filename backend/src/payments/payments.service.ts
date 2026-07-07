@@ -16,10 +16,16 @@ import Stripe from 'stripe';
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionStatus } from '@prisma/client';
 
-// ── Stripe product ID ─────────────────────────────────────────────────────────
-// Un solo precio: €9.95 pago único, acceso de por vida
-// Configurar en Railway: STRIPE_PRICE_LIFETIME=price_1...
+// ── Stripe price IDs ─────────────────────────────────────────────────────────
+// Configure in Railway environment variables:
+//   STRIPE_PRICE_LIFETIME=price_1...   (€9.95 one-time)
+//   STRIPE_PRICE_MONTHLY=price_1...    (€4.95/month recurring)
+//   STRIPE_PRICE_ANNUAL=price_1...     (€39/year recurring)
 const PRICE_LIFETIME = process.env.STRIPE_PRICE_LIFETIME ?? '';
+const PRICE_MONTHLY  = process.env.STRIPE_PRICE_MONTHLY  ?? '';
+const PRICE_ANNUAL   = process.env.STRIPE_PRICE_ANNUAL   ?? '';
+
+type PlanType = 'lifetime' | 'monthly' | 'annual';
 
 @Injectable()
 export class PaymentsService {
@@ -71,22 +77,39 @@ export class PaymentsService {
   async createCheckoutSession(
     userId: string,
     userEmail: string,
+    plan: PlanType = 'lifetime',
   ): Promise<{ url: string; sessionId: string }> {
-    if (!PRICE_LIFETIME) {
-      throw new BadRequestException('STRIPE_PRICE_LIFETIME no está configurado en las variables de entorno');
-    }
-
     const customerId = await this.getOrCreateCustomer(userId, userEmail);
 
-    const session = await this.stripe.checkout.sessions.create({
-      mode: 'payment',           // pago único, no suscripción
-      customer: customerId,
-      payment_method_types: ['card', 'ideal'],
-      line_items: [{ price: PRICE_LIFETIME, quantity: 1 }],
-      metadata: { userId },
-      success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${process.env.FRONTEND_URL}/payment/cancelled`,
-    });
+    let session: Stripe.Checkout.Session;
+
+    if (plan === 'monthly' || plan === 'annual') {
+      const priceId = plan === 'monthly' ? PRICE_MONTHLY : PRICE_ANNUAL;
+      if (!priceId) throw new BadRequestException(`STRIPE_PRICE_${plan.toUpperCase()} not configured`);
+
+      session = await this.stripe.checkout.sessions.create({
+        mode: 'subscription',
+        customer: customerId,
+        payment_method_types: ['card', 'ideal'],
+        line_items: [{ price: priceId, quantity: 1 }],
+        metadata: { userId, plan },
+        subscription_data: { metadata: { userId, plan } },
+        success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url:  `${process.env.FRONTEND_URL}/payment/cancelled`,
+      });
+    } else {
+      if (!PRICE_LIFETIME) throw new BadRequestException('STRIPE_PRICE_LIFETIME not configured');
+
+      session = await this.stripe.checkout.sessions.create({
+        mode: 'payment',
+        customer: customerId,
+        payment_method_types: ['card', 'ideal'],
+        line_items: [{ price: PRICE_LIFETIME, quantity: 1 }],
+        metadata: { userId, plan: 'lifetime' },
+        success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url:  `${process.env.FRONTEND_URL}/payment/cancelled`,
+      });
+    }
 
     return { url: session.url!, sessionId: session.id };
   }
@@ -278,7 +301,7 @@ export class PaymentsService {
     simulationsUsed:   number;
     simulationsLimit:  number;
     canSimulate:       boolean;
-    plan:              'free' | 'lifetime';
+    plan:              'free' | 'monthly' | 'annual' | 'lifetime';
   }> {
     const [user, simCount] = await Promise.all([
       this.prisma.user.findUnique({
@@ -314,7 +337,14 @@ export class PaymentsService {
     const limit        = 20 + bonus;
     const canSimulate  = paid || simCount < limit;
 
-    const plan: 'free' | 'lifetime' = isActive || user.paidAt ? 'lifetime' : 'free';
+    // Infer billing period from Stripe subscription interval if available
+    let plan: 'free' | 'monthly' | 'annual' | 'lifetime' = 'free';
+    if (user.paidAt && !user.subscriptionId) {
+      plan = 'lifetime';
+    } else if (isActive || isPastDue) {
+      // Will be enriched by subscription metadata in future; default to monthly
+      plan = 'monthly';
+    }
 
     return {
       paid,

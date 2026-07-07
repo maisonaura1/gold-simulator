@@ -23,24 +23,20 @@ const STEPS = [
   { n: '03', title: 'Trade and review',          body: 'Enter positions, set SL/TP, review your Trader Score and analytics after each session. Iterate.' },
 ];
 
-const TIERS = [
-  {
-    name: 'Free', price: '€0', period: 'forever — no card required', highlight: false,
-    cta: 'Start free now', href: '/auth/register',
-    features: ['20 trade simulations included', 'Basic stats: win rate & P/L', 'XAUUSD chart with 5 timeframes', 'Risk calculator', 'Community missions & XP'],
-    locked:   ['Full performance analytics', 'Equity curve & max drawdown', 'Trader Score & coaching tips', 'Unlimited sessions', 'All 8 timeframes (M1–MN)', 'Trade journal & export'],
-  },
-  {
-    name: 'Pro', price: '€9.95', period: 'one-time · lifetime access', highlight: true,
-    cta: 'Unlock everything →', href: '/auth/register?plan=pro',
-    features: ['Unlimited trade simulations', 'Full analytics dashboard', 'Equity curve & max drawdown', 'Trader Score + coaching tips', 'All 8 timeframes — M1 to Monthly', 'Trade journal & session export', 'All missions unlocked', 'Priority support'],
-    locked: [],
-  },
+const PRO_FEATURES = [
+  'Unlimited trade simulations',
+  'Full analytics dashboard',
+  'Equity curve & max drawdown',
+  'Trader Score + coaching tips',
+  'All 8 timeframes — M1 to Monthly',
+  'Trade journal & session export',
+  'All missions unlocked',
+  'Priority support',
 ];
 
 const FAQS = [
   { q: 'Is this a real brokerage or demo account?',         a: 'Neither — it\'s a pure simulator. No real money, no broker connection. You practice using historical XAUUSD data in a completely safe environment. Nothing connects to any live market.' },
-  { q: 'What happens after I use my 20 free simulations?',  a: 'You\'ll see a prompt to upgrade. The €9.95 one-time payment unlocks unlimited sessions forever — no monthly fees, no recurring charges. Pay once, practice indefinitely.' },
+  { q: 'What happens after I use my 20 free simulations?',  a: 'You\'ll see an upgrade prompt. Choose the plan that fits you: Monthly (€4.95/mo), Annual (€39/yr — best value), or Lifetime (€9.95 once, forever). All plans unlock the same Pro features.' },
   { q: 'Is the market data real?',                          a: 'Yes. We source real historical XAUUSD spot price data with authentic bid/ask spreads. Scenarios replay at real market timing. The only thing that isn\'t real is the capital at risk.' },
   { q: 'Can I track my progress over time?',                a: 'Pro users get a full analytics dashboard: equity curve, drawdown history, Trader Score trend and session-by-session breakdown. You can see exactly which sessions you improved and where you still lose money.' },
   { q: 'Do I need trading experience to start?',            a: 'No. The missions and academy section cover everything from reading a candlestick chart to building a complete trading plan with risk rules. Beginners start with the guided modules; experienced traders go straight to the simulator.' },
@@ -163,46 +159,130 @@ function FeatureCard({ icon, title, body, mock }: { icon: string; title: string;
   );
 }
 
-function PricingCard({ tier }: { tier: typeof TIERS[0] }) {
+function PricingSection() {
+  const [billing, setBilling] = useState<'monthly' | 'annual'>('annual');
+
   return (
-    <div className="p-6 rounded-sm flex flex-col" style={{
-      background: tier.highlight ? '#0d1008' : '#0b0d11',
-      border: `1px solid ${tier.highlight ? '#c9a84c55' : '#1d2029'}`,
-      boxShadow: tier.highlight ? '0 0 60px rgba(201,168,76,0.1)' : 'none',
-      minWidth: 260, flex: 1,
-    }}>
-      {tier.highlight && (
-        <div className="text-center text-xs font-mono uppercase tracking-widest mb-4 py-1 rounded-sm"
-          style={{ background: '#c9a84c22', color: '#c9a84c', border: '1px solid #c9a84c44' }}>
-          ◆ Best value
+    <section id="pricing" className="max-w-4xl mx-auto px-6 py-16">
+      <h2 className="text-center font-bold mb-2" style={{ color: '#e8ecf4', fontSize: 22 }}>Simple, honest pricing</h2>
+      <p className="text-center mb-6" style={{ color: '#6b7385', fontSize: 13 }}>
+        Start free. Upgrade when you're ready.
+      </p>
+
+      {/* Billing toggle */}
+      <div className="flex items-center justify-center gap-3 mb-10">
+        <button
+          onClick={() => setBilling('monthly')}
+          className="px-4 py-1.5 rounded-sm text-xs font-medium transition-colors"
+          style={{
+            background: billing === 'monthly' ? '#141720' : 'transparent',
+            color: billing === 'monthly' ? '#c8cdd8' : '#3a3f4d',
+            border: `1px solid ${billing === 'monthly' ? '#1d2029' : 'transparent'}`,
+            cursor: 'pointer',
+          }}
+        >Monthly</button>
+        <button
+          onClick={() => setBilling('annual')}
+          className="px-4 py-1.5 rounded-sm text-xs font-medium transition-colors"
+          style={{
+            background: billing === 'annual' ? '#141720' : 'transparent',
+            color: billing === 'annual' ? '#c8cdd8' : '#3a3f4d',
+            border: `1px solid ${billing === 'annual' ? '#1d2029' : 'transparent'}`,
+            cursor: 'pointer',
+          }}
+        >Annual</button>
+        {billing === 'annual' && (
+          <span className="text-xs font-mono px-2 py-0.5 rounded-sm" style={{ background: '#0d1a08', color: '#2dcc6f', border: '1px solid #2dcc6f33' }}>
+            Save 33%
+          </span>
+        )}
+      </div>
+
+      <div className="flex gap-4 flex-wrap justify-center">
+        {/* Free */}
+        <div className="p-6 rounded-sm flex flex-col" style={{ background: '#0b0d11', border: '1px solid #1d2029', minWidth: 220, flex: 1, maxWidth: 280 }}>
+          <div style={{ color: '#6b7385', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Free</div>
+          <div style={{ color: '#c8cdd8', fontSize: 36, fontWeight: 800, fontFamily: 'monospace', lineHeight: 1 }}>€0</div>
+          <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 20 }}>forever · no card required</div>
+          <ul className="space-y-2 mb-6 flex-1">
+            {['20 trade simulations', 'Basic stats: win rate & P/L', 'XAUUSD chart · 5 timeframes', 'Risk calculator', 'Missions & XP'].map((f) => (
+              <li key={f} className="flex items-start gap-2 text-xs" style={{ color: '#c8cdd8' }}>
+                <span style={{ color: '#2dcc6f', flexShrink: 0 }}>✓</span> {f}
+              </li>
+            ))}
+            {['Full analytics', 'Equity curve', 'Trader Score', 'All 8 timeframes'].map((f) => (
+              <li key={f} className="flex items-start gap-2 text-xs" style={{ color: '#3a3f4d' }}>
+                <span style={{ flexShrink: 0 }}>—</span> {f}
+              </li>
+            ))}
+          </ul>
+          <Link href="/auth/register" className="block text-center py-2.5 rounded-sm text-xs font-bold" style={{ background: '#141720', color: '#c9a84c', border: '1px solid #2c2410', textDecoration: 'none' }}>
+            Start free
+          </Link>
         </div>
-      )}
-      <div style={{ color: '#6b7385', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>{tier.name}</div>
-      <div style={{ color: tier.highlight ? '#e8c96d' : '#c8cdd8', fontSize: 36, fontWeight: 800, fontFamily: 'monospace', lineHeight: 1 }}>{tier.price}</div>
-      <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 20 }}>{tier.period}</div>
-      <ul className="space-y-2 mb-6 flex-1">
-        {tier.features.map((f) => (
-          <li key={f} className="flex items-start gap-2" style={{ fontSize: 12, color: '#c8cdd8' }}>
-            <span style={{ color: '#2dcc6f', marginTop: 1, flexShrink: 0 }}>✓</span> {f}
-          </li>
-        ))}
-        {tier.locked.map((f) => (
-          <li key={f} className="flex items-start gap-2" style={{ fontSize: 12, color: '#3a3f4d' }}>
-            <span style={{ marginTop: 1, flexShrink: 0 }}>—</span> {f}
-          </li>
-        ))}
-      </ul>
-      <Link href={tier.href} className="block text-center py-3 rounded-sm text-sm font-bold tracking-wide" style={{
-        background: tier.highlight ? 'linear-gradient(135deg, #c9a84c, #a8893c)' : '#141720',
-        color: tier.highlight ? '#000' : '#c9a84c',
-        border: `1px solid ${tier.highlight ? 'transparent' : '#2c2410'}`,
-        textDecoration: 'none',
-      }}>
-        {tier.cta}
-      </Link>
-    </div>
+
+        {/* Pro subscription */}
+        <div className="p-6 rounded-sm flex flex-col" style={{ background: '#0d1008', border: '1px solid #c9a84c55', boxShadow: '0 0 60px rgba(201,168,76,0.08)', minWidth: 220, flex: 1, maxWidth: 280 }}>
+          <div className="text-center text-xs font-mono uppercase tracking-widest mb-4 py-1 rounded-sm"
+            style={{ background: '#c9a84c22', color: '#c9a84c', border: '1px solid #c9a84c44' }}>
+            {billing === 'annual' ? '◆ Best value' : '◆ Pro'}
+          </div>
+          <div style={{ color: '#6b7385', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Pro</div>
+          <div style={{ color: '#e8c96d', fontSize: 36, fontWeight: 800, fontFamily: 'monospace', lineHeight: 1 }}>
+            {billing === 'monthly' ? '€4.95' : '€3.25'}
+          </div>
+          <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 2 }}>
+            {billing === 'monthly' ? 'per month · cancel anytime' : 'per month · billed €39/year'}
+          </div>
+          {billing === 'annual' && (
+            <div style={{ color: '#2dcc6f', fontSize: 10, marginBottom: 16 }}>You save €20.40 vs monthly</div>
+          )}
+          {billing === 'monthly' && <div style={{ marginBottom: 16 }} />}
+          <ul className="space-y-2 mb-6 flex-1">
+            {PRO_FEATURES.map((f) => (
+              <li key={f} className="flex items-start gap-2 text-xs" style={{ color: '#c8cdd8' }}>
+                <span style={{ color: '#2dcc6f', flexShrink: 0 }}>✓</span> {f}
+              </li>
+            ))}
+          </ul>
+          <Link
+            href={`/auth/register?plan=${billing}`}
+            className="block text-center py-2.5 rounded-sm text-xs font-bold"
+            style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}
+          >
+            {billing === 'annual' ? 'Get annual access →' : 'Get monthly access →'}
+          </Link>
+        </div>
+
+        {/* Lifetime */}
+        <div className="p-6 rounded-sm flex flex-col" style={{ background: '#0b0d11', border: '1px solid #1d2029', minWidth: 220, flex: 1, maxWidth: 280 }}>
+          <div style={{ color: '#6b7385', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Lifetime</div>
+          <div style={{ color: '#c8cdd8', fontSize: 36, fontWeight: 800, fontFamily: 'monospace', lineHeight: 1 }}>€9.95</div>
+          <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 20 }}>one-time · no recurring fees ever</div>
+          <ul className="space-y-2 mb-6 flex-1">
+            {PRO_FEATURES.map((f) => (
+              <li key={f} className="flex items-start gap-2 text-xs" style={{ color: '#c8cdd8' }}>
+                <span style={{ color: '#2dcc6f', flexShrink: 0 }}>✓</span> {f}
+              </li>
+            ))}
+            <li className="flex items-start gap-2 text-xs" style={{ color: '#c9a84c' }}>
+              <span style={{ flexShrink: 0 }}>★</span> Pay once, own forever
+            </li>
+          </ul>
+          <Link href="/auth/register?plan=lifetime" className="block text-center py-2.5 rounded-sm text-xs font-bold" style={{ background: '#141720', color: '#c9a84c', border: '1px solid #2c2410', textDecoration: 'none' }}>
+            Get lifetime access →
+          </Link>
+        </div>
+      </div>
+
+      <p className="text-center mt-6" style={{ color: '#3a3f4d', fontSize: 11 }}>
+        iDEAL · Credit & debit card · Stripe · 30-day refund guarantee · GDPR compliant
+      </p>
+    </section>
   );
 }
+
+// Keep for potential reuse
 
 function FakeTicker() {
   const [price, setPrice] = useState(3342.50);
@@ -612,25 +692,7 @@ export default function LandingPage() {
 
       {/* ── Pricing ── */}
       <CornerFrame>
-        <section id="pricing" className="max-w-3xl mx-auto px-6 py-16">
-          <h2 className="text-center font-bold mb-2" style={{ color: '#e8ecf4', fontSize: 22 }}>Simple, honest pricing</h2>
-          <p className="text-center mb-4" style={{ color: '#6b7385', fontSize: 13 }}>
-            Start free. Upgrade once. No subscriptions, no surprises, no hidden fees.
-          </p>
-          {/* ROI framing */}
-          <div className="text-center mb-8 px-4 py-3 mx-auto max-w-xl rounded-sm"
-            style={{ background: '#0d1008', border: '1px solid #c9a84c22' }}>
-            <span style={{ color: '#c9a84c', fontFamily: 'monospace', fontSize: 11 }}>
-              ◆ One-time payment · Lifetime access · 30-day money-back guarantee
-            </span>
-          </div>
-          <div className="flex gap-4 flex-wrap justify-center">
-            {TIERS.map((t) => <PricingCard key={t.name} tier={t} />)}
-          </div>
-          <p className="text-center mt-6" style={{ color: '#3a3f4d', fontSize: 11 }}>
-            iDEAL · Credit & debit card · Secure checkout via Stripe · Data protected under GDPR
-          </p>
-        </section>
+        <PricingSection />
       </CornerFrame>
 
       {/* ── FAQ ── */}
