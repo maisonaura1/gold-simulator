@@ -52,16 +52,17 @@ function HTip({ children, tip }: { children: React.ReactNode; tip: string }) {
 interface Props {
   overview: DeskOverview | null;
   reviewQueueCount: number;
+  ordersCount?: number;
 }
 
-export function DeskHeader({ overview, reviewQueueCount }: Props) {
+export function DeskHeader({ overview, reviewQueueCount, ordersCount = 0 }: Props) {
   const price = usePricesStore((s) => s.currentPrice);
   const bid   = price ? price - 0.10 : null;
   const ask   = price ? price + 0.10 : null;
 
   const total = overview?.orderSummary
     ? Object.values(overview.orderSummary).reduce((a, b) => a + b, 0)
-    : 0;
+    : ordersCount;
 
   const netBuy  = overview?.recentOrders?.filter((o) => o.side === 'BUY').reduce((s, o) => s + o.quantity, 0) ?? 0;
   const netSell = overview?.recentOrders?.filter((o) => o.side === 'SELL').reduce((s, o) => s + o.quantity, 0) ?? 0;
@@ -169,7 +170,9 @@ export function DeskHeader({ overview, reviewQueueCount }: Props) {
 
       <div className="px-4 py-2 shrink-0">
         <span style={{ color: '#6b7385' }}>{total} orders · </span>
-        <span style={{ color: '#8893a8' }}>Internal Spot Reference</span>
+        <span style={{ color: price > 0 ? '#c9a84c' : '#3a3f4d', fontWeight: price > 0 ? 700 : 400 }}>
+          {price > 0 ? `$${price.toFixed(2)}` : 'Internal Spot Reference'}
+        </span>
       </div>
     </div>
   );

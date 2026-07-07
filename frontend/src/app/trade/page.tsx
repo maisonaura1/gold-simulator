@@ -72,7 +72,7 @@ function TradeInner() {
   return (
     <div className="flex flex-col h-full w-full overflow-hidden" style={{ background: '#07080b' }}>
       {/* Gold desk header strip */}
-      <DeskHeader overview={overview} reviewQueueCount={reviewQueueCount} />
+      <DeskHeader overview={overview} reviewQueueCount={reviewQueueCount} ordersCount={orders.length} />
 
       {/* Main workspace */}
       <div className="flex flex-1 overflow-hidden min-h-0">
