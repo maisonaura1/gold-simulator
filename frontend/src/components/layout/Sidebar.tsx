@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import { useAuthStore } from '@/store/auth.store';
 import { usePricesStore } from '@/store/prices.store';
+import { LogoIcon } from '@/components/ui/LogoIcon';
 
 const NAV = [
   { href: '/dashboard',  label: 'Dashboard',     icon: '📊' },
@@ -22,12 +23,12 @@ export function Sidebar() {
   return (
     <aside className="w-64 min-h-screen bg-[var(--card)] border-r border-[var(--border)] flex flex-col">
       {/* Logo */}
-      <div className="p-6 border-b border-[var(--border)]">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">🪙</span>
+      <div className="px-5 py-4 border-b border-[var(--border)]">
+        <div className="flex items-center gap-2.5">
+          <LogoIcon size={26} />
           <div>
-            <div className="font-bold text-white">GoldTrader</div>
-            <div className="text-xs text-[var(--muted)]">Simulador XAUUSD</div>
+            <div style={{ color: '#e8b84b', fontWeight: 700, fontSize: 14, letterSpacing: '0.02em', lineHeight: 1 }}>GoldTrader</div>
+            <div style={{ color: '#3a3f4d', fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 3 }}>XAU/USD Simulator</div>
           </div>
         </div>
       </div>

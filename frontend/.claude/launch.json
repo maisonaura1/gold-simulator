@@ -2,12 +2,11 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "frontend",
+      "name": "GoldTrader Frontend",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": ["run", "dev", "--", "--port", "3010"],
       "cwd": "/Users/maisonaura/gold-simulator/frontend",
-      "port": 3000,
-      "autoPort": false
+      "port": 3010
     }
   ]
 }

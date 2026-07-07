@@ -12,6 +12,7 @@ import { resetOnboarding } from '@/components/onboarding/OnboardingWizard';
 import { LotCalculator } from '@/components/trade/LotCalculator';
 import type { Lang } from '@/lib/i18n';
 import clsx from 'clsx';
+import { LogoIcon } from '@/components/ui/LogoIcon';
 
 const LANG_OPTIONS: { code: 'es' | Lang; flag: string }[] = [
   { code: 'es', flag: '🇪🇸' },
@@ -128,7 +129,7 @@ function MenuButton({
 
 // ─── Main toolbar ─────────────────────────────────────────────────────────────
 
-export function MTToolbar() {
+export function AppToolbar() {
   const router   = useRouter();
   const pathname = usePathname();
   const { currentPrice, connected } = usePricesStore();
@@ -250,7 +251,7 @@ export function MTToolbar() {
         { label: t.menuItemAcademy,   action: () => router.push('/academy') },
         { label: t.menuItemMissions,  action: () => router.push('/learn') },
         { separator: true },
-        { label: 'GoldTrader MT v1.0', action: () => alert('GoldTrader MT v1.0\nXAU/USD Professional Simulator'), disabled: false },
+        { label: 'GoldTrader v1.0', action: () => alert('GoldTrader v1.0\nXAU/USD Professional Simulator'), disabled: false },
       ],
     },
   ];
@@ -271,6 +272,11 @@ export function MTToolbar() {
     <div className="flex flex-col shrink-0 select-none">
       {/* ── Menu bar ── */}
       <div className="flex items-center h-6 bg-[#0d1017] border-b border-[var(--mt-border)] px-1" style={{ fontSize: 11 }}>
+        {/* Brand mark */}
+        <div className="flex items-center gap-1.5 px-2 border-r border-[var(--mt-border)] mr-1" style={{ height: '100%' }}>
+          <LogoIcon size={14} />
+          <span style={{ color: '#e8b84b', fontWeight: 700, fontSize: 11, letterSpacing: '0.02em' }}>GoldTrader</span>
+        </div>
         {MENUS.map((menu) => (
           <MenuButton
             key={menu.key}

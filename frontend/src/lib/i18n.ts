@@ -180,7 +180,7 @@ export const translations = {
     ],
 
     // AppShell loading
-    appLoading: 'GoldTrader MT · Loading...',
+    appLoading: 'GoldTrader · Loading...',
 
     // Toolbar menu items (hardcoded strings)
     newDemoAccount: 'New demo account',
@@ -359,7 +359,7 @@ export const translations = {
     equityCurveLabel: 'Equity Curve',
 
     // ── Onboarding wizard ──
-    tourHeader: 'GoldTrader MT — Getting started',
+    tourHeader: 'GoldTrader — Getting started',
     tourSkip: 'Skip tour',
     tourBack: '← Back',
     tourStepOf: (cur: number, total: number) => `${cur} of ${total}`,
@@ -370,7 +370,7 @@ export const translations = {
     tourLangSub: 'Kies je taal · Elige tu idioma',
     tourLangContinue: 'Continue →',
 
-    tourWelcomeTitle: 'Welcome to GoldTrader MT',
+    tourWelcomeTitle: 'Welcome to GoldTrader',
     tourWelcomeSub: 'The simulator that prepares you to pass funded accounts',
     tourWelcomeCta: 'Start the tour →',
     tourWelcomeBody: 'This is not a game. It is a professional simulator designed to help you trade XAU/USD (gold) exactly as you would in a real funded account (FTMO, MyFundedFX…). Every decision you make here — lot size, Stop Loss, R:R ratio — matters. The simulator records everything and tells you if you are on the right track.',
@@ -452,10 +452,60 @@ export const translations = {
     otRiskIdeal: 'Ideal risk:',
     otSlTooltip: 'Stop Loss closes your trade automatically if the market goes against you. Without SL, a loss can destroy your account while you sleep.',
     trialExpiredTitle: 'Your trial period has ended',
-    trialExpiredBody: 'To keep using GoldTrader MT, activate full access with a one-time payment of €9.95.',
+    trialExpiredBody: 'To keep using GoldTrader, activate full access with a one-time payment of €9.95.',
     trialPayBtn: 'Activate access — €9.95',
     trialDaysLeft: (n: number) => `Free trial · ${n} day${n !== 1 ? 's' : ''} remaining`,
     trialUpgradeBtn: 'Activate — €9.95',
+
+    // ── Dashboard ──
+    dashTitle: '◆ Gold Spot Dashboard',
+    dashSubtitle: 'XAUUSD · Internal Practice Account',
+    dashNewSession: '▶ New Session',
+    dashPracticeAccount: 'Practice account',
+    dashVsInitial: 'vs. initial $10,000',
+    dashTargetMet: '✓ Target met',
+    dashTargetLabel: 'Target: 2:1',
+    dashSessionsLabel: 'Sessions',
+    dashTotalSims: 'Total simulations',
+    dashTraderScoreLabel: 'Trader Score',
+    dashScoreDesc: 'Based on win rate, R:R, risk management, drawdown and session volume.',
+    dashFullAnalytics: 'Full analytics →',
+    dashNoScore: 'Complete your first simulation to see your score.',
+    dashKeyMetrics: 'Key Metrics',
+    dashAvgRiskTrade: 'Avg Risk/Trade',
+    dashMaxDrawdown: 'Max Drawdown',
+    dashWinStreakLabel: 'Win Streak',
+    dashAvgPLTrade: 'Avg P/L/Trade',
+    dashNoData: 'No data yet. Start a simulation to track your progress.',
+    dashProgress: 'Progress',
+    dashLevelLabel: (n: number) => `Level ${n}`,
+    dashXPTotal: (xp: number) => `${xp} XP total`,
+    dashXPToNext: (xp: number) => `${xp} XP to next level`,
+    dashViewMissions: 'View missions →',
+    dashLoadingAccount: 'Loading account…',
+    dashRecentSessions: 'Recent Sessions',
+    dashViewAll: 'View all →',
+    dashNoSessions: 'No sessions yet.',
+    dashStartFirst: 'Start your first simulation →',
+    dashNavSimulator: 'Simulator',
+    dashNavAnalytics: 'Analytics',
+    dashNavAcademy: 'Academy',
+    dashNavMissions: 'Missions',
+    dashNavSimDesc: 'XAUUSD practice',
+    dashNavAnalDesc: 'Performance review',
+    dashNavAcadDesc: 'Learn & improve',
+    dashNavMisDesc: 'Daily challenges',
+
+    // ── Learn / Missions ──
+    learnLoadingMissions: 'Loading missions...',
+    learnNoMissionsCompleted: 'Complete missions by trading in the simulator',
+    learnNoMissionsHere: 'No missions here',
+    learnGoSimulator: '⚡ Go to simulator',
+    learnXPTip: '💡 How to earn XP faster',
+    learnXPTipBody: 'Every trade with active SL + risk ≤ 2% + R:R ≥ 2:1 advances 3 missions simultaneously.',
+
+    // ── Order Ticket warnings ──
+    otSlWarning: '🛑 Stop Loss required. Without it you cannot open the trade. It is rule #1 of professional trading.',
   },
 
   nl: {
@@ -637,7 +687,7 @@ export const translations = {
     ],
 
     // AppShell loading
-    appLoading: 'GoldTrader MT · Laden...',
+    appLoading: 'GoldTrader · Laden...',
 
     // Toolbar menu items
     newDemoAccount: 'Nieuw demo-account',
@@ -816,7 +866,7 @@ export const translations = {
     equityCurveLabel: 'Aandelenkromme',
 
     // ── Onboarding wizard ──
-    tourHeader: 'GoldTrader MT — Aan de slag',
+    tourHeader: 'GoldTrader — Aan de slag',
     tourSkip: 'Tour overslaan',
     tourBack: '← Terug',
     tourStepOf: (cur: number, total: number) => `${cur} van ${total}`,
@@ -827,7 +877,7 @@ export const translations = {
     tourLangSub: 'Select your language · Elige tu idioma',
     tourLangContinue: 'Doorgaan →',
 
-    tourWelcomeTitle: 'Welkom bij GoldTrader MT',
+    tourWelcomeTitle: 'Welkom bij GoldTrader',
     tourWelcomeSub: 'De simulator die u voorbereidt om gefinancierde accounts te halen',
     tourWelcomeCta: 'Start de tour →',
     tourWelcomeBody: 'Dit is geen spel. Het is een professionele simulator om u te leren handelen in XAU/USD (goud) zoals u dat zou doen op een echt gefinancierd account (FTMO, MyFundedFX…). Elke beslissing die u hier neemt — lotgrootte, Stop Loss, R:R-verhouding — telt. De simulator registreert alles en vertelt u of u op de goede weg bent.',
@@ -909,10 +959,60 @@ export const translations = {
     otRiskIdeal: 'Ideaal risico:',
     otSlTooltip: 'Stop-verlies sluit je trade automatisch als de markt tegen je ingaat. Zonder SL kan een verlies je account verwoesten terwijl je slaapt.',
     trialExpiredTitle: 'Uw proefperiode is verlopen',
-    trialExpiredBody: 'Om GoldTrader MT te blijven gebruiken, activeer volledige toegang met een eenmalige betaling van €9,95.',
+    trialExpiredBody: 'Om GoldTrader te blijven gebruiken, activeer volledige toegang met een eenmalige betaling van €9,95.',
     trialPayBtn: 'Toegang activeren — €9,95',
     trialDaysLeft: (n: number) => `Gratis proef · ${n} dag${n !== 1 ? 'en' : ''} resterend`,
     trialUpgradeBtn: 'Activeren — €9,95',
+
+    // ── Dashboard ──
+    dashTitle: '◆ Goud Spot Dashboard',
+    dashSubtitle: 'XAUUSD · Interne oefenaccount',
+    dashNewSession: '▶ Nieuwe Sessie',
+    dashPracticeAccount: 'Oefenaccount',
+    dashVsInitial: 'vs. beginsaldo $10.000',
+    dashTargetMet: '✓ Doel bereikt',
+    dashTargetLabel: 'Doel: 2:1',
+    dashSessionsLabel: 'Sessies',
+    dashTotalSims: 'Totale simulaties',
+    dashTraderScoreLabel: 'Traderscore',
+    dashScoreDesc: 'Gebaseerd op winstkans, R:R, risicobeheer, drawdown en sessievolume.',
+    dashFullAnalytics: 'Volledige analyse →',
+    dashNoScore: 'Voltooi uw eerste simulatie om uw score te zien.',
+    dashKeyMetrics: 'Kernstatistieken',
+    dashAvgRiskTrade: 'Gem. risico/trade',
+    dashMaxDrawdown: 'Max. drawdown',
+    dashWinStreakLabel: 'Winnende reeks',
+    dashAvgPLTrade: 'Gem. W/V/trade',
+    dashNoData: 'Nog geen gegevens. Start een simulatie om uw voortgang bij te houden.',
+    dashProgress: 'Voortgang',
+    dashLevelLabel: (n: number) => `Niveau ${n}`,
+    dashXPTotal: (xp: number) => `${xp} XP totaal`,
+    dashXPToNext: (xp: number) => `${xp} XP naar volgend niveau`,
+    dashViewMissions: 'Missies bekijken →',
+    dashLoadingAccount: 'Account laden…',
+    dashRecentSessions: 'Recente sessies',
+    dashViewAll: 'Alles bekijken →',
+    dashNoSessions: 'Nog geen sessies.',
+    dashStartFirst: 'Start uw eerste simulatie →',
+    dashNavSimulator: 'Simulator',
+    dashNavAnalytics: 'Analyse',
+    dashNavAcademy: 'Academie',
+    dashNavMissions: 'Missies',
+    dashNavSimDesc: 'XAUUSD-oefening',
+    dashNavAnalDesc: 'Prestatieoverzicht',
+    dashNavAcadDesc: 'Leer & verbeter',
+    dashNavMisDesc: 'Dagelijkse uitdagingen',
+
+    // ── Learn / Missions ──
+    learnLoadingMissions: 'Missies laden...',
+    learnNoMissionsCompleted: 'Voltooi missies door te handelen in de simulator',
+    learnNoMissionsHere: 'Geen missies hier',
+    learnGoSimulator: '⚡ Naar de simulator',
+    learnXPTip: '💡 Hoe sneller XP verdienen',
+    learnXPTipBody: 'Elke trade met actieve SL + risico ≤ 2% + R:R ≥ 2:1 vordert 3 missies tegelijk.',
+
+    // ── Order Ticket warnings ──
+    otSlWarning: '🛑 Stop-verlies verplicht. Zonder Stop Loss kunt u de trade niet openen. Dit is regel nr. 1 van professioneel handelen.',
   },
 } as const;
 

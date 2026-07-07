@@ -168,7 +168,7 @@ const es = {
     { title: 'Oro (XAUUSD)', body: 'El oro se mueve con la inflación, el dólar y el riesgo global. 1 lote = 100 oz. Valor del pip ≈ $10 por pip.' },
   ],
 
-  appLoading: 'GoldTrader MT · Cargando...',
+  appLoading: 'GoldTrader · Cargando...',
 
   // ── Menu items ──
   newDemoAccount: 'Nueva cuenta demo',
@@ -349,7 +349,7 @@ const es = {
   equityCurveLabel: 'Curva de Equity',
 
   // ── Onboarding wizard ──
-  tourHeader: 'GoldTrader MT — Guía de inicio',
+  tourHeader: 'GoldTrader — Guía de inicio',
   tourSkip: 'Saltar tour',
   tourBack: '← Atrás',
   tourStepOf: (cur: number, total: number) => `${cur} de ${total}`,
@@ -360,7 +360,7 @@ const es = {
   tourLangSub: 'Select your language · Kies je taal',
   tourLangContinue: 'Continuar →',
 
-  tourWelcomeTitle: 'Bienvenido a GoldTrader MT',
+  tourWelcomeTitle: 'Bienvenido a GoldTrader',
   tourWelcomeSub: 'El simulador que te prepara para pasar cuentas de fondeo',
   tourWelcomeCta: 'Empezar el tour →',
   tourWelcomeBody: 'Este no es un juego. Es un simulador profesional diseñado para que aprendas a operar XAU/USD (oro) exactamente como lo harías en una cuenta de fondeo real (FTMO, MyFundedFX…). Cada decisión que tomes aquí — el tamaño del lote, el Stop Loss, el ratio R:R — importa. El simulador registra todo y te dice si vas por el camino correcto.',
@@ -445,10 +445,60 @@ const es = {
 
   // ── Trial / Payment ──
   trialExpiredTitle: 'Tu período de prueba ha finalizado',
-  trialExpiredBody: 'Para seguir usando GoldTrader MT, activa tu acceso completo por un único pago de €9,95.',
+  trialExpiredBody: 'Para seguir usando GoldTrader, activa tu acceso completo por un único pago de €9,95.',
   trialPayBtn: 'Activar acceso — €9,95',
   trialDaysLeft: (n: number) => `Prueba gratuita · ${n} día${n !== 1 ? 's' : ''} restante${n !== 1 ? 's' : ''}`,
   trialUpgradeBtn: 'Activar — €9,95',
+
+  // ── Dashboard ──
+  dashTitle: '◆ Panel de Operaciones',
+  dashSubtitle: 'XAUUSD · Cuenta de práctica interna',
+  dashNewSession: '▶ Nueva Sesión',
+  dashPracticeAccount: 'Cuenta de práctica',
+  dashVsInitial: 'vs. inicial $10.000',
+  dashTargetMet: '✓ Objetivo alcanzado',
+  dashTargetLabel: 'Objetivo: 2:1',
+  dashSessionsLabel: 'Sesiones',
+  dashTotalSims: 'Simulaciones totales',
+  dashTraderScoreLabel: 'Puntuación de trader',
+  dashScoreDesc: 'Basado en winrate, R:R, gestión del riesgo, drawdown y volumen de sesiones.',
+  dashFullAnalytics: 'Análisis completo →',
+  dashNoScore: 'Completa tu primera simulación para ver tu puntuación.',
+  dashKeyMetrics: 'Métricas clave',
+  dashAvgRiskTrade: 'Riesgo med./trade',
+  dashMaxDrawdown: 'Drawdown máx.',
+  dashWinStreakLabel: 'Racha ganadora',
+  dashAvgPLTrade: 'P/L med./trade',
+  dashNoData: 'Sin datos aún. Inicia una simulación para ver tu progreso.',
+  dashProgress: 'Progreso',
+  dashLevelLabel: (n: number) => `Nivel ${n}`,
+  dashXPTotal: (xp: number) => `${xp} XP total`,
+  dashXPToNext: (xp: number) => `${xp} XP para el siguiente nivel`,
+  dashViewMissions: 'Ver misiones →',
+  dashLoadingAccount: 'Cargando cuenta…',
+  dashRecentSessions: 'Sesiones recientes',
+  dashViewAll: 'Ver todas →',
+  dashNoSessions: 'Sin sesiones aún.',
+  dashStartFirst: 'Inicia tu primera simulación →',
+  dashNavSimulator: 'Simulador',
+  dashNavAnalytics: 'Análisis',
+  dashNavAcademy: 'Academia',
+  dashNavMissions: 'Misiones',
+  dashNavSimDesc: 'Práctica XAUUSD',
+  dashNavAnalDesc: 'Revisión de rendimiento',
+  dashNavAcadDesc: 'Aprende y mejora',
+  dashNavMisDesc: 'Retos diarios',
+
+  // ── Learn / Missions ──
+  learnLoadingMissions: 'Cargando misiones...',
+  learnNoMissionsCompleted: 'Completa misiones operando en el simulador',
+  learnNoMissionsHere: 'No hay misiones aquí',
+  learnGoSimulator: '⚡ Ir al simulador',
+  learnXPTip: '💡 Cómo ganar XP más rápido',
+  learnXPTipBody: 'Cada trade con SL activo + riesgo ≤ 2% + R:R ≥ 2:1 avanza 3 misiones simultáneamente.',
+
+  // ── Order Ticket warnings ──
+  otSlWarning: '🛑 Stop Loss obligatorio. Sin él no puedes abrir el trade. Es la regla número 1 del trading profesional.',
 } as const;
 
 export type T = typeof es;

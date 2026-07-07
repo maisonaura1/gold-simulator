@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MTToolbar } from './MTToolbar';
+import { AppToolbar } from './AppToolbar';
 import { MarketWatch } from './MarketWatch';
 import { Navigator } from './Navigator';
 import { TerminalPanel } from './TerminalPanel';
@@ -59,7 +59,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {showPaywall && <PaywallModal onClose={closePaywall} />}
       <OnboardingWizard />
       <TrialBanner />
-      <MTToolbar />
+      <AppToolbar />
       <div className="flex flex-1 overflow-hidden min-h-0">
         <div className="flex flex-col border-r border-[var(--mt-border)] shrink-0 overflow-hidden">
           <MarketWatch />

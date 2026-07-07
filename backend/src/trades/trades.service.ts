@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccountService } from '../account/account.service';
 import { SimulatorService } from './simulator.service';
@@ -16,7 +16,21 @@ export class TradesService {
     private prices:     PricesService,
   ) {}
 
+  private async enforceFreeTierLimit(userId: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { paidAt: true, subscriptionStatus: true },
+    });
+    const isPro = user?.subscriptionStatus === 'ACTIVE' || !!user?.paidAt;
+    if (isPro) return;
+    const count = await this.prisma.trade.count({ where: { userId } });
+    if (count >= 20) {
+      throw new ForbiddenException('FREE_LIMIT_REACHED');
+    }
+  }
+
   async simulate(userId: string, dto: CreateTradeDto) {
+    await this.enforceFreeTierLimit(userId);
     const acct = await this.prisma.simAccount.findUnique({ where: { userId } });
     if (!acct) throw new NotFoundException('Account not found');
     if (!dto.sl || !dto.tp) throw new BadRequestException('SL y TP son obligatorios para simular');
@@ -71,6 +85,7 @@ export class TradesService {
   }
 
   async openTrade(userId: string, dto: CreateTradeDto) {
+    await this.enforceFreeTierLimit(userId);
     const acct = await this.prisma.simAccount.findUnique({ where: { userId } });
     if (!acct) throw new NotFoundException('Account not found');
 

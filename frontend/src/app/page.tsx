@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import Link from 'next/link';
 import { CornerFrame } from '@/components/ui/CornerFrame';
+import { LogoIcon } from '@/components/ui/LogoIcon';
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 
@@ -17,7 +18,7 @@ const FEATURES: { icon: string; title: string; body: string; mock?: 'equity' | '
 ];
 
 const STEPS = [
-  { n: '01', title: 'Create your free account', body: 'Sign up in 30 seconds. No credit card required. Instant access to your first 10 free simulations.' },
+  { n: '01', title: 'Create your free account', body: 'Sign up in 30 seconds. No credit card required. Instant access to your first 20 free simulations.' },
   { n: '02', title: 'Load a gold session',       body: 'Pick a historical scenario or replay live XAUUSD data from real London, New York or Asian sessions.' },
   { n: '03', title: 'Trade and review',          body: 'Enter positions, set SL/TP, review your Trader Score and analytics after each session. Iterate.' },
 ];
@@ -26,7 +27,7 @@ const TIERS = [
   {
     name: 'Free', price: '€0', period: 'forever — no card required', highlight: false,
     cta: 'Start free now', href: '/auth/register',
-    features: ['10 trade simulations included', 'Basic stats: win rate & P/L', 'XAUUSD chart with 5 timeframes', 'Risk calculator', 'Community missions & XP'],
+    features: ['20 trade simulations included', 'Basic stats: win rate & P/L', 'XAUUSD chart with 5 timeframes', 'Risk calculator', 'Community missions & XP'],
     locked:   ['Full performance analytics', 'Equity curve & max drawdown', 'Trader Score & coaching tips', 'Unlimited sessions', 'All 8 timeframes (M1–MN)', 'Trade journal & export'],
   },
   {
@@ -39,7 +40,7 @@ const TIERS = [
 
 const FAQS = [
   { q: 'Is this a real brokerage or demo account?',         a: 'Neither — it\'s a pure simulator. No real money, no broker connection. You practice using historical XAUUSD data in a completely safe environment. Nothing connects to any live market.' },
-  { q: 'What happens after I use my 10 free simulations?',  a: 'You\'ll see a prompt to upgrade. The €9.95 one-time payment unlocks unlimited sessions forever — no monthly fees, no recurring charges. Pay once, practice indefinitely.' },
+  { q: 'What happens after I use my 20 free simulations?',  a: 'You\'ll see a prompt to upgrade. The €9.95 one-time payment unlocks unlimited sessions forever — no monthly fees, no recurring charges. Pay once, practice indefinitely.' },
   { q: 'Is the market data real?',                          a: 'Yes. We source real historical XAUUSD spot price data with authentic bid/ask spreads. Scenarios replay at real market timing. The only thing that isn\'t real is the capital at risk.' },
   { q: 'Can I track my progress over time?',                a: 'Pro users get a full analytics dashboard: equity curve, drawdown history, Trader Score trend and session-by-session breakdown. You can see exactly which sessions you improved and where you still lose money.' },
   { q: 'Do I need trading experience to start?',            a: 'No. The missions and academy section cover everything from reading a candlestick chart to building a complete trading plan with risk rules. Beginners start with the guided modules; experienced traders go straight to the simulator.' },
@@ -444,8 +445,9 @@ export default function LandingPage() {
       {/* ── Nav ── */}
       <nav className="flex items-center justify-between px-6 py-3 border-b sticky top-0 z-40"
         style={{ borderColor: '#1d2029', background: 'rgba(7,8,11,0.92)', backdropFilter: 'blur(12px)' }}>
-        <div style={{ color: '#c9a84c', fontWeight: 800, fontSize: 14, letterSpacing: 2, fontFamily: 'monospace' }}>
-          ◆ GOLDTRADER
+        <div className="flex items-center gap-2">
+          <LogoIcon size={22} />
+          <span style={{ color: '#e8b84b', fontWeight: 700, fontSize: 14, letterSpacing: '0.02em' }}>GoldTrader</span>
         </div>
         <div className="hidden sm:flex items-center gap-6 text-xs" style={{ color: '#6b7385' }}>
           <a href="#features" style={{ color: '#6b7385', textDecoration: 'none' }} className="hover:text-[#c8cdd8] transition-colors">Features</a>
@@ -489,7 +491,7 @@ export default function LandingPage() {
           </a>
         </div>
         <p style={{ color: '#3a3f4d', fontSize: 11, marginTop: 12 }}>
-          No credit card · 10 free simulations · Instant access · 30-day refund guarantee
+          No credit card · 20 free simulations · Instant access · 30-day refund guarantee
         </p>
 
         {/* Real social proof — only with real data */}
@@ -656,7 +658,7 @@ export default function LandingPage() {
       <section className="border-t py-14 text-center" style={{ borderColor: '#1d2029', background: '#09090d' }}>
         <GoldLabel>◆ Start today</GoldLabel>
         <h2 className="font-bold mb-4" style={{ color: '#e8ecf4', fontSize: 22 }}>
-          Your first 10 simulations are free
+          Your first 20 simulations are free
         </h2>
         <p style={{ color: '#6b7385', fontSize: 13, marginBottom: 20 }}>
           No credit card. No subscription. Just practice.
@@ -683,7 +685,10 @@ export default function LandingPage() {
       {/* ── Footer ── */}
       <footer className="border-t px-6 py-6" style={{ borderColor: '#1d2029', background: '#07080b' }}>
         <div className="max-w-5xl mx-auto flex items-center justify-between flex-wrap gap-4">
-          <div style={{ color: '#3a3f4d', fontSize: 11, fontFamily: 'monospace' }}>◆ GOLDTRADER · XAUUSD Simulator · Not financial advice</div>
+          <div className="flex items-center gap-2" style={{ color: '#3a3f4d', fontSize: 11 }}>
+            <LogoIcon size={14} />
+            <span>GoldTrader · XAUUSD Simulator · Not financial advice</span>
+          </div>
           <div className="flex gap-5 flex-wrap">
             {[
               ['Log in',   '/auth/login'],

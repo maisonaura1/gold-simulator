@@ -299,7 +299,7 @@ export class PaymentsService {
         subscriptionStatus: SubscriptionStatus.FREE,
         subscriptionEndsAt: null,
         simulationsUsed:  0,
-        simulationsLimit: 10,
+        simulationsLimit: 20,
         canSimulate:      true,
         plan:             'free',
       };
@@ -310,7 +310,7 @@ export class PaymentsService {
 
     // Acceso permitido si está activo, en período de gracia, o es lifetime
     const paid       = isActive || isPastDue || !!user.paidAt;
-    const canSimulate = paid || simCount < 10;
+    const canSimulate = paid || simCount < 20;
 
     // Inferir el plan a partir del estado
     const plan: 'free' | 'lifetime' = isActive || user.paidAt ? 'lifetime' : 'free';
@@ -320,7 +320,7 @@ export class PaymentsService {
       subscriptionStatus: user.subscriptionStatus,
       subscriptionEndsAt: user.subscriptionEndsAt,
       simulationsUsed:  simCount,
-      simulationsLimit: 10,
+      simulationsLimit: 20,
       canSimulate,
       plan,
     };
