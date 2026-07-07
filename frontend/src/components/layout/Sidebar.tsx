@@ -1,10 +1,12 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { useAuthStore } from '@/store/auth.store';
 import { usePricesStore } from '@/store/prices.store';
 import { LogoIcon } from '@/components/ui/LogoIcon';
+import { api } from '@/lib/api';
 
 const NAV = [
   { href: '/dashboard',  label: 'Dashboard',     icon: '📊' },
@@ -18,8 +20,16 @@ const NAV = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { clearTokens } = useAuthStore();
+  const { clearTokens, accessToken } = useAuthStore();
   const { currentPrice, connected } = usePricesStore();
+  const [streak, setStreak] = useState<{ current: number; longest: number } | null>(null);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    api.get<{ current: number; longest: number }>('/stats/streak')
+      .then((r) => setStreak(r.data))
+      .catch(() => null);
+  }, [accessToken]);
 
   return (
     <aside className="w-64 h-screen sticky top-0 bg-[var(--card)] border-r border-[var(--border)] flex flex-col overflow-y-auto">
@@ -44,6 +54,28 @@ export function Sidebar() {
           {currentPrice > 0 ? `$${currentPrice.toFixed(2)}` : '—'}
         </div>
       </div>
+
+      {/* Streak */}
+      {streak !== null && (
+        <div className="mx-4 mt-3 p-3 rounded-xl" style={{ background: streak.current > 0 ? '#1a1508' : '#0f1117', border: `1px solid ${streak.current > 0 ? '#2c2410' : '#1d2029'}` }}>
+          <div className="flex items-center justify-between mb-1">
+            <span style={{ color: '#6b7385', fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', fontFamily: 'monospace' }}>Racha diaria</span>
+            {streak.longest > 0 && (
+              <span style={{ color: '#3a3f4d', fontSize: 9, fontFamily: 'monospace' }}>récord {streak.longest}d</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: 18 }}>{streak.current > 0 ? '🔥' : '○'}</span>
+            <span style={{ color: streak.current > 0 ? '#c9a84c' : '#3a3f4d', fontFamily: 'monospace', fontWeight: 800, fontSize: 22, lineHeight: 1 }}>
+              {streak.current}
+            </span>
+            <span style={{ color: '#6b7385', fontSize: 10 }}>{streak.current === 1 ? 'día' : 'días'}</span>
+          </div>
+          {streak.current === 0 && (
+            <p style={{ color: '#3a3f4d', fontSize: 9, marginTop: 4 }}>Simula hoy para empezar racha</p>
+          )}
+        </div>
+      )}
 
       {/* Nav */}
       <nav className="flex-1 p-4 space-y-1 mt-2">

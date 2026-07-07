@@ -4,6 +4,7 @@ import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { EmailsService } from '../emails/emails.service';
 
 const REFERRAL_BONUS = 5;
 
@@ -16,6 +17,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    private emails: EmailsService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -74,7 +76,10 @@ export class AuthService {
       })),
     });
 
-    return this.buildTokens(user.id, user.email);
+    const tokens = this.buildTokens(user.id, user.email);
+    // Fire-and-forget welcome email
+    this.emails.sendWelcome(user.email).catch(() => null);
+    return tokens;
   }
 
   async login(dto: LoginDto) {

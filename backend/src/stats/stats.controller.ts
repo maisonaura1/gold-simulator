@@ -19,6 +19,12 @@ export class StatsController {
     return this.statsService.getStats(user.sub);
   }
 
+  @Get('streak')
+  @UseGuards(JwtAuthGuard)
+  getStreak(@CurrentUser() user: { sub: string }) {
+    return this.statsService.getStreak(user.sub);
+  }
+
   @Get('daily')
   @UseGuards(JwtAuthGuard)
   getDailyStats(@CurrentUser() user: { sub: string }) {

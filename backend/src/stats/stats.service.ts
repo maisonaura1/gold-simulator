@@ -226,6 +226,56 @@ export class StatsService {
     return rows.map((r) => r.join(',')).join('\n');
   }
 
+  async getStreak(userId: string): Promise<{ current: number; longest: number; lastTradeAt: Date | null }> {
+    const trades = await this.prisma.trade.findMany({
+      where: { userId, status: { in: ['CLOSED', 'SIMULATED'] } },
+      orderBy: { entryAt: 'desc' },
+      select: { entryAt: true },
+    });
+
+    if (!trades.length) return { current: 0, longest: 0, lastTradeAt: null };
+
+    // Build set of unique UTC dates (YYYY-MM-DD)
+    const days = new Set(trades.map((t) => t.entryAt.toISOString().slice(0, 10)));
+    const sorted = Array.from(days).sort().reverse(); // most recent first
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+    // Current streak: consecutive days backwards from today or yesterday
+    let current = 0;
+    if (sorted[0] === todayStr || sorted[0] === yesterdayStr) {
+      const ref = new Date(sorted[0]);
+      for (const day of sorted) {
+        const expected = new Date(ref);
+        expected.setDate(ref.getDate() - current);
+        if (day === expected.toISOString().slice(0, 10)) {
+          current++;
+        } else {
+          break;
+        }
+      }
+    }
+
+    // Longest streak
+    const asc = Array.from(days).sort();
+    let longest = 1;
+    let run = 1;
+    for (let i = 1; i < asc.length; i++) {
+      const prev = new Date(asc[i - 1]);
+      const curr = new Date(asc[i]);
+      const diff = (curr.getTime() - prev.getTime()) / 86400000;
+      if (diff === 1) {
+        run++;
+        longest = Math.max(longest, run);
+      } else {
+        run = 1;
+      }
+    }
+
+    return { current, longest, lastTradeAt: trades[0]?.entryAt ?? null };
+  }
+
   async getPublicStats() {
     const [totalUsers, totalTrades] = await Promise.all([
       this.prisma.user.count(),

@@ -46,7 +46,7 @@ const PROPFIRM_FEATURES = [
 
 const FAQS = [
   { q: 'Is this a real brokerage or demo account?',         a: 'Neither — it\'s a pure simulator. No real money, no broker connection. You practice using historical XAUUSD data in a completely safe environment. Nothing connects to any live market.' },
-  { q: 'What happens after I use my 20 free simulations?',  a: 'You\'ll see an upgrade prompt. Choose the plan that fits you: Monthly (€4.95/mo) or Annual (€39/yr — best value, saves €20 vs monthly). For prop firm operators, the Prop Firm plan (€149/yr) adds challenge-mode metrics, CSV export and up to 5 seats.' },
+  { q: 'What happens after I use my 20 free simulations?',  a: 'You\'ll see an upgrade prompt. Choose the plan that fits you: Monthly (€9.95/mo) or Annual (€79/yr — best value, saves €40 vs monthly). For prop firm candidates, the Prop Firm plan (€149/yr) adds challenge-mode metrics, CSV export and verified badge.' },
   { q: 'Is the market data real?',                          a: 'Yes. We source real historical XAUUSD spot price data with authentic bid/ask spreads. Scenarios replay at real market timing. The only thing that isn\'t real is the capital at risk.' },
   { q: 'Can I track my progress over time?',                a: 'Pro users get a full analytics dashboard: equity curve, drawdown history, Trader Score trend and session-by-session breakdown. You can see exactly which sessions you improved and where you still lose money.' },
   { q: 'Do I need trading experience to start?',            a: 'No. The missions and academy section cover everything from reading a candlestick chart to building a complete trading plan with risk rules. Beginners start with the guided modules; experienced traders go straight to the simulator.' },
@@ -239,13 +239,13 @@ function PricingSection() {
           </div>
           <div style={{ color: '#6b7385', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Pro</div>
           <div style={{ color: '#e8c96d', fontSize: 36, fontWeight: 800, fontFamily: 'monospace', lineHeight: 1 }}>
-            {billing === 'monthly' ? '€4.95' : '€39'}
+            {billing === 'monthly' ? '€9.95' : '€79'}
           </div>
           <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 2 }}>
-            {billing === 'monthly' ? 'per month · cancel anytime' : 'per year · cancel anytime'}
+            {billing === 'monthly' ? 'por mes · cancela cuando quieras' : 'por año · cancela cuando quieras'}
           </div>
           {billing === 'annual' && (
-            <div style={{ color: '#2dcc6f', fontSize: 10, marginBottom: 16 }}>≈ €3.25/mo · save €20.40 vs monthly</div>
+            <div style={{ color: '#2dcc6f', fontSize: 10, marginBottom: 16 }}>≈ €6.58/mes · ahorras €40 vs mensual</div>
           )}
           {billing === 'monthly' && <div style={{ marginBottom: 16 }} />}
           <ul className="space-y-2 mb-6 flex-1">
@@ -563,32 +563,49 @@ export default function LandingPage() {
 
       {/* ── Hero ── */}
       <section className="max-w-4xl mx-auto px-6 pt-20 pb-10 text-center">
-        <GoldLabel>XAUUSD Gold Spot Simulator — Real data. Zero risk.</GoldLabel>
+        <GoldLabel>XAUUSD Prop Firm Simulator — Real data. Zero risk.</GoldLabel>
         <h1 className="font-black leading-tight mb-5"
           style={{ fontSize: 'clamp(28px,5vw,54px)', color: '#e8ecf4' }}>
-          The simulator that trades{' '}
-          <span style={{ color: '#c9a84c' }}>like a real desk.</span>
+          ¿Pasarías el challenge{' '}
+          <span style={{ color: '#c9a84c' }}>antes de poner dinero real?</span>
         </h1>
-        <p className="max-w-xl mx-auto mb-8"
+        <p className="max-w-2xl mx-auto mb-6"
           style={{ color: '#8893a8', fontSize: 15, lineHeight: 1.8 }}>
-          Practice XAUUSD on 2 years of real historical data. Build risk discipline, track your Trader Score, and prepare for prop firm challenges — without risking a single euro.
+          Los challenges de prop firm (FTMO, Funded Next, MyForexFunds) cuestan entre <strong style={{ color: '#c8cdd8' }}>€150 y €1.500</strong> — y el <strong style={{ color: '#c8cdd8' }}>85% de los traders los fallan en la primera semana</strong> por no controlar drawdown o riesgo por trade. GoldTrader te permite practicar exactamente las métricas que te van a evaluar, sobre datos reales de XAUUSD, sin arriesgar nada.
         </p>
+
+        {/* Prop firm metrics preview */}
+        <div className="flex flex-wrap justify-center gap-3 mb-8">
+          {[
+            { label: 'Max Drawdown', value: '< 10%', ok: true },
+            { label: 'Daily DD', value: '< 5%', ok: true },
+            { label: 'Consistency', value: '≥ 70/100', ok: false },
+            { label: 'Avg R:R', value: '≥ 2:1', ok: false },
+          ].map(({ label, value, ok }) => (
+            <div key={label} className="flex items-center gap-2 px-3 py-1.5 rounded-sm font-mono text-xs"
+              style={{ background: '#0f1117', border: `1px solid ${ok ? '#2dcc6f33' : '#1d2029'}` }}>
+              <span style={{ color: ok ? '#2dcc6f' : '#e84040', fontSize: 10 }}>{ok ? '✓' : '✗'}</span>
+              <span style={{ color: '#6b7385' }}>{label}</span>
+              <span style={{ color: ok ? '#2dcc6f' : '#e84040', fontWeight: 700 }}>{value}</span>
+            </div>
+          ))}
+        </div>
 
         {/* CTAs */}
         <div className="flex items-center justify-center gap-3 flex-wrap">
           <Link href="/auth/register"
             className="px-7 py-3 rounded-sm font-bold text-sm transition-opacity hover:opacity-90"
             style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}>
-            Start practicing free →
+            Empezar gratis — 20 simulaciones →
           </Link>
           <a href="#preview"
             className="px-7 py-3 rounded-sm text-sm"
             style={{ background: '#0f1117', color: '#8893a8', border: '1px solid #1d2029', textDecoration: 'none' }}>
-            See the product ↓
+            Ver el producto ↓
           </a>
         </div>
         <p style={{ color: '#3a3f4d', fontSize: 11, marginTop: 12 }}>
-          No credit card · 20 free simulations · Instant access · 30-day refund guarantee
+          Sin tarjeta de crédito · 20 simulaciones gratis · Acceso inmediato · Garantía 30 días
         </p>
 
         {/* Real social proof — only with real data */}
@@ -621,7 +638,7 @@ export default function LandingPage() {
             ['XAUUSD',      'Gold Spot — one instrument, mastered'],
             ['8 timeframes','M1 · M5 · M15 · H1 · H4 · D1 · W1 · MN'],
             ['2yr history', 'Real historical price data'],
-            ['€39/yr',       'Full Pro access — annual plan, cancel anytime'],
+            ['€79/yr',       'Acceso Pro completo — plan anual, cancela cuando quieras'],
           ].map(([val, label]) => (
             <div key={label} className="text-center">
               <div style={{ color: '#c9a84c', fontWeight: 700, fontSize: 14, fontFamily: 'monospace' }}>{val}</div>
