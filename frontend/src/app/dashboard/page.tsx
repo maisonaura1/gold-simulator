@@ -319,6 +319,27 @@ function PropFirmPanel({ stats }: { stats: Stats | null }) {
   );
 }
 
+const PLAN_META: Record<string, { label: string; color: string; bg: string; border: string; icon: string }> = {
+  free:      { label: 'Free',       color: '#6b7385', bg: '#0f1117', border: '#1d2029', icon: '○' },
+  monthly:   { label: 'Pro Monthly', color: '#c9a84c', bg: '#1a1508', border: '#2c2410', icon: '◆' },
+  annual:    { label: 'Pro Annual',  color: '#e8c96d', bg: '#1a1508', border: '#c9a84c55', icon: '◆' },
+  propfirm:  { label: 'Prop Firm',  color: '#4a6cf7', bg: '#080d14', border: '#4a6cf755', icon: '◈' },
+  lifetime:  { label: 'Lifetime',   color: '#22c55e', bg: '#0a1a0e', border: '#2dcc6f44', icon: '★' },
+};
+
+function MembershipBadge({ plan }: { plan: string }) {
+  const meta = PLAN_META[plan] ?? PLAN_META.free;
+  return (
+    <div
+      className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm font-mono text-xs font-bold"
+      style={{ background: meta.bg, border: `1px solid ${meta.border}`, color: meta.color }}
+    >
+      <span style={{ fontSize: 9 }}>{meta.icon}</span>
+      {meta.label}
+    </div>
+  );
+}
+
 function DashboardInner() {
   const { accessToken } = useAuthStore();
   const t = useT();
@@ -370,17 +391,23 @@ function DashboardInner() {
           </span>
           <div style={{ color: '#6b7385', fontSize: 10, marginTop: 1 }}>{t.dashSubtitle}</div>
         </div>
-        <Link
-          href="/trade"
-          className="flex items-center gap-2 px-4 py-2 rounded-sm text-xs font-bold"
-          style={{
-            background: 'linear-gradient(135deg, #c9a84c, #a8893c)',
-            color: '#000',
-            textDecoration: 'none',
-          }}
-        >
-          {t.dashNewSession}
-        </Link>
+        <div className="flex items-center gap-3">
+          {/* Membership badge */}
+          {payStatus && (
+            <MembershipBadge plan={payStatus.plan} />
+          )}
+          <Link
+            href="/trade"
+            className="flex items-center gap-2 px-4 py-2 rounded-sm text-xs font-bold"
+            style={{
+              background: 'linear-gradient(135deg, #c9a84c, #a8893c)',
+              color: '#000',
+              textDecoration: 'none',
+            }}
+          >
+            {t.dashNewSession}
+          </Link>
+        </div>
       </div>
 
       <div className="flex-1 p-5 space-y-5">
