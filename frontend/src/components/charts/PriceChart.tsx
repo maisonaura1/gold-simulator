@@ -223,7 +223,13 @@ export function PriceChart() {
     bbUpperRef.current?.setData(bb.map((p) => ({ time: toTime(p.time), value: p.upper })));
     bbMidRef.current?.setData(  bb.map((p) => ({ time: toTime(p.time), value: p.middle })));
     bbLowerRef.current?.setData(bb.map((p) => ({ time: toTime(p.time), value: p.lower })));
-    chartRef.current?.timeScale().fitContent();
+    // Show the last ~120 candles by default instead of fitting all data
+    const total = candles.length;
+    const visible = 120;
+    chartRef.current?.timeScale().setVisibleLogicalRange({
+      from: Math.max(0, total - visible),
+      to:   total + 5,
+    });
     scheduleRender();
   }, [candles]);
 
