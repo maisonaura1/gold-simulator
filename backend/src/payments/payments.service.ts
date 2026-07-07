@@ -403,6 +403,35 @@ export class PaymentsService {
   }
 
   /**
+   * Aplica un promotion code de Stripe a la suscripción activa del usuario.
+   */
+  async applyPromoCode(userId: string, code: string): Promise<{ ok: boolean; message: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { stripeCustomerId: true, subscriptionId: true },
+    });
+
+    if (!user?.subscriptionId) {
+      throw new BadRequestException('No tienes una suscripción activa');
+    }
+
+    // Buscar el promotion code en Stripe
+    const promoCodes = await this.stripe.promotionCodes.list({ code, limit: 1, active: true });
+    if (!promoCodes.data.length) {
+      throw new BadRequestException('Código promocional no válido o expirado');
+    }
+
+    const promoCode = promoCodes.data[0];
+
+    // Aplicar al subscription
+    await this.stripe.subscriptions.update(user.subscriptionId, {
+      discounts: [{ promotion_code: promoCode.id }],
+    });
+
+    return { ok: true, message: `Código "${code}" aplicado correctamente` };
+  }
+
+  /**
    * Portal de billing de Stripe: permite al usuario gestionar
    * su suscripción (cancelar, cambiar plan, actualizar tarjeta).
    */

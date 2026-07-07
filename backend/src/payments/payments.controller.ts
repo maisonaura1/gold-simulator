@@ -10,12 +10,18 @@ import {
   UseGuards, RawBodyRequest,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { IsOptional, IsIn } from 'class-validator';
+import { IsOptional, IsIn, IsString, MinLength } from 'class-validator';
 
 class CheckoutDto {
   @IsOptional()
   @IsIn(['monthly', 'annual', 'lifetime', 'propfirm'])
   plan?: 'monthly' | 'annual' | 'lifetime' | 'propfirm';
+}
+
+class PromoCodeDto {
+  @IsString()
+  @MinLength(1)
+  code: string;
 }
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -74,6 +80,19 @@ export class PaymentsController {
   @Get('portal')
   portal(@CurrentUser() user: { sub: string }) {
     return this.payments.createBillingPortalSession(user.sub);
+  }
+
+  /**
+   * POST /payments/apply-promo
+   * Aplica un código promocional a la suscripción activa.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('apply-promo')
+  applyPromo(
+    @CurrentUser() user: { sub: string },
+    @Body() body: PromoCodeDto,
+  ) {
+    return this.payments.applyPromoCode(user.sub, body.code);
   }
 
   /**

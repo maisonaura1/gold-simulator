@@ -13,6 +13,7 @@ const NAV = [
   { href: '/learn',      label: 'Misiones',       icon: '🎯' },
   { href: '/academy',    label: 'Academia XAU',   icon: '🎓' },
   { href: '/stats',      label: 'Estadísticas',   icon: '📈' },
+  { href: '/account',    label: 'Mi cuenta',      icon: '⚙️' },
 ];
 
 export function Sidebar() {
