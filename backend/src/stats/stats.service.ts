@@ -161,6 +161,79 @@ export class StatsService {
     return { equityCurve, maxDrawdown };
   }
 
+  async getDailyStats(userId: string) {
+    const trades = await this.prisma.trade.findMany({
+      where: { userId, status: { in: ['CLOSED', 'SIMULATED'] } },
+      orderBy: { entryAt: 'asc' },
+      select: { resultUsd: true, entryAt: true, rrRatio: true },
+    });
+
+    const map: Record<string, { pnl: number; trades: number; wins: number }> = {};
+
+    for (const t of trades) {
+      const day = new Date(t.entryAt).toISOString().slice(0, 10);
+      if (!map[day]) map[day] = { pnl: 0, trades: 0, wins: 0 };
+      map[day].pnl    += t.resultUsd ?? 0;
+      map[day].trades += 1;
+      if ((t.resultUsd ?? 0) > 0) map[day].wins += 1;
+    }
+
+    // Build monthly totals
+    const monthMap: Record<string, number> = {};
+    for (const [day, d] of Object.entries(map)) {
+      const month = day.slice(0, 7);
+      monthMap[month] = (monthMap[month] ?? 0) + d.pnl;
+    }
+
+    const days = Object.entries(map).map(([date, d]) => ({
+      date,
+      pnl:      +d.pnl.toFixed(2),
+      trades:   d.trades,
+      winRate:  d.trades > 0 ? +((d.wins / d.trades) * 100).toFixed(1) : 0,
+    }));
+
+    const months = Object.entries(monthMap).map(([month, pnl]) => ({
+      month, pnl: +pnl.toFixed(2),
+    }));
+
+    return { days, months };
+  }
+
+  async getCsvExport(userId: string): Promise<string> {
+    const trades = await this.prisma.trade.findMany({
+      where: { userId, status: { in: ['CLOSED', 'SIMULATED'] } },
+      orderBy: { entryAt: 'asc' },
+    });
+
+    const rows = [
+      ['Date', 'Type', 'Lot', 'Entry', 'Exit', 'SL', 'TP', 'R:R', 'Risk%', 'P/L USD', 'P/L%', 'Status'],
+      ...trades.map((t) => [
+        new Date(t.entryAt).toISOString().slice(0, 16).replace('T', ' '),
+        t.type,
+        t.lot,
+        t.entryPrice.toFixed(2),
+        t.exitPrice?.toFixed(2) ?? '',
+        t.sl?.toFixed(2) ?? '',
+        t.tp?.toFixed(2) ?? '',
+        t.rrRatio?.toFixed(2) ?? '',
+        t.riskPct?.toFixed(2) ?? '',
+        t.resultUsd?.toFixed(2) ?? '',
+        t.resultPct?.toFixed(2) ?? '',
+        t.status,
+      ]),
+    ];
+
+    return rows.map((r) => r.join(',')).join('\n');
+  }
+
+  async getPublicStats() {
+    const [totalUsers, totalTrades] = await Promise.all([
+      this.prisma.user.count(),
+      this.prisma.trade.count({ where: { status: { in: ['CLOSED', 'SIMULATED'] } } }),
+    ]);
+    return { totalUsers, totalTrades };
+  }
+
   private emptyStats() {
     return {
       winRate: 0, totalPnl: 0, avgPnl: 0, avgRisk: 0, avgRR: 0,

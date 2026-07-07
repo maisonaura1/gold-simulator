@@ -52,7 +52,7 @@ export function DeskOrderEntry({ memberships, onOrderCreated }: Props) {
     }
   }
 
-  if (writableBooks.length === 0) {
+  if (writableBooks.length === 0 && memberships.length > 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-2 p-6">
         <span style={{ color: '#c9a84c', fontSize: 24 }}>◆</span>

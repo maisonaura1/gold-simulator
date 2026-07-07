@@ -6,6 +6,7 @@ import { useTrades } from '@/hooks/useTrades';
 import { useAccount } from '@/hooks/useAccount';
 import { usePricesStore } from '@/store/prices.store';
 import { useT } from '@/hooks/useT';
+import { useSuperwall } from '@/hooks/useSuperwall';
 import { TipLabel } from '@/components/ui/Tooltip';
 import type { Trade } from '@/types';
 
@@ -178,6 +179,7 @@ export function TerminalPanel() {
   const { account } = useAccount();
   const currentPrice = usePricesStore((s) => s.currentPrice);
   const t = useT();
+  const { status: swStatus } = useSuperwall();
 
   const closed = trades.filter((tr) => tr.status !== 'OPEN');
 
@@ -305,24 +307,80 @@ export function TerminalPanel() {
         )}
 
         {tab === 'account' && account && (
-          <div className="p-4 grid grid-cols-4 gap-3 text-[11px]">
-            {[
-              { label: t.balance,         tip: t.tipBalance,         value: `$${account.currentBalance.toFixed(2)}`,                                      cls: 'text-[var(--mt-white)]' },
-              { label: t.equity,          tip: t.tipEquity,          value: `$${(account.currentBalance + totalLivePnl).toFixed(2)}`,                     cls: 'text-[var(--mt-cyan)]' },
-              { label: t.floatingPL,      tip: t.tipFloatingPL,      value: `${totalLivePnl >= 0 ? '+' : ''}$${totalLivePnl.toFixed(2)}`,                 cls: totalLivePnl >= 0 ? 'text-[var(--mt-green)]' : 'text-[var(--mt-red)]' },
-              { label: t.plToday,         tip: t.tipPLToday,         value: `${account.dailyPnl >= 0 ? '+' : ''}$${account.dailyPnl.toFixed(2)}`,        cls: account.dailyPnl >= 0 ? 'text-[var(--mt-green)]' : 'text-[var(--mt-red)]' },
-              { label: t.level,           tip: t.tipLevel,           value: String(account.level),                                                        cls: 'text-[var(--mt-yellow)]' },
-              { label: t.xp,              tip: t.tipXP,              value: `${account.xp} pts`,                                                          cls: 'text-[var(--mt-yellow)]' },
-              { label: t.startingBalance, tip: t.tipStartingBalance, value: `$${account.initialBalance.toFixed(2)}`,                                      cls: 'text-[var(--mt-text-dim)]' },
-              { label: t.openPositions,   tip: t.tipOpenPositions,   value: String(openTrades.length),                                                    cls: 'text-[var(--mt-text)]' },
-            ].map((item) => (
-              <div key={item.label} className="bg-[var(--mt-bg)] border border-[var(--mt-border)] p-2">
-                <div className="text-[var(--mt-text-dim)] text-[10px] mb-0.5">
-                  <TipLabel label={item.label} tip={item.tip} side="top" />
-                </div>
-                <div className={`font-mono font-bold text-sm ${item.cls}`}>{item.value}</div>
+          <div className="p-3 flex flex-col gap-3 text-[11px]">
+
+            {/* ── User profile strip ── */}
+            <div className="flex items-center gap-3 bg-[var(--mt-bg)] border border-[var(--mt-border)] px-3 py-2">
+              {/* Avatar initials */}
+              <div className="shrink-0 w-8 h-8 rounded-sm flex items-center justify-center font-bold text-sm font-mono"
+                style={{ background: '#1a1508', border: '1px solid #c9a84c44', color: '#c9a84c' }}>
+                {(account.user?.name ?? account.user?.email ?? '?')[0].toUpperCase()}
               </div>
-            ))}
+              {/* Name + email */}
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold truncate" style={{ color: '#e8ecf4' }}>
+                  {account.user?.name ?? '—'}
+                </div>
+                <div className="truncate" style={{ color: '#6b7385', fontSize: 10 }}>
+                  {account.user?.email ?? '—'}
+                </div>
+              </div>
+              {/* Membership badge */}
+              {(() => {
+                const plan = swStatus?.plan ?? 'free';
+                const isPro = plan === 'lifetime';
+                return (
+                  <div className="shrink-0 px-2 py-0.5 rounded-sm font-mono text-[9px] font-bold uppercase tracking-widest"
+                    style={{
+                      background: isPro ? '#1a1508' : '#0e1118',
+                      border: `1px solid ${isPro ? '#c9a84c66' : '#2e3340'}`,
+                      color: isPro ? '#c9a84c' : '#6b7385',
+                    }}>
+                    {isPro ? '◆ PRO' : 'FREE'}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* ── Free tier usage bar (only for free users) ── */}
+            {swStatus && !swStatus.paid && (
+              <div className="bg-[var(--mt-bg)] border border-[var(--mt-border)] px-3 py-2">
+                <div className="flex justify-between mb-1" style={{ fontSize: 10, color: '#6b7385' }}>
+                  <span>Simulaciones gratuitas</span>
+                  <span style={{ color: swStatus.simulationsUsed >= swStatus.simulationsLimit ? '#e84040' : '#c9a84c' }}>
+                    {swStatus.simulationsUsed} / {swStatus.simulationsLimit}
+                  </span>
+                </div>
+                <div className="h-1.5 bg-[#0e1118] border border-[#2e3340] overflow-hidden rounded-sm">
+                  <div className="h-full transition-all duration-500"
+                    style={{
+                      width: `${Math.min(100, (swStatus.simulationsUsed / swStatus.simulationsLimit) * 100)}%`,
+                      background: swStatus.simulationsUsed >= swStatus.simulationsLimit ? '#e84040' : '#c9a84c',
+                    }} />
+                </div>
+              </div>
+            )}
+
+            {/* ── Financial metrics grid ── */}
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { label: t.balance,         tip: t.tipBalance,         value: `$${account.currentBalance.toFixed(2)}`,                                    cls: 'text-[var(--mt-white)]' },
+                { label: t.equity,          tip: t.tipEquity,          value: `$${(account.currentBalance + totalLivePnl).toFixed(2)}`,                   cls: 'text-[var(--mt-cyan)]' },
+                { label: t.floatingPL,      tip: t.tipFloatingPL,      value: `${totalLivePnl >= 0 ? '+' : ''}$${totalLivePnl.toFixed(2)}`,               cls: totalLivePnl >= 0 ? 'text-[var(--mt-green)]' : 'text-[var(--mt-red)]' },
+                { label: t.plToday,         tip: t.tipPLToday,         value: `${account.dailyPnl >= 0 ? '+' : ''}$${account.dailyPnl.toFixed(2)}`,      cls: account.dailyPnl >= 0 ? 'text-[var(--mt-green)]' : 'text-[var(--mt-red)]' },
+                { label: t.level,           tip: t.tipLevel,           value: String(account.level),                                                      cls: 'text-[var(--mt-yellow)]' },
+                { label: t.xp,              tip: t.tipXP,              value: `${account.xp} pts`,                                                        cls: 'text-[var(--mt-yellow)]' },
+                { label: t.startingBalance, tip: t.tipStartingBalance, value: `$${account.initialBalance.toFixed(2)}`,                                    cls: 'text-[var(--mt-text-dim)]' },
+                { label: t.openPositions,   tip: t.tipOpenPositions,   value: String(openTrades.length),                                                  cls: 'text-[var(--mt-text)]' },
+              ].map((item) => (
+                <div key={item.label} className="bg-[var(--mt-bg)] border border-[var(--mt-border)] p-2">
+                  <div className="text-[var(--mt-text-dim)] text-[10px] mb-0.5">
+                    <TipLabel label={item.label} tip={item.tip} side="top" />
+                  </div>
+                  <div className={`font-mono font-bold text-sm ${item.cls}`}>{item.value}</div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

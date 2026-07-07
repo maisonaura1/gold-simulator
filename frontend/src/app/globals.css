@@ -53,16 +53,36 @@ body {
   background: var(--mt-bg);
   color: var(--mt-text);
   font-family: 'Roboto', 'Segoe UI', system-ui, sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   -webkit-font-smoothing: antialiased;
   user-select: none;
 }
 
-/* ── MT-style scrollbar ─────────────────────────────────── */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--mt-panel); }
-::-webkit-scrollbar-thumb { background: var(--mt-sep); border-radius: 0; }
-::-webkit-scrollbar-corner { background: var(--mt-panel); }
+/* ── MT-style scrollbar (panels/tables) ─────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--mt-sep); border-radius: 3px; }
+::-webkit-scrollbar-corner { background: transparent; }
+
+/* ── Landing page scroll container ──────────────────────── */
+.landing-scroll {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: none;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2d38 transparent;
+}
+
+.landing-scroll::-webkit-scrollbar { width: 4px; }
+.landing-scroll::-webkit-scrollbar-track { background: transparent; }
+.landing-scroll::-webkit-scrollbar-thumb {
+  background: #c9a84c22;
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+.landing-scroll:hover::-webkit-scrollbar-thumb { background: #c9a84c55; }
 
 /* ── Utility ─────────────────────────────────────────────── */
 @layer components {

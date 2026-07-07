@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 import { useT } from '@/hooks/useT';
 import { useReferral } from '@/hooks/useReferral';
+import { TradeCalendar } from '@/components/dashboard/TradeCalendar';
 import type { Stats } from '@/types';
 
 interface AccountData {
@@ -540,6 +541,25 @@ function DashboardInner() {
 
         {/* Prop Firm challenge panel — only for propfirm plan */}
         {payStatus?.plan === 'propfirm' && <PropFirmPanel stats={stats} />}
+
+        {/* Trading Journal Calendar — Pro + Prop Firm */}
+        {payStatus?.paid && (
+          <div>
+            <div style={{ color: '#6b7385', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8, fontFamily: 'monospace' }}>
+              Trading Journal
+            </div>
+            <TradeCalendar
+              isPropFirm={payStatus.plan === 'propfirm'}
+              onExportCsv={async () => {
+                const res = await api.get('/stats/export/csv', { responseType: 'blob' });
+                const url = URL.createObjectURL(new Blob([res.data as BlobPart], { type: 'text/csv' }));
+                const a = document.createElement('a');
+                a.href = url; a.download = 'goldtrader-journal.csv'; a.click();
+                URL.revokeObjectURL(url);
+              }}
+            />
+          </div>
+        )}
 
         {/* Referral card */}
         <ReferralCard referral={referral} />

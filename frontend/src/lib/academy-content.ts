@@ -30,6 +30,96 @@ const es: AcademyLevel[] = [
     color: 'border-yellow-500/40 bg-yellow-500/5', accent: 'text-yellow-400', bar: 'bg-yellow-500', xpRequired: 0,
     modules: [
       {
+        id: 'l1-m0', title: '🖥️ Cómo leer el simulador — Guía de interfaz', duration: '7 min', type: 'guide', icon: '🖥️',
+        content: [
+          {
+            heading: 'La pantalla principal del simulador',
+            body: `Cuando entras a la pantalla /trade verás tres zonas principales:
+
+📊 IZQUIERDA — El gráfico de velas (precio del oro en tiempo real)
+📋 DERECHA — El panel de órdenes (donde abres y cierras operaciones)
+📌 ABAJO — El ORDER TAPE (historial de todas tus operaciones)
+
+Hay también una barra superior dorada (el "Bullion Desk") que muestra datos del mercado en tiempo real. Pasa el cursor sobre cualquier término con ⓘ para ver qué significa.`,
+          },
+          {
+            heading: 'La barra superior: Bullion Desk',
+            body: `La barra dorada superior muestra información de mercado en tiempo real:
+
+◆ BULLION DESK — El nombre de tu mesa de operaciones virtual
+XAUUSD — Par que estás operando (oro vs. dólar)
+BID — Precio al que puedes VENDER (verde)
+ASK — Precio al que puedes COMPRAR (rojo)
+SPD — Spread: la diferencia BID-ASK, que es el coste de cada operación
+SESSION — Sesión de mercado activa (Londres, Nueva York, Tokio)
+NET FLOW — Flujo neto de órdenes: más compras o más ventas en la mesa
+REVIEW QUEUE — Órdenes pendientes de aprobación
+
+💡 Todos estos términos tienen explicación: pasa el cursor sobre el ⓘ junto a cada uno.`,
+          },
+          {
+            heading: 'El gráfico de velas japonesas',
+            body: `El gráfico del centro muestra el precio del oro. Cada "vela" representa un período de tiempo:
+
+🕯️ Vela verde (alcista): el precio subió en ese período. El cuerpo va de la apertura (abajo) al cierre (arriba).
+🕯️ Vela roja (bajista): el precio bajó. El cuerpo va de la apertura (arriba) al cierre (abajo).
+📏 La mecha/sombra: el precio máximo y mínimo que alcanzó dentro del período.
+
+En la barra de herramientas del gráfico encuentras:
+— Los timeframes: 1H = velas de 1 hora, 4H = 4 horas, etc.
+— Los indicadores: MA20, MA50, BB, RSI, MACD (pasa el cursor para ver qué hace cada uno)
+— Las herramientas de dibujo: para trazar líneas, zonas Fibonacci, etc.`,
+          },
+          {
+            heading: 'El panel de órdenes (Order Entry)',
+            body: `En el panel derecho encontrarás el formulario para abrir operaciones:
+
+▲ BUY — Compras oro apostando a que el precio sube
+▼ SELL — Vendes oro apostando a que el precio baja
+
+Campos obligatorios:
+• Precio de entrada: a qué precio quieres entrar (por defecto el precio actual)
+• Stop Loss (SL): precio donde la operación se cierra automáticamente si va en tu contra → OBLIGATORIO
+• Take Profit (TP): precio donde la operación se cierra automáticamente con ganancia
+• Lotes: tamaño de la posición (empieza con 0.01 — el mínimo)
+
+⚠️ El simulador no te dejará operar sin Stop Loss. Es la regla número 1.`,
+          },
+          {
+            heading: 'El ORDER TAPE (barra inferior)',
+            body: `La barra inferior es el "blotter" — el registro de todas tus órdenes. Puedes colapsarla haciendo clic en ella.
+
+Columnas:
+• TIPO: BUY (▲ verde) o SELL (▼ rojo)
+• Par: XAUUSD
+• Lotes: tamaño de la posición
+• Precio de entrada: al que se ejecutó
+• SL / TP: tus niveles de protección
+• Resultado: ganancia o pérdida al cerrar
+
+Las órdenes aparecen en tiempo real. Usa esta vista para revisar tu historial y aprender de cada trade.`,
+          },
+          {
+            heading: 'Tu primer trade en 5 pasos',
+            body: `Sigue estos pasos para tu primera operación simulada:
+
+1️⃣ Mira el gráfico — ¿Las últimas velas son mayoritariamente verdes (sube) o rojas (baja)?
+2️⃣ Elige BUY si el precio está subiendo, SELL si está bajando
+3️⃣ Pon el Stop Loss a 30–50 puntos de tu precio de entrada
+4️⃣ Pon el Take Profit al doble que el Stop Loss (si SL=30, TP=60)
+5️⃣ Usa 0.01 lotes y pulsa CONFIRMAR
+
+No te preocupes si la primera sale mal — lo importante es hacerlo con Stop Loss y aprender el flujo.`,
+          },
+        ],
+        quiz: [
+          { q: '¿Qué significa BID en la barra superior?', options: ['El precio al que compras', 'El precio al que vendes', 'El volumen operado'], answer: 1 },
+          { q: '¿Para qué sirve el Stop Loss (SL)?', options: ['Para ganar más dinero', 'Para cerrar la operación automáticamente si va en tu contra', 'Para ver el historial'], answer: 1 },
+          { q: 'Una vela verde en el gráfico significa que...', options: ['El precio bajó en ese período', 'El precio subió en ese período', 'No hubo actividad'], answer: 1 },
+          { q: '¿Cuál es el tamaño de lote recomendado para empezar?', options: ['1.00 lote', '0.10 lote', '0.01 lote (micro)'], answer: 2 },
+        ],
+      },
+      {
         id: 'l1-m1', title: '¿Qué es el oro (XAU/USD)?', duration: '5 min', type: 'lesson', icon: '📖',
         content: [
           { heading: 'El oro como activo financiero', body: `XAU es el símbolo del oro en los mercados financieros. USD es el dólar americano. Cuando ves "XAUUSD = 2.340", significa que 1 onza de oro cuesta 2.340 dólares.\n\nEl oro es uno de los activos más negociados del mundo porque:\n• Es refugio seguro en crisis económicas\n• Se mueve con fuerza cuando hay inflación\n• Opera 24/5 (lunes a viernes)\n• Tiene alta liquidez — puedes entrar y salir rápido` },
@@ -223,6 +313,96 @@ const en: AcademyLevel[] = [
     color: 'border-yellow-500/40 bg-yellow-500/5', accent: 'text-yellow-400', bar: 'bg-yellow-500', xpRequired: 0,
     modules: [
       {
+        id: 'l1-m0', title: '🖥️ How to read the simulator — Interface guide', duration: '7 min', type: 'guide', icon: '🖥️',
+        content: [
+          {
+            heading: 'The simulator main screen',
+            body: `When you enter the /trade screen you'll see three main areas:
+
+📊 LEFT — The candlestick chart (gold price in real time)
+📋 RIGHT — The order panel (where you open and close trades)
+📌 BOTTOM — The ORDER TAPE (history of all your trades)
+
+There's also a golden top bar (the "Bullion Desk") showing live market data. Hover over any ⓘ icon to see what each term means.`,
+          },
+          {
+            heading: 'The top bar: Bullion Desk',
+            body: `The golden top bar shows real-time market information:
+
+◆ BULLION DESK — Your virtual trading desk name
+XAUUSD — The pair you're trading (gold vs. dollar)
+BID — Price at which you can SELL (green)
+ASK — Price at which you can BUY (red)
+SPD — Spread: the BID-ASK difference, which is the cost of each trade
+SESSION — Active market session (London, New York, Tokyo)
+NET FLOW — Net order flow: more buys or more sells on the desk
+REVIEW QUEUE — Orders pending approval
+
+💡 All these terms have explanations — hover over the ⓘ icon next to each one.`,
+          },
+          {
+            heading: 'The Japanese candlestick chart',
+            body: `The centre chart shows the gold price. Each "candle" represents a time period:
+
+🕯️ Green candle (bullish): price went up in that period. The body goes from open (bottom) to close (top).
+🕯️ Red candle (bearish): price went down. The body goes from open (top) to close (bottom).
+📏 The wick/shadow: the highest and lowest price reached within the period.
+
+In the chart toolbar you'll find:
+— Timeframes: 1H = 1-hour candles, 4H = 4 hours, etc.
+— Indicators: MA20, MA50, BB, RSI, MACD (hover to see what each does)
+— Drawing tools: to draw lines, Fibonacci zones, etc.`,
+          },
+          {
+            heading: 'The order panel (Order Entry)',
+            body: `In the right panel you'll find the form to open trades:
+
+▲ BUY — You buy gold betting the price will rise
+▼ SELL — You sell gold betting the price will fall
+
+Required fields:
+• Entry price: at what price you want to enter (defaults to current price)
+• Stop Loss (SL): price where the trade closes automatically if it goes against you → REQUIRED
+• Take Profit (TP): price where the trade closes automatically with a profit
+• Lots: position size (start with 0.01 — the minimum)
+
+⚠️ The simulator won't let you trade without a Stop Loss. It's rule number 1.`,
+          },
+          {
+            heading: 'The ORDER TAPE (bottom bar)',
+            body: `The bottom bar is the "blotter" — the record of all your orders. You can collapse it by clicking on it.
+
+Columns:
+• TYPE: BUY (▲ green) or SELL (▼ red)
+• Pair: XAUUSD
+• Lots: position size
+• Entry price: at which it was executed
+• SL / TP: your protection levels
+• Result: profit or loss on close
+
+Orders appear in real time. Use this view to review your history and learn from each trade.`,
+          },
+          {
+            heading: 'Your first trade in 5 steps',
+            body: `Follow these steps for your first simulated trade:
+
+1️⃣ Look at the chart — are the last candles mostly green (rising) or red (falling)?
+2️⃣ Choose BUY if the price is rising, SELL if it's falling
+3️⃣ Set your Stop Loss 30–50 points from your entry price
+4️⃣ Set your Take Profit at double the Stop Loss (if SL=30, TP=60)
+5️⃣ Use 0.01 lots and click CONFIRM
+
+Don't worry if the first one goes wrong — what matters is doing it with a Stop Loss and learning the flow.`,
+          },
+        ],
+        quiz: [
+          { q: 'What does BID mean in the top bar?', options: ['The price at which you buy', 'The price at which you sell', 'The volume traded'], answer: 1 },
+          { q: 'What is the Stop Loss (SL) for?', options: ['To make more money', 'To automatically close the trade if it goes against you', 'To view history'], answer: 1 },
+          { q: 'A green candle on the chart means...', options: ['The price fell in that period', 'The price rose in that period', 'There was no activity'], answer: 1 },
+          { q: 'What lot size is recommended to start?', options: ['1.00 lot', '0.10 lot', '0.01 lot (micro)'], answer: 2 },
+        ],
+      },
+      {
         id: 'l1-m1', title: 'What is Gold (XAU/USD)?', duration: '5 min', type: 'lesson', icon: '📖',
         content: [
           { heading: 'Gold as a financial asset', body: `XAU is the symbol for gold in financial markets. USD is the US dollar. When you see "XAUUSD = 2,340", it means 1 ounce of gold costs $2,340.\n\nGold is one of the most traded assets in the world because:\n• It's a safe haven during economic crises\n• It moves strongly during inflation\n• It trades 24/5 (Monday to Friday)\n• High liquidity — you can enter and exit quickly` },
@@ -415,6 +595,96 @@ const nl: AcademyLevel[] = [
     id: 1, name: 'Beginner', emoji: '🟡', subtitle: 'Van nul naar eerste trade',
     color: 'border-yellow-500/40 bg-yellow-500/5', accent: 'text-yellow-400', bar: 'bg-yellow-500', xpRequired: 0,
     modules: [
+      {
+        id: 'l1-m0', title: '🖥️ Hoe gebruik je de simulator — Interface-gids', duration: '7 min', type: 'guide', icon: '🖥️',
+        content: [
+          {
+            heading: 'Het hoofdscherm van de simulator',
+            body: `Als je het scherm /trade opent, zie je drie hoofdgebieden:
+
+📊 LINKS — De candlestick-grafiek (goudprijs in realtime)
+📋 RECHTS — Het orderpaneel (waar je trades opent en sluit)
+📌 ONDER — De ORDER TAPE (geschiedenis van al je orders)
+
+Er is ook een gouden bovenste balk (het "Bullion Desk") die live marktgegevens toont. Beweeg de muis over een ⓘ-pictogram om te zien wat elke term betekent.`,
+          },
+          {
+            heading: 'De bovenste balk: Bullion Desk',
+            body: `De gouden bovenste balk toont real-time marktinformatie:
+
+◆ BULLION DESK — Naam van je virtuele handelsbureau
+XAUUSD — Het paar dat je verhandelt (goud vs. dollar)
+BID — Prijs waartegen je kunt VERKOPEN (groen)
+ASK — Prijs waartegen je kunt KOPEN (rood)
+SPD — Spread: het verschil BID-ASK, de kosten per trade
+SESSION — Actieve marktsessie (Londen, New York, Tokio)
+NET FLOW — Netto orderstroom: meer kopen of verkopen op de desk
+REVIEW QUEUE — Orders wachtend op goedkeuring
+
+💡 Alle termen hebben uitleg — beweeg de muis over het ⓘ naast elk item.`,
+          },
+          {
+            heading: 'De Japanse candlestick-grafiek',
+            body: `De grafiek in het midden toont de goudprijs. Elke "kaars" staat voor een tijdsperiode:
+
+🕯️ Groene kaars (stijgend): prijs steeg in die periode. Het lichaam loopt van open (onder) naar sluiting (boven).
+🕯️ Rode kaars (dalend): prijs daalde. Het lichaam loopt van open (boven) naar sluiting (onder).
+📏 De wick/schaduw: de hoogste en laagste prijs die bereikt werd.
+
+In de grafiekwerkbalk vind je:
+— Tijdsbestekken: 1H = 1-uurkaarsen, 4H = 4 uur, etc.
+— Indicatoren: MA20, MA50, BB, RSI, MACD (beweeg erover voor uitleg)
+— Tekeninstrumenten: voor het tekenen van lijnen, Fibonacci-zones, etc.`,
+          },
+          {
+            heading: 'Het orderpaneel (Order Entry)',
+            body: `In het rechterpaneel vind je het formulier om trades te openen:
+
+▲ KOPEN — Je koopt goud en wedt dat de prijs stijgt
+▼ VERKOPEN — Je verkoopt goud en wedt dat de prijs daalt
+
+Verplichte velden:
+• Instapprijs: op welke prijs je wilt instappen (standaard de huidige prijs)
+• Stop-verlies (SL): prijs waarbij de trade automatisch sluit als hij tegen je ingaat → VERPLICHT
+• Winst nemen (TP): prijs waarbij de trade automatisch sluit met winst
+• Loten: positiegrootte (begin met 0,01 — het minimum)
+
+⚠️ De simulator laat je niet handelen zonder Stop-verlies. Dat is regel nummer 1.`,
+          },
+          {
+            heading: 'De ORDER TAPE (onderste balk)',
+            body: `De onderste balk is het "blotter" — het overzicht van al je orders. Je kunt het inklappen door erop te klikken.
+
+Kolommen:
+• TYPE: KOPEN (▲ groen) of VERKOPEN (▼ rood)
+• Paar: XAUUSD
+• Loten: positiegrootte
+• Instapprijs: waartegen uitgevoerd
+• SL / TP: je beschermingsniveaus
+• Resultaat: winst of verlies bij sluiting
+
+Orders verschijnen in realtime. Gebruik dit overzicht om je geschiedenis te bekijken en van elke trade te leren.`,
+          },
+          {
+            heading: 'Je eerste trade in 5 stappen',
+            body: `Volg deze stappen voor je eerste gesimuleerde trade:
+
+1️⃣ Bekijk de grafiek — zijn de laatste kaarsen voornamelijk groen (stijgend) of rood (dalend)?
+2️⃣ Kies KOPEN als de prijs stijgt, VERKOPEN als hij daalt
+3️⃣ Stel je Stop-verlies in op 30–50 punten van je instapprijs
+4️⃣ Stel je Winst nemen in op het dubbele van het Stop-verlies (als SL=30, TP=60)
+5️⃣ Gebruik 0,01 lot en klik op BEVESTIGEN
+
+Maak je geen zorgen als de eerste trade verlies geeft — het gaat erom dat je het doet mét Stop-verlies en het flow leert kennen.`,
+          },
+        ],
+        quiz: [
+          { q: 'Wat betekent BID in de bovenste balk?', options: ['De prijs waartegen je koopt', 'De prijs waartegen je verkoopt', 'Het verhandelde volume'], answer: 1 },
+          { q: 'Waarvoor dient het Stop-verlies (SL)?', options: ['Om meer geld te verdienen', 'Om de trade automatisch te sluiten als hij tegen je ingaat', 'Om de geschiedenis te bekijken'], answer: 1 },
+          { q: 'Een groene kaars in de grafiek betekent...', options: ['De prijs daalde in die periode', 'De prijs steeg in die periode', 'Er was geen activiteit'], answer: 1 },
+          { q: 'Welke lotgrootte is aanbevolen om mee te beginnen?', options: ['1,00 lot', '0,10 lot', '0,01 lot (micro)'], answer: 2 },
+        ],
+      },
       {
         id: 'l1-m1', title: 'Wat is goud (XAU/USD)?', duration: '5 min', type: 'lesson', icon: '📖',
         content: [

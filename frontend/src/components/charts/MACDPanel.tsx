@@ -15,10 +15,10 @@ export function MACDPanel({ candles }: { candles: PriceTick[] }) {
     if (!containerRef.current || chartRef.current) return;
 
     const chart = createChart(containerRef.current, {
-      layout: { background: { type: ColorType.Solid, color: '#0e1118' }, textColor: '#64748b', fontSize: 10, fontFamily: 'Roboto Mono, monospace' },
-      grid: { vertLines: { color: '#1c2030' }, horzLines: { color: '#1c2030' } },
-      rightPriceScale: { borderColor: '#2e3340', textColor: '#64748b', scaleMargins: { top: 0.1, bottom: 0.1 } },
-      timeScale: { borderColor: '#2e3340', timeVisible: true, secondsVisible: false },
+      layout: { background: { type: ColorType.Solid, color: '#07080b' }, textColor: '#6b7385', fontSize: 10, fontFamily: 'Roboto Mono, monospace' },
+      grid: { vertLines: { color: '#12141c' }, horzLines: { color: '#12141c' } },
+      rightPriceScale: { borderColor: '#1d2029', textColor: '#6b7385', scaleMargins: { top: 0.1, bottom: 0.1 } },
+      timeScale: { borderColor: '#1d2029', timeVisible: true, secondsVisible: false },
       crosshair: {
         vertLine: { color: '#4a6cf7', width: 1, style: LineStyle.Dashed, labelBackgroundColor: '#1e2535' },
         horzLine: { color: '#4a6cf7', width: 1, style: LineStyle.Dashed, labelBackgroundColor: '#1e2535' },

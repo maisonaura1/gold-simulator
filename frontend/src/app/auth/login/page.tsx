@@ -75,8 +75,10 @@ export default function LoginPage() {
         {/* Title bar */}
         <div className="flex items-center justify-between px-3 py-2 bg-[#12151a] border-b border-[var(--mt-border)]">
           <div className="flex items-center gap-2">
-            <span style={{ fontSize: 14 }}>🪙</span>
-            <span className="text-[var(--mt-text)] text-xs font-medium">{t.loginTitle}</span>
+            <Link href="/" className="flex items-center gap-1.5 hover:opacity-80 transition-opacity" style={{ textDecoration: 'none' }}>
+              <span style={{ fontSize: 14 }}>🪙</span>
+              <span className="text-[var(--mt-text)] text-xs font-medium">{t.loginTitle}</span>
+            </Link>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex gap-0.5">

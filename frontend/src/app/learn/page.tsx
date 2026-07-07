@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { api } from '@/lib/api';
 import { useAccount } from '@/hooks/useAccount';
+import { useT } from '@/hooks/useT';
 import type { UserMission } from '@/types';
 import Link from 'next/link';
 import clsx from 'clsx';
@@ -108,6 +109,8 @@ export default function LearnPage() {
   const [section, setSection] = useState<Section>('active');
   const { account } = useAccount();
 
+  const t = useT();
+
   const fetchMissions = async () => {
     const { data } = await api.get<UserMission[]>('/missions');
     setMissions(data);
@@ -194,24 +197,24 @@ export default function LearnPage() {
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
           {loading ? (
-            <div className="flex items-center justify-center h-32 text-[var(--mt-text-dim)]" style={{ fontSize: 11 }}>Cargando misiones...</div>
+            <div className="flex items-center justify-center h-32 text-[var(--mt-text-dim)]" style={{ fontSize: 11 }}>{t.learnLoadingMissions}</div>
           ) : displayed.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 gap-2">
               <span className="text-2xl">{section === 'completed' ? '🏆' : '🎯'}</span>
               <div className="text-[var(--mt-text-dim)] text-[11px]">
-                {section === 'completed' ? 'Completa misiones operando en el simulador' : 'No hay misiones aquí'}
+                {section === 'completed' ? t.learnNoMissionsCompleted : t.learnNoMissionsHere}
               </div>
               <Link href="/trade" className="text-[10px] text-[var(--mt-cyan)] border border-[var(--mt-sep)] px-3 py-1 hover:bg-[var(--mt-hover)] transition-colors">
-                ⚡ Ir al simulador
+                {t.learnGoSimulator}
               </Link>
             </div>
           ) : (
             <div className="p-3 space-y-2">
               {section === 'active' && (
                 <div className="border border-[var(--mt-sep)] bg-[var(--mt-toolbar)] p-3 mb-1">
-                  <div className="text-[10px] text-[var(--mt-yellow)] font-medium mb-1">💡 Cómo ganar XP más rápido</div>
+                  <div className="text-[10px] text-[var(--mt-yellow)] font-medium mb-1">{t.learnXPTip}</div>
                   <div className="text-[9px] text-[var(--mt-text-dim)] leading-relaxed">
-                    Cada trade con <span className="text-[var(--mt-white)]">SL activo + riesgo ≤ 2% + R:R ≥ 2:1</span> avanza 3 misiones simultáneamente.
+                    {t.learnXPTipBody}
                     Pulsa <span className="text-[var(--mt-cyan)]">Evaluar progreso</span> después de cerrar trades para actualizar tu XP.
                   </div>
                 </div>
