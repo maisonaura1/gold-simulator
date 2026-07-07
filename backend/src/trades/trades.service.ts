@@ -19,12 +19,13 @@ export class TradesService {
   private async enforceFreeTierLimit(userId: string): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { paidAt: true, subscriptionStatus: true },
+      select: { paidAt: true, subscriptionStatus: true, referralBonus: true },
     });
     const isPro = user?.subscriptionStatus === 'ACTIVE' || !!user?.paidAt;
     if (isPro) return;
     const count = await this.prisma.trade.count({ where: { userId } });
-    if (count >= 20) {
+    const limit = 20 + (user?.referralBonus ?? 0);
+    if (count >= limit) {
       throw new ForbiddenException('FREE_LIMIT_REACHED');
     }
   }

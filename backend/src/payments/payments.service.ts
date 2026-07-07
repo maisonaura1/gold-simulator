@@ -288,6 +288,7 @@ export class PaymentsService {
           subscriptionStatus: true,
           subscriptionId:     true,
           subscriptionEndsAt: true,
+          referralBonus:      true,
         },
       }),
       this.prisma.trade.count({ where: { userId } }),
@@ -308,11 +309,11 @@ export class PaymentsService {
     const isActive = user.subscriptionStatus === SubscriptionStatus.ACTIVE;
     const isPastDue = user.subscriptionStatus === SubscriptionStatus.PAST_DUE;
 
-    // Acceso permitido si está activo, en período de gracia, o es lifetime
-    const paid       = isActive || isPastDue || !!user.paidAt;
-    const canSimulate = paid || simCount < 20;
+    const paid         = isActive || isPastDue || !!user.paidAt;
+    const bonus        = user.referralBonus ?? 0;
+    const limit        = 20 + bonus;
+    const canSimulate  = paid || simCount < limit;
 
-    // Inferir el plan a partir del estado
     const plan: 'free' | 'lifetime' = isActive || user.paidAt ? 'lifetime' : 'free';
 
     return {
@@ -320,7 +321,7 @@ export class PaymentsService {
       subscriptionStatus: user.subscriptionStatus,
       subscriptionEndsAt: user.subscriptionEndsAt,
       simulationsUsed:  simCount,
-      simulationsLimit: 20,
+      simulationsLimit: limit,
       canSimulate,
       plan,
     };

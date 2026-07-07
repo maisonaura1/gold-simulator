@@ -5,6 +5,12 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
+const REFERRAL_BONUS = 5;
+
+function genReferralCode(): string {
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -18,11 +24,28 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
+    // Generate a unique 6-char referral code
+    let referralCode = genReferralCode();
+    while (await this.prisma.user.findUnique({ where: { referralCode } })) {
+      referralCode = genReferralCode();
+    }
+
+    // Validate incoming referral code
+    let referrer: { id: string } | null = null;
+    if (dto.referralCode) {
+      referrer = await this.prisma.user.findUnique({
+        where: { referralCode: dto.referralCode.toUpperCase() },
+        select: { id: true },
+      });
+    }
+
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         name: dto.name,
         passwordHash,
+        referralCode,
+        referredBy: referrer ? dto.referralCode!.toUpperCase() : null,
         account: {
           create: {
             initialBalance: 10000,
@@ -32,6 +55,14 @@ export class AuthService {
         },
       },
     });
+
+    // Credit bonus simulations to referrer
+    if (referrer) {
+      await this.prisma.user.update({
+        where: { id: referrer.id },
+        data: { referralBonus: { increment: REFERRAL_BONUS } },
+      });
+    }
 
     // Assign default missions to new user
     const missions = await this.prisma.mission.findMany();

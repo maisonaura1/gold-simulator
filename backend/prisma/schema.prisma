@@ -23,6 +23,9 @@ model User {
   subscriptionStatus SubscriptionStatus @default(FREE) @map("subscription_status")
   subscriptionEndsAt DateTime?          @map("subscription_ends_at")
   superwallUserId    String?            @map("superwall_user_id")
+  referralCode       String             @unique @map("referral_code")
+  referredBy         String?            @map("referred_by")
+  referralBonus      Int                @default(0) @map("referral_bonus")
 
   account      SimAccount?
   trades       Trade[]

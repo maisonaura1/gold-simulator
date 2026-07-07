@@ -1,7 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 import { useLangStore } from '@/store/lang.store';
@@ -16,20 +16,32 @@ const LANG_OPTIONS: { code: 'es' | Lang; flag: string }[] = [
 ];
 
 export default function RegisterPage() {
+  return <Suspense><RegisterInner /></Suspense>;
+}
+
+function RegisterInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setTokens } = useAuthStore();
   const { lang, setLang } = useLangStore();
   const t = useT();
   const [form, setForm] = useState({ email: '', password: '', name: '' });
+  const [refCode, setRefCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) setRefCode(ref.toUpperCase());
+  }, [searchParams]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/register', form);
+      const payload = refCode ? { ...form, referralCode: refCode } : form;
+      const { data } = await api.post('/auth/register', payload);
       setTokens(data);
       router.replace('/dashboard');
     } catch (err: any) {
@@ -48,8 +60,10 @@ export default function RegisterPage() {
         {/* Title bar */}
         <div className="flex items-center justify-between px-3 py-2 bg-[#12151a] border-b border-[var(--mt-border)]">
           <div className="flex items-center gap-2">
-            <span style={{ fontSize: 14 }}>🪙</span>
-            <span className="text-[var(--mt-text)] text-xs font-medium">{t.registerTitle}</span>
+            <Link href="/" className="flex items-center gap-1.5 hover:opacity-80 transition-opacity" style={{ textDecoration: 'none' }}>
+              <span style={{ fontSize: 14 }}>🪙</span>
+              <span className="text-[var(--mt-text)] text-xs font-medium">{t.registerTitle}</span>
+            </Link>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex gap-0.5">
@@ -94,6 +108,13 @@ export default function RegisterPage() {
               <label className="block text-[10px] text-[var(--mt-text-dim)] mb-1">{t.registerPassword}</label>
               <input type="password" className="mt-input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={8} />
             </div>
+
+            {refCode && (
+              <div className="flex items-center gap-2 text-[10px] bg-amber-500/10 border border-amber-500/20 p-2">
+                <span style={{ color: '#f59e0b' }}>🎁</span>
+                <span style={{ color: '#c8cdd8' }}>Referral code <span style={{ color: '#f59e0b', fontFamily: 'monospace', fontWeight: 700 }}>{refCode}</span> applied — you get 20 free simulations</span>
+              </div>
+            )}
 
             {error && (
               <div className="text-[var(--mt-red)] text-[10px] bg-red-500/10 border border-red-500/20 p-2">

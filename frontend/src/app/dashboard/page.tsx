@@ -5,6 +5,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 import { useT } from '@/hooks/useT';
+import { useReferral } from '@/hooks/useReferral';
 import type { Stats } from '@/types';
 
 interface AccountData {
@@ -193,9 +194,71 @@ function calcScore(stats: Stats): number {
   return s;
 }
 
+function ReferralCard({ referral }: { referral: ReturnType<typeof useReferral> }) {
+  const [copied, setCopied] = useState(false);
+
+  if (referral.loading || !referral.data) return null;
+  const { code, bonus, referredCount } = referral.data;
+
+  const handleCopy = async () => {
+    const ok = await referral.copyLink(code);
+    if (ok) { setCopied(true); setTimeout(() => setCopied(false), 2000); }
+  };
+
+  return (
+    <div
+      className="p-4 rounded-sm"
+      style={{ background: '#0f1117', border: '1px solid #1d2029' }}
+    >
+      <div style={{ color: '#6b7385', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10 }}>
+        Refer &amp; earn simulations
+      </div>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          {/* Code badge */}
+          <div
+            className="px-3 py-1.5 font-mono font-bold text-sm tracking-widest"
+            style={{ background: '#1a1508', border: '1px solid #2c2410', color: '#e8b84b', borderRadius: 4 }}
+          >
+            {code}
+          </div>
+          <div>
+            <div style={{ color: '#c8cdd8', fontSize: 11, fontWeight: 600 }}>
+              {referredCount} {referredCount === 1 ? 'friend' : 'friends'} joined
+            </div>
+            {bonus > 0 && (
+              <div style={{ color: '#2dcc6f', fontSize: 10 }}>
+                +{bonus} bonus simulations earned
+              </div>
+            )}
+            {bonus === 0 && (
+              <div style={{ color: '#3a3f4d', fontSize: 10 }}>
+                +5 simulations per friend who joins
+              </div>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={handleCopy}
+          className="px-4 py-1.5 rounded-sm text-xs font-medium transition-colors"
+          style={{
+            background: copied ? '#1a2e1a' : '#141720',
+            color: copied ? '#2dcc6f' : '#c9a84c',
+            border: `1px solid ${copied ? '#2dcc6f44' : '#2c2410'}`,
+            cursor: 'pointer',
+          }}
+        >
+          {copied ? '✓ Copied!' : '↗ Copy invite link'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function DashboardInner() {
   const { accessToken } = useAuthStore();
   const t = useT();
+  const referral = useReferral();
   const [stats, setStats]     = useState<Stats | null>(null);
   const [account, setAccount] = useState<AccountData | null>(null);
   const [trades, setTrades]   = useState<RecentTrade[]>([]);
@@ -397,6 +460,9 @@ function DashboardInner() {
             )}
           </div>
         </div>
+
+        {/* Referral card */}
+        <ReferralCard referral={referral} />
 
         {/* Recent trades */}
         <div
