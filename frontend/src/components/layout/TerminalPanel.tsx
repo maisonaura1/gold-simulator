@@ -166,6 +166,7 @@ function FtmoDashboard(p: FtmoProps) {
 
 export function TerminalPanel() {
   const [tab, setTab] = useState<Tab>('trade');
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -236,20 +237,27 @@ export function TerminalPanel() {
   const COL_HEADERS_HIST = [t.colOpen, t.colClose, t.colTicket, t.colType, t.colLots, t.colSymbol, t.colEntry, t.colExit, t.colRR, t.colPL];
 
   return (
-    <div className="flex flex-col h-48 bg-[var(--mt-panel)] border-t border-[var(--mt-border)]">
+    <div className={clsx('flex flex-col bg-[var(--mt-panel)] border-t border-[var(--mt-border)] transition-all duration-200', collapsed ? 'h-8' : 'h-48')}>
       <div className="flex items-center bg-[#0e1118] border-b border-[var(--mt-border)] shrink-0">
         {TABS.map((tb) => (
           <button
             key={tb.key}
-            onClick={() => setTab(tb.key)}
-            className={clsx('mt-tab', tab === tb.key && 'mt-tab-active')}
+            onClick={() => { setCollapsed(false); setTab(tb.key); }}
+            className={clsx('mt-tab', tab === tb.key && !collapsed && 'mt-tab-active')}
           >
             {tb.label}
           </button>
         ))}
+        <button
+          onClick={() => setCollapsed((c) => !c)}
+          className="ml-auto mr-2 text-[var(--mt-text-dim)] hover:text-[var(--mt-white)] transition-colors text-xs px-2 py-1 select-none"
+          title={collapsed ? 'Expandir panel' : 'Colapsar panel'}
+        >
+          {collapsed ? '▲' : '▼'}
+        </button>
       </div>
 
-      <div className="flex-1 overflow-auto">
+      <div className={clsx('flex-1 overflow-auto', collapsed && 'hidden')}>
         {tab === 'trade' && (
           <>
             <div className="flex bg-[var(--mt-toolbar)] border-b border-[var(--mt-border)] sticky top-0">
