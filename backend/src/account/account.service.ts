@@ -66,7 +66,8 @@ export class AccountService {
     const account = await this.prisma.simAccount.findUnique({ where: { userId } });
     if (!account) return;
 
-    const newBalance = account.currentBalance + resultUsd;
+    // Never allow balance to go below 0 (no margin debt in a simulator)
+    const newBalance = Math.max(0, account.currentBalance + resultUsd);
     const xpGain = resultUsd > 0 ? 10 : 2;
 
     return this.prisma.simAccount.update({

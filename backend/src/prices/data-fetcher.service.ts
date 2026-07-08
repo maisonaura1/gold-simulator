@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
+import { writeFileSync, readFileSync, existsSync, mkdirSync, renameSync } from 'fs';
 import { join } from 'path';
 
 export interface OhlcCandle {
@@ -97,7 +97,10 @@ export class DataFetcherService implements OnModuleInit {
       this.currentPrice = parsed.at(-1)?.close ?? 0;
       this.lastFetchAt  = Date.now();
 
-      writeFileSync(DATA_FILE, JSON.stringify(parsed, null, 2));
+      // Atomic write: write to temp file then rename to avoid corruption on crash
+      const tmp = DATA_FILE + '.tmp';
+      writeFileSync(tmp, JSON.stringify(parsed, null, 2));
+      renameSync(tmp, DATA_FILE);
       this.logger.log(`✅ Fetched & saved ${parsed.length} XAUUSD H1 candles from Twelve Data`);
     } catch (err) {
       this.logger.error(`Historical fetch failed: ${err}`);

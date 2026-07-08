@@ -205,6 +205,15 @@ export class StatsService {
       orderBy: { entryAt: 'asc' },
     });
 
+    // Properly escape CSV fields: wrap in quotes, escape internal quotes
+    const escapeField = (v: string | number) => {
+      const s = String(v);
+      if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+        return `"${s.replace(/"/g, '""')}"`;
+      }
+      return s;
+    };
+
     const rows = [
       ['Date', 'Type', 'Lot', 'Entry', 'Exit', 'SL', 'TP', 'R:R', 'Risk%', 'P/L USD', 'P/L%', 'Status'],
       ...trades.map((t) => [
@@ -223,7 +232,7 @@ export class StatsService {
       ]),
     ];
 
-    return rows.map((r) => r.join(',')).join('\n');
+    return rows.map((r) => r.map(escapeField).join(',')).join('\n');
   }
 
   async getStreak(userId: string): Promise<{ current: number; longest: number; lastTradeAt: Date | null }> {

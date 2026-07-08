@@ -28,8 +28,9 @@ export function resampleCandles(candles: PriceTick[], tf: string): PriceTick[] {
     .map(([ts, cs]) => ({
       timestamp: ts,
       open:   cs[0].open,
-      high:   Math.max(...cs.map((c) => c.high)),
-      low:    Math.min(...cs.map((c) => c.low)),
+      // Use reduce instead of spread to avoid stack overflow on large arrays
+      high:   cs.reduce((m, c) => c.high > m ? c.high : m, cs[0].high),
+      low:    cs.reduce((m, c) => c.low  < m ? c.low  : m, cs[0].low),
       close:  cs[cs.length - 1].close,
       price:  cs[cs.length - 1].close,
       volume: cs.reduce((s, c) => s + (c.volume ?? 0), 0) || undefined,

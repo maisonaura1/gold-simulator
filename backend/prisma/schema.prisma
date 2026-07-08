@@ -82,6 +82,8 @@ model Trade {
   entryAt      DateTime    @default(now()) @map("entry_at")
   exitAt       DateTime?   @map("exit_at")
 
+  @@index([userId, status])
+  @@index([userId, entryAt])
   @@map("trades")
 }
 

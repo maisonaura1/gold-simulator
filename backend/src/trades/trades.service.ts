@@ -119,7 +119,17 @@ export class TradesService {
     const acct = await this.prisma.simAccount.findUnique({ where: { userId } });
     if (!acct) throw new NotFoundException('Account not found');
 
-    const price    = exitPrice ?? this.prices.getCurrentPrice();
+    const currentPrice = this.prices.getCurrentPrice();
+    // Reject exit prices that deviate more than 5% from current market price
+    if (exitPrice !== undefined) {
+      const deviation = Math.abs(exitPrice - currentPrice) / currentPrice;
+      if (deviation > 0.05) {
+        throw new BadRequestException(
+          `Exit price ${exitPrice} deviates more than 5% from current price ${currentPrice.toFixed(2)}`,
+        );
+      }
+    }
+    const price    = exitPrice ?? currentPrice;
     const diff     = trade.type === 'BUY' ? price - trade.entryPrice : trade.entryPrice - price;
     const resultUsd = +(diff * trade.lot * LOT_SIZE_XAU).toFixed(2);
     const resultPct = +(resultUsd / acct.currentBalance * 100).toFixed(2);

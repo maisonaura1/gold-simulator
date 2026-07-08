@@ -40,9 +40,10 @@ export class SimulatorService {
 
     if (candles.length < 50) return this.fallbackResult(params);
 
-    // Pick a random starting point with at least 200 candles ahead
-    const maxStart = Math.max(0, candles.length - 200);
-    const startIdx = Math.floor(Math.random() * maxStart);
+    // Deterministic window selection: hash entryPrice + sl + tp into a seed
+    // so the same setup always replays the same candle sequence.
+    const seed = Math.abs(Math.round((entryPrice * 100 + sl * 10 + tp) % (candles.length - 200 || 1)));
+    const startIdx = Math.max(0, Math.min(seed, candles.length - 200));
     const window   = candles.slice(startIdx, startIdx + 200);
 
     let outcome: SimulationResult['outcome'] = 'NEUTRAL';
@@ -53,12 +54,36 @@ export class SimulatorService {
       candlesTraversed++;
 
       if (type === 'BUY') {
-        if (candle.low  <= sl) { outcome = 'SL_HIT'; exitPrice = sl; break; }
-        if (candle.high >= tp) { outcome = 'TP_HIT'; exitPrice = tp; break; }
+        // Intrabar order: if both SL and TP are within this candle,
+        // determine which is closer to the candle open to decide first hit.
+        const slHit = candle.low  <= sl;
+        const tpHit = candle.high >= tp;
+        if (slHit && tpHit) {
+          // Closest to open wins
+          const distSl = Math.abs(candle.open - sl);
+          const distTp = Math.abs(candle.open - tp);
+          outcome   = distSl <= distTp ? 'SL_HIT' : 'TP_HIT';
+          exitPrice = outcome === 'SL_HIT' ? sl : tp;
+        } else if (slHit) {
+          outcome = 'SL_HIT'; exitPrice = sl;
+        } else if (tpHit) {
+          outcome = 'TP_HIT'; exitPrice = tp;
+        }
       } else {
-        if (candle.high >= sl) { outcome = 'SL_HIT'; exitPrice = sl; break; }
-        if (candle.low  <= tp) { outcome = 'TP_HIT'; exitPrice = tp; break; }
+        const slHit = candle.high >= sl;
+        const tpHit = candle.low  <= tp;
+        if (slHit && tpHit) {
+          const distSl = Math.abs(candle.open - sl);
+          const distTp = Math.abs(candle.open - tp);
+          outcome   = distSl <= distTp ? 'SL_HIT' : 'TP_HIT';
+          exitPrice = outcome === 'SL_HIT' ? sl : tp;
+        } else if (slHit) {
+          outcome = 'SL_HIT'; exitPrice = sl;
+        } else if (tpHit) {
+          outcome = 'TP_HIT'; exitPrice = tp;
+        }
       }
+      if (outcome !== 'NEUTRAL') break;
     }
 
     if (outcome === 'NEUTRAL') exitPrice = window.at(-1)?.close ?? entryPrice;
