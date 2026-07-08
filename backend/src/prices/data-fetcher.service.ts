@@ -121,15 +121,10 @@ export class DataFetcherService implements OnModuleInit {
       const price = parseFloat(json.price ?? '0');
       if (price > 100) {
         this.currentPrice = +price.toFixed(2);
-        const prevClose = this.candles.at(-1)?.close ?? price;
-        this.candles.push({
-          time:  Date.now(),
-          open:  prevClose,
-          high:  +(Math.max(prevClose, price) + Math.random() * 0.5).toFixed(2),
-          low:   +(Math.min(prevClose, price) - Math.random() * 0.5).toFixed(2),
-          close: +price.toFixed(2),
-        });
-        if (this.candles.length > 2000) this.candles = this.candles.slice(-2000);
+        // Only update currentPrice — do NOT push synthetic tick candles into the
+        // historical H1 array. A tick candle with open=lastClose(~3349) and
+        // close=livePrice(~4092) would create a 743-point monster body that
+        // destroys the chart Y-axis scale.
         this.logger.verbose(`Price refreshed: $${this.currentPrice}`);
       }
     } catch {

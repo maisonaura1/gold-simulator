@@ -200,6 +200,7 @@ export function PriceChart() {
   useEffect(() => {
     if (!candleRef.current || candles.length === 0) return;
     const toTime = (ts: number) => Math.floor(ts / 1000) as any;
+    const visible = 120;
 
     const map = new Map<number, PriceTick>();
     candles.forEach((c) => map.set(Math.floor(c.timestamp / 1000), c));
@@ -213,11 +214,15 @@ export function PriceChart() {
       .sort((a, b) => (a.time as number) - (b.time as number))
       .filter((c) => { const t = c.time as number; if (seen.has(t)) return false; seen.add(t); return true; });
     candleRef.current.setData(candleData);
-    // Update range ref so autoscaleInfoProvider has current candle bounds
-    if (candles.length > 0) {
+    // Compute Y-axis range from VISIBLE candles only (last ~visible bars).
+    // Using all 2000 candles would span ~3349→4092 even when the viewport
+    // shows only recent candles around 4092, producing a 743-pt Y-axis and
+    // compressing all visible candles into a single pixel strip.
+    const visibleSlice = candles.slice(Math.max(0, candles.length - visible));
+    if (visibleSlice.length > 0) {
       candleRangeRef.current = {
-        min: Math.min(...candles.map((c) => c.low)),
-        max: Math.max(...candles.map((c) => c.high)),
+        min: visibleSlice.reduce((m, c) => c.low  < m ? c.low  : m, visibleSlice[0].low),
+        max: visibleSlice.reduce((m, c) => c.high > m ? c.high : m, visibleSlice[0].high),
       };
     }
 
@@ -236,7 +241,6 @@ export function PriceChart() {
     bbLowerRef.current?.setData(bb.map((p) => ({ time: toTime(p.time), value: p.lower })));
     // Show the last ~120 candles by default instead of fitting all data
     const total = candles.length;
-    const visible = 120;
     chartRef.current?.timeScale().setVisibleLogicalRange({
       from: Math.max(0, total - visible),
       to:   total + 5,
