@@ -43,6 +43,9 @@ export function PriceChart() {
   const chartRef        = useRef<IChartApi | null>(null);
   const candleRef       = useRef<ISeriesApi<'Candlestick'> | null>(null);
   const volRef          = useRef<ISeriesApi<'Histogram'> | null>(null);
+  const hasInitViewRef  = useRef(false);   // guard: only set initial viewport once
+  const ma20LastRef     = useRef<number | null>(null);  // cache last MA value for toolbar
+  const ma50LastRef     = useRef<number | null>(null);
   const ma20Ref         = useRef<ISeriesApi<'Line'> | null>(null);
   const ma50Ref         = useRef<ISeriesApi<'Line'> | null>(null);
   const bbUpperRef      = useRef<ISeriesApi<'Line'> | null>(null);
@@ -192,7 +195,12 @@ export function PriceChart() {
       scheduleRender();
     });
     ro.observe(containerRef.current);
-    return () => { ro.disconnect(); chart.remove(); chartRef.current = null; };
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      ro.disconnect();
+      chart.remove();
+      chartRef.current = null;
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -233,18 +241,26 @@ export function PriceChart() {
     }));
     volRef.current?.setData(volData);
 
-    ma20Ref.current?.setData(calcMA(candles, 20).map((p) => ({ time: toTime(p.time), value: p.value })));
-    ma50Ref.current?.setData(calcMA(candles, 50).map((p) => ({ time: toTime(p.time), value: p.value })));
+    const ma20 = calcMA(candles, 20);
+    const ma50 = calcMA(candles, 50);
+    ma20LastRef.current = ma20.at(-1)?.value ?? null;
+    ma50LastRef.current = ma50.at(-1)?.value ?? null;
+    ma20Ref.current?.setData(ma20.map((p) => ({ time: toTime(p.time), value: p.value })));
+    ma50Ref.current?.setData(ma50.map((p) => ({ time: toTime(p.time), value: p.value })));
     const bb = calcBB(candles);
     bbUpperRef.current?.setData(bb.map((p) => ({ time: toTime(p.time), value: p.upper })));
     bbMidRef.current?.setData(  bb.map((p) => ({ time: toTime(p.time), value: p.middle })));
     bbLowerRef.current?.setData(bb.map((p) => ({ time: toTime(p.time), value: p.lower })));
-    // Show the last ~120 candles by default instead of fitting all data
-    const total = candles.length;
-    chartRef.current?.timeScale().setVisibleLogicalRange({
-      from: Math.max(0, total - visible),
-      to:   total + 5,
-    });
+    // Set initial viewport only once — resetting on every tick snaps the
+    // user back to the newest candles whenever they scroll to older history.
+    if (!hasInitViewRef.current) {
+      const total = candles.length;
+      chartRef.current?.timeScale().setVisibleLogicalRange({
+        from: Math.max(0, total - visible),
+        to:   total + 5,
+      });
+      hasInitViewRef.current = true;
+    }
     scheduleRender();
   }, [candles]);
 
@@ -565,7 +581,13 @@ export function PriceChart() {
     // Require at least 5px drag to commit (avoids accidental single-click shapes)
     const dx = Math.abs(cp.x - dragStart.current.x);
     const dy = Math.abs(cp.y - dragStart.current.y);
-    if (dx < 5 && dy < 5) return;
+    if (dx < 5 && dy < 5) {
+      // Clear stale drag state so the next mouseDown starts fresh
+      dragStart.current  = null;
+      inProgress.current = null;
+      scheduleRender();
+      return;
+    }
     const p1 = dragStart.current.pt;
     const p2 = cp.pt;
     const shape: DrawShape =
@@ -595,8 +617,9 @@ export function PriceChart() {
     ? { open: hoverOHLC.o, high: hoverOHLC.h, low: hoverOHLC.l, close: hoverOHLC.c, volume: hoverOHLC.v }
     : candles.at(-1);
   const isUp      = (lastCandle?.close ?? 0) >= (lastCandle?.open ?? 0);
-  const ma20Last  = showMA20 ? calcMA(candles, 20).at(-1)?.value : null;
-  const ma50Last  = showMA50 ? calcMA(candles, 50).at(-1)?.value : null;
+  // Read from refs cached in the candles effect — avoids a full MA scan on every render
+  const ma20Last  = showMA20 ? ma20LastRef.current : null;
+  const ma50Last  = showMA50 ? ma50LastRef.current : null;
 
   return (
     <div className="flex flex-col h-full w-full min-h-0 overflow-hidden">

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards, Query } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Post, Patch, Body, Param, UseGuards, Query } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { TradesService } from './trades.service';
 import { CreateTradeDto } from './dto/create-trade.dto';
@@ -23,13 +23,20 @@ export class TradesController {
     return this.tradesService.openTrade(user.sub, dto);
   }
 
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @Patch(':id/close')
   closeTrade(
     @CurrentUser() user: { sub: string },
     @Param('id') id: string,
     @Query('exitPrice') exitPrice?: string,
   ) {
-    return this.tradesService.closeTrade(user.sub, id, exitPrice ? +exitPrice : undefined);
+    // Parse and validate exitPrice — NaN from unary + bypasses the 5%
+    // deviation check inside closeTrade and corrupts the trade record.
+    const parsed = exitPrice !== undefined ? parseFloat(exitPrice) : undefined;
+    if (parsed !== undefined && (!isFinite(parsed) || parsed <= 0)) {
+      throw new BadRequestException('Invalid exitPrice');
+    }
+    return this.tradesService.closeTrade(user.sub, id, parsed);
   }
 
   @Get()

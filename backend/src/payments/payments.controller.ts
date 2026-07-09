@@ -9,6 +9,7 @@ import {
   Controller, Post, Get, Req, Res, Headers, Body,
   UseGuards, RawBodyRequest,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { IsOptional, IsIn, IsString, MinLength } from 'class-validator';
 
@@ -86,6 +87,7 @@ export class PaymentsController {
    * POST /payments/apply-promo
    * Aplica un código promocional a la suscripción activa.
    */
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @UseGuards(JwtAuthGuard)
   @Post('apply-promo')
   applyPromo(

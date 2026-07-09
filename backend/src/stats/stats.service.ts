@@ -16,8 +16,8 @@ export class StatsService {
     }
 
     const closed = trades.filter((t) => t.resultUsd !== null);
-    const wins = closed.filter((t) => (t.resultUsd ?? 0) > 0);
-    const losses = closed.filter((t) => (t.resultUsd ?? 0) <= 0);
+    const wins   = closed.filter((t) => (t.resultUsd ?? 0) > 0);
+    const losses = closed.filter((t) => (t.resultUsd ?? 0) < 0); // break-even (0) is neither win nor loss
 
     const winRate = closed.length > 0 ? (wins.length / closed.length) * 100 : 0;
     const totalPnl = closed.reduce((sum, t) => sum + (t.resultUsd ?? 0), 0);
@@ -35,20 +35,13 @@ export class StatsService {
     // Equity curve + max drawdown (start from 10000 default)
     const { equityCurve, maxDrawdown } = this.buildEquityCurve(closed);
 
-    // Save snapshot
-    await this.prisma.statsSnapshot.create({
-      data: {
-        userId,
-        winRate,
-        avgRisk,
-        avgRR,
-        winStreak,
-        lossStreak,
-        totalTrades: closed.length,
-        totalPnl,
-        avgPnlPerTrade: avgPnl,
-      },
-    });
+    // Fire-and-forget: snapshot write must never block the response or throw
+    // on every read call. An unbounded await here caused 500s on DB constraint
+    // failures and would fill the table with one row per page refresh.
+    this.prisma.statsSnapshot.create({
+      data: { userId, winRate, avgRisk, avgRR, winStreak, lossStreak,
+              totalTrades: closed.length, totalPnl, avgPnlPerTrade: avgPnl },
+    }).catch(() => null);
 
     return {
       winRate: +winRate.toFixed(1),
@@ -274,7 +267,7 @@ export class StatsService {
       const prev = new Date(asc[i - 1]);
       const curr = new Date(asc[i]);
       const diff = (curr.getTime() - prev.getTime()) / 86400000;
-      if (diff === 1) {
+      if (Math.round(diff) === 1) { // Math.round handles DST days (23h or 25h)
         run++;
         longest = Math.max(longest, run);
       } else {

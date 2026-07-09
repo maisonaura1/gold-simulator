@@ -38,7 +38,7 @@ export class SimulatorService {
     const { type, lot, entryPrice, sl, tp, accountBalance } = params;
     const candles = this.fetcher.getAllCandles();
 
-    if (candles.length < 50) return this.fallbackResult(params);
+    if (candles.length < 200) return this.fallbackResult(params); // window requires 200 candles
 
     // Deterministic window selection: hash entryPrice + sl + tp into a seed
     // so the same setup always replays the same candle sequence.

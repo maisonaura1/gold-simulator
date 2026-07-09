@@ -107,15 +107,14 @@ export class AuthService {
   }
 
   private buildTokens(userId: string, email: string) {
+    const jwtSecret     = process.env.JWT_SECRET;
+    const refreshSecret = process.env.JWT_REFRESH_SECRET;
+    if (!jwtSecret || !refreshSecret) {
+      throw new Error('JWT_SECRET and JWT_REFRESH_SECRET must be set in environment variables');
+    }
     const payload = { sub: userId, email };
-    const accessToken = this.jwt.sign(payload, {
-      secret: process.env.JWT_SECRET || 'dev-secret',
-      expiresIn: '15m',
-    });
-    const refreshToken = this.jwt.sign(payload, {
-      secret: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret',
-      expiresIn: '7d',
-    });
+    const accessToken  = this.jwt.sign(payload, { secret: jwtSecret,     expiresIn: '15m' });
+    const refreshToken = this.jwt.sign(payload, { secret: refreshSecret, expiresIn: '7d'  });
     return { accessToken, refreshToken };
   }
 }
