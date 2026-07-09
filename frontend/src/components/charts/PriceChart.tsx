@@ -186,6 +186,26 @@ export function PriceChart() {
     // Redraw canvas drawings on scroll/zoom
     chart.timeScale().subscribeVisibleTimeRangeChange(() => scheduleRender());
 
+    // Keep candleRangeRef in sync with the actual visible candles so the
+    // autoscaleInfoProvider always reflects what is on screen — not a static
+    // tail slice that can span a 700-point price range on long uptrend data.
+    chart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
+      if (!range) return;
+      const all = resampleCandles(
+        usePricesStore.getState().candles,
+        useChartStore.getState().timeframe,
+      );
+      if (all.length === 0) return;
+      const from  = Math.max(0, Math.floor(range.from));
+      const to    = Math.min(all.length - 1, Math.ceil(range.to));
+      const slice = all.slice(from, to + 1);
+      if (slice.length === 0) return;
+      candleRangeRef.current = {
+        min: slice.reduce((m, c) => c.low  < m ? c.low  : m, slice[0].low),
+        max: slice.reduce((m, c) => c.high > m ? c.high : m, slice[0].high),
+      };
+    });
+
     chartRef.current = chart;
 
     const ro = new ResizeObserver(() => {
@@ -222,15 +242,14 @@ export function PriceChart() {
       .sort((a, b) => (a.time as number) - (b.time as number))
       .filter((c) => { const t = c.time as number; if (seen.has(t)) return false; seen.add(t); return true; });
     candleRef.current.setData(candleData);
-    // Compute Y-axis range from VISIBLE candles only (last ~visible bars).
-    // Using all 2000 candles would span ~3349→4092 even when the viewport
-    // shows only recent candles around 4092, producing a 743-pt Y-axis and
-    // compressing all visible candles into a single pixel strip.
-    const visibleSlice = candles.slice(Math.max(0, candles.length - visible));
-    if (visibleSlice.length > 0) {
+    // candleRangeRef is now maintained dynamically by subscribeVisibleLogicalRangeChange
+    // (in the init effect). Seed it here with the initial visible window so
+    // autoscaleInfoProvider has a value before the first scroll event fires.
+    const seedSlice = candles.slice(Math.max(0, candles.length - visible));
+    if (seedSlice.length > 0 && !candleRangeRef.current) {
       candleRangeRef.current = {
-        min: visibleSlice.reduce((m, c) => c.low  < m ? c.low  : m, visibleSlice[0].low),
-        max: visibleSlice.reduce((m, c) => c.high > m ? c.high : m, visibleSlice[0].high),
+        min: seedSlice.reduce((m, c) => c.low  < m ? c.low  : m, seedSlice[0].low),
+        max: seedSlice.reduce((m, c) => c.high > m ? c.high : m, seedSlice[0].high),
       };
     }
 
