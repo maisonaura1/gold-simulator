@@ -56,10 +56,6 @@ export function PriceChart() {
   const lineTpRef       = useRef<IPriceLine | null>(null);
   const openLinesRef    = useRef<IPriceLine[]>([]);
   const candleMapRef    = useRef<Map<number, PriceTick>>(new Map());
-  // Refs for autoscale provider — updated from effects, read at render time
-  const scaleSlRef      = useRef<number | null>(null);
-  const scaleTpRef      = useRef<number | null>(null);
-  const candleRangeRef  = useRef<{ min: number; max: number } | null>(null);
 
   const [hoverOHLC, setHoverOHLC] = useState<HoverOHLC | null>(null);
 
@@ -134,25 +130,11 @@ export function PriceChart() {
       upColor: '#2dcc6f', downColor: '#e84040',
       borderUpColor: '#2dcc6f', borderDownColor: '#e84040',
       wickUpColor: '#2dcc6f', wickDownColor: '#e84040',
-      // Prevent price lines (ENTRY, SL, TP) from stretching the Y-axis when
-      // they are far from the current candle range (e.g. entry from a prior
-      // session hundreds of points away from replay candles).
-      autoscaleInfoProvider: () => {
-        const range = candleRangeRef.current;
-        if (!range) return null;
-        const pad = (range.max - range.min) * 0.15 || range.min * 0.01;
-        let min = range.min - pad;
-        let max = range.max + pad;
-        // Extend scale to include SL/TP only when they are within 2× the pad
-        const threshold = pad * 2;
-        if (scaleSlRef.current != null && Math.abs(scaleSlRef.current - range.min) < threshold) {
-          min = Math.min(min, scaleSlRef.current - pad * 0.5);
-        }
-        if (scaleTpRef.current != null && Math.abs(scaleTpRef.current - range.max) < threshold) {
-          max = Math.max(max, scaleTpRef.current + pad * 0.5);
-        }
-        return { priceRange: { minValue: min, maxValue: max }, margins: { above: 0.1, below: 0.1 } };
-      },
+      // No autoscaleInfoProvider — let lightweight-charts native autoscale
+      // handle the Y-axis. In lwc v4, createPriceLine does NOT affect the
+      // price scale, so there is no need to override it. All previous attempts
+      // with custom providers caused more problems than they solved (static
+      // range computed from a tail slice that spans the full historical drift).
     });
 
     volRef.current = chart.addHistogramSeries({
@@ -185,26 +167,6 @@ export function PriceChart() {
 
     // Redraw canvas drawings on scroll/zoom
     chart.timeScale().subscribeVisibleTimeRangeChange(() => scheduleRender());
-
-    // Keep candleRangeRef in sync with the actual visible candles so the
-    // autoscaleInfoProvider always reflects what is on screen — not a static
-    // tail slice that can span a 700-point price range on long uptrend data.
-    chart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
-      if (!range) return;
-      const all = resampleCandles(
-        usePricesStore.getState().candles,
-        useChartStore.getState().timeframe,
-      );
-      if (all.length === 0) return;
-      const from  = Math.max(0, Math.floor(range.from));
-      const to    = Math.min(all.length - 1, Math.ceil(range.to));
-      const slice = all.slice(from, to + 1);
-      if (slice.length === 0) return;
-      candleRangeRef.current = {
-        min: slice.reduce((m, c) => c.low  < m ? c.low  : m, slice[0].low),
-        max: slice.reduce((m, c) => c.high > m ? c.high : m, slice[0].high),
-      };
-    });
 
     chartRef.current = chart;
 
@@ -242,16 +204,6 @@ export function PriceChart() {
       .sort((a, b) => (a.time as number) - (b.time as number))
       .filter((c) => { const t = c.time as number; if (seen.has(t)) return false; seen.add(t); return true; });
     candleRef.current.setData(candleData);
-    // candleRangeRef is now maintained dynamically by subscribeVisibleLogicalRangeChange
-    // (in the init effect). Seed it here with the initial visible window so
-    // autoscaleInfoProvider has a value before the first scroll event fires.
-    const seedSlice = candles.slice(Math.max(0, candles.length - visible));
-    if (seedSlice.length > 0 && !candleRangeRef.current) {
-      candleRangeRef.current = {
-        min: seedSlice.reduce((m, c) => c.low  < m ? c.low  : m, seedSlice[0].low),
-        max: seedSlice.reduce((m, c) => c.high > m ? c.high : m, seedSlice[0].high),
-      };
-    }
 
     const volData = candles.map((c) => ({
       time:  toTime(c.timestamp),
@@ -305,12 +257,10 @@ export function PriceChart() {
     if (sl && sl > 0) {
       const dist = Math.abs(entryPrice - sl);
       lineSlRef.current = series.createPriceLine({ price: sl, color: '#e84040', lineWidth: 1, lineStyle: LineStyle.Solid, axisLabelVisible: true, title: `SL ${sl.toFixed(2)}  –${dist.toFixed(2)} pts` });
-      scaleSlRef.current = sl;
     }
     if (tp && tp > 0) {
       const dist = Math.abs(tp - entryPrice);
       lineTpRef.current = series.createPriceLine({ price: tp, color: '#2dcc6f', lineWidth: 1, lineStyle: LineStyle.Solid, axisLabelVisible: true, title: `TP ${tp.toFixed(2)}  +${dist.toFixed(2)} pts` });
-      scaleTpRef.current = tp;
     }
   }, [entryPrice, sl, tp, tradeType]);
 
