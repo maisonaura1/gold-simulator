@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -7,9 +7,11 @@ export const metadata: Metadata = {
   description: 'Practice gold spot trading on real XAUUSD data. Risk calculator, Trader Score, equity curve and replay — without risking real capital.',
   keywords: 'gold trading simulator, XAUUSD practice, trading education, prop firm preparation, risk management, FTMO',
   icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-    ],
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
   },
   openGraph: {
     title: 'GoldTrader — XAUUSD Trading Simulator',
@@ -25,15 +27,19 @@ export const metadata: Metadata = {
   },
 };
 
+// Viewport must be a separate export in Next.js 14 — not inside metadata
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#07080b',
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="h-full">
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="theme-color" content="#07080b" />
-      </head>
       <body className="h-full overflow-hidden" suppressHydrationWarning>
         {children}
       </body>
