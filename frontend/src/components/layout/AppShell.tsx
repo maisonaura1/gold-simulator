@@ -8,10 +8,12 @@ import { TerminalPanel } from './TerminalPanel';
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 import { TrialBanner } from '@/components/TrialBanner';
 import { PaywallModal } from '@/components/PaywallModal';
+import { MobileShell } from '@/components/mobile/MobileShell';
 import { useAuthStore } from '@/store/auth.store';
 import { useSocket } from '@/hooks/useSocket';
 import { useT } from '@/hooks/useT';
 import { useSuperwall } from '@/hooks/useSuperwall';
+import { useMobile } from '@/hooks/useMobile';
 import Superwall from '@/lib/superwall';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -19,6 +21,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
   const [ready, setReady] = useState(false);
   const t = useT();
+  const isMobile = useMobile();
 
   // Inicializar Superwall y exponer el paywall global
   const { showPaywall, closePaywall } = useSuperwall();
@@ -51,6 +54,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     );
+  }
+
+  // Mobile layout — full-screen touch-optimized shell
+  if (isMobile) {
+    return <MobileShell />;
   }
 
   return (
