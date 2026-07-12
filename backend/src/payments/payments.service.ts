@@ -12,7 +12,7 @@
  */
 
 import { Injectable, BadRequestException } from '@nestjs/common';
-import Stripe from 'stripe';
+import Stripe = require('stripe');
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionStatus } from '@prisma/client';
 
@@ -31,12 +31,20 @@ type PlanType = 'lifetime' | 'monthly' | 'annual' | 'propfirm';
 
 @Injectable()
 export class PaymentsService {
-  private stripe: Stripe;
+  private stripe: Stripe | null = null;
 
   constructor(private prisma: PrismaService) {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2026-06-24.dahlia' as any,
-    });
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (key) {
+      this.stripe = new Stripe(key, { apiVersion: '2026-06-24.dahlia' as any });
+    } else {
+      console.warn('[PaymentsService] STRIPE_SECRET_KEY not set — payments disabled');
+    }
+  }
+
+  private get stripeClient(): Stripe {
+    if (!this.stripe) throw new Error('Stripe not configured — set STRIPE_SECRET_KEY');
+    return this.stripe;
   }
 
   // ── 1. CUSTOMER ─────────────────────────────────────────────────────────────
@@ -54,9 +62,9 @@ export class PaymentsService {
     if (user?.stripeCustomerId) return user.stripeCustomerId;
 
     // Buscar por email en Stripe antes de crear (evita duplicados)
-    const existing = await this.stripe.customers.list({ email, limit: 1 });
+    const existing = await this.stripeClient.customers.list({ email, limit: 1 });
     const customer = existing.data[0]
-      ?? await this.stripe.customers.create({ email, metadata: { userId } });
+      ?? await this.stripeClient.customers.create({ email, metadata: { userId } });
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -89,7 +97,7 @@ export class PaymentsService {
       const priceId = plan === 'monthly' ? PRICE_MONTHLY : plan === 'annual' ? PRICE_ANNUAL : PRICE_PROPFIRM;
       if (!priceId) throw new BadRequestException(`STRIPE_PRICE_${plan.toUpperCase()} not configured`);
 
-      session = await this.stripe.checkout.sessions.create({
+      session = await this.stripeClient.checkout.sessions.create({
         mode: 'subscription',
         customer: customerId,
         payment_method_types: ['card', 'ideal'],
@@ -102,7 +110,7 @@ export class PaymentsService {
     } else {
       if (!PRICE_LIFETIME) throw new BadRequestException('STRIPE_PRICE_LIFETIME not configured');
 
-      session = await this.stripe.checkout.sessions.create({
+      session = await this.stripeClient.checkout.sessions.create({
         mode: 'payment',
         customer: customerId,
         payment_method_types: ['card', 'ideal'],
@@ -134,7 +142,7 @@ export class PaymentsService {
     let event: Stripe.Event;
 
     try {
-      event = this.stripe.webhooks.constructEvent(
+      event = this.stripeClient.webhooks.constructEvent(
         rawBody,
         signature,
         process.env.STRIPE_WEBHOOK_SECRET!,
@@ -346,7 +354,7 @@ export class PaymentsService {
     } else if ((isActive || isPastDue) && user.subscriptionId) {
       // Try to read plan from subscription metadata stored at creation
       try {
-        const sub = await this.stripe.subscriptions.retrieve(user.subscriptionId, { expand: ['items'] });
+        const sub = await this.stripeClient.subscriptions.retrieve(user.subscriptionId, { expand: ['items'] });
         const meta = sub.metadata?.plan as string | undefined;
         if (meta === 'propfirm') plan = 'propfirm';
         else if (meta === 'annual') plan = 'annual';
@@ -387,7 +395,7 @@ export class PaymentsService {
     // Si tiene subscriptionId activo, verificar con Stripe en tiempo real
     if (user.subscriptionId) {
       try {
-        const sub = await this.stripe.subscriptions.retrieve(user.subscriptionId);
+        const sub = await this.stripeClient.subscriptions.retrieve(user.subscriptionId);
         const freshStatus = this.mapStripeStatus(sub.status);
         await this.prisma.user.update({
           where: { id: userId },
@@ -416,7 +424,7 @@ export class PaymentsService {
     }
 
     // Buscar el promotion code en Stripe
-    const promoCodes = await this.stripe.promotionCodes.list({ code, limit: 1, active: true });
+    const promoCodes = await this.stripeClient.promotionCodes.list({ code, limit: 1, active: true });
     if (!promoCodes.data.length) {
       throw new BadRequestException('Código promocional no válido o expirado');
     }
@@ -424,7 +432,7 @@ export class PaymentsService {
     const promoCode = promoCodes.data[0];
 
     // Aplicar al subscription
-    await this.stripe.subscriptions.update(user.subscriptionId, {
+    await this.stripeClient.subscriptions.update(user.subscriptionId, {
       discounts: [{ promotion_code: promoCode.id }],
     });
 
@@ -445,7 +453,7 @@ export class PaymentsService {
       throw new BadRequestException('No hay customer de Stripe asociado a este usuario');
     }
 
-    const session = await this.stripe.billingPortal.sessions.create({
+    const session = await this.stripeClient.billingPortal.sessions.create({
       customer:   user.stripeCustomerId,
       return_url: `${process.env.FRONTEND_URL}/dashboard`,
     });

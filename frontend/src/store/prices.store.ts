@@ -26,6 +26,6 @@ export const usePricesStore = create<PricesState>((set) => ({
       currentPrice: tick.price,
     })),
   setCandles:   (candles)   => set({ candles }),
-  setH1Candles: (h1Candles) => set({ h1Candles, candles: h1Candles }),
+  setH1Candles: (h1Candles) => set({ h1Candles }),
   setConnected: (connected) => set({ connected }),
 }));

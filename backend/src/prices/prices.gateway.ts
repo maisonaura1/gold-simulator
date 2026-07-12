@@ -82,8 +82,11 @@ export class PricesGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const realPrice = this.fetcher.getCurrentPrice();
 
     // Build a realistic synthetic tick around the real price
-    const prev  = all[Math.max(0, this.streamIndex - 1)];
-    const open  = prev?.close ?? realPrice;
+    // Guard: if cache is stale (prev.close differs from live price by >2%), anchor open to live price
+    const prev      = all[Math.max(0, this.streamIndex - 1)];
+    const prevClose = prev?.close ?? realPrice;
+    const drift     = Math.abs(prevClose - realPrice) / realPrice;
+    const open      = drift > 0.02 ? realPrice : prevClose;
     const noise = (Math.random() - 0.5) * 1.2;
     const close = +(realPrice + noise).toFixed(2);
     const high  = +(Math.max(open, close) + Math.random() * 0.8).toFixed(2);
