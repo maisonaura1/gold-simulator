@@ -9,11 +9,6 @@ ALTER TABLE "users"
   ADD COLUMN "subscription_ends_at"  TIMESTAMP(3),
   ADD COLUMN "superwall_user_id"     TEXT;
 
--- Backfill: users who already paid get ACTIVE status
-UPDATE "users"
-  SET "subscription_status" = 'ACTIVE'
-  WHERE "paid_at" IS NOT NULL;
-
 -- UniqueIndex: one customer per user
 CREATE UNIQUE INDEX "users_stripe_customer_id_key"
   ON "users"("stripe_customer_id");
