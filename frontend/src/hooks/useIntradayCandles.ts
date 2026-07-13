@@ -39,7 +39,7 @@ export function useIntradayCandles() {
     // Try backend first (persistent cache across serverless instances), fallback to local API route
     const backendUrl = process.env.NEXT_PUBLIC_API_URL;
     const urls = backendUrl
-      ? [`${backendUrl}/prices/intraday?tf=${timeframe}`, `/api/prices/intraday?tf=${timeframe}`]
+      ? [`${backendUrl}/api/prices/intraday?tf=${timeframe}`, `/api/prices/intraday?tf=${timeframe}`]
       : [`/api/prices/intraday?tf=${timeframe}`];
 
     const tryFetch = async () => {
