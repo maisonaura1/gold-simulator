@@ -201,11 +201,9 @@ function PricingSection() {
             cursor: 'pointer',
           }}
         >Annual</button>
-        {billing === 'annual' && (
-          <span className="text-xs font-mono px-2 py-0.5 rounded-sm" style={{ background: '#0d1a08', color: '#2dcc6f', border: '1px solid #2dcc6f33' }}>
-            Save 33%
-          </span>
-        )}
+        <span className="text-xs font-mono px-2 py-0.5 rounded-sm" style={{ background: '#0d1a08', color: '#2dcc6f', border: '1px solid #2dcc6f33' }}>
+          Ahorra 33%
+        </span>
       </div>
 
       <div className="flex gap-4 flex-wrap justify-center">
@@ -601,34 +599,94 @@ export default function LandingPage() {
           <a href="#preview"
             className="px-7 py-3 rounded-sm text-sm"
             style={{ background: '#0f1117', color: '#8893a8', border: '1px solid #1d2029', textDecoration: 'none' }}>
-            Ver el producto ↓
+            Ver demo ↓
           </a>
         </div>
-        <p style={{ color: '#3a3f4d', fontSize: 11, marginTop: 12 }}>
-          Sin tarjeta de crédito · 20 simulaciones gratis · Acceso inmediato · Garantía 30 días
+        <p className="flex items-center justify-center flex-wrap gap-3" style={{ fontSize: 11, marginTop: 12 }}>
+          {[
+            ['🔒', 'Sin tarjeta de crédito'],
+            ['📊', 'Datos reales Twelve Data'],
+            ['✓', '20 simulaciones gratis'],
+            ['↩', 'Garantía 30 días'],
+          ].map(([icon, text]) => (
+            <span key={text as string} style={{ color: '#6b7385' }}>
+              <span style={{ marginRight: 4 }}>{icon}</span>{text as string}
+            </span>
+          ))}
         </p>
 
-        {/* Real social proof — only with real data */}
-        {publicStats && publicStats.totalUsers > 0 && (
-          <div className="flex items-center justify-center gap-4 mt-6 flex-wrap">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-sm font-mono text-xs"
-              style={{ background: '#0f1117', border: '1px solid #2c2410' }}>
-              <span style={{ color: '#c9a84c' }}>◆</span>
-              <span style={{ color: '#c8cdd8', fontWeight: 700 }}>+{publicStats.totalUsers.toLocaleString()}</span>
-              <span style={{ color: '#6b7385' }}>traders registered</span>
-            </div>
-            {publicStats.totalTrades > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-sm font-mono text-xs"
-                style={{ background: '#0f1117', border: '1px solid #2c2410' }}>
-                <span style={{ color: '#2dcc6f' }}>▦</span>
-                <span style={{ color: '#c8cdd8', fontWeight: 700 }}>{publicStats.totalTrades.toLocaleString()}</span>
-                <span style={{ color: '#6b7385' }}>simulations completed</span>
-              </div>
-            )}
+        {/* Beta access badge — fixed messaging until 500+ users */}
+        <div className="flex items-center justify-center gap-3 mt-6 flex-wrap">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-sm font-mono text-xs"
+            style={{ background: '#0f1117', border: '1px solid #2c2410' }}>
+            <span style={{ color: '#c9a84c' }}>◆</span>
+            <span style={{ color: '#c8cdd8', fontWeight: 700 }}>Acceso beta</span>
+            <span style={{ color: '#6b7385' }}>· Plazas limitadas</span>
           </div>
-        )}
+          {publicStats && publicStats.totalTrades >= 50 && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-sm font-mono text-xs"
+              style={{ background: '#0f1117', border: '1px solid #1d2029' }}>
+              <span style={{ color: '#2dcc6f' }}>▦</span>
+              <span style={{ color: '#c8cdd8', fontWeight: 700 }}>{publicStats.totalTrades.toLocaleString()}</span>
+              <span style={{ color: '#6b7385' }}>simulaciones completadas</span>
+            </div>
+          )}
+        </div>
 
         <FakeTicker />
+
+        {/* Hero product teaser — 16:9 mock of the trading desk */}
+        <div className="relative mx-auto mt-10" style={{ maxWidth: 720, borderRadius: 8, overflow: 'hidden', border: '1px solid #2c2410', boxShadow: '0 0 80px rgba(201,168,76,0.10), 0 40px 80px rgba(0,0,0,0.5)' }}>
+          {/* Browser bar */}
+          <div className="flex items-center gap-2 px-3 py-2" style={{ background: '#0f1117', borderBottom: '1px solid #1d2029' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#e84040' }} />
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f0b429' }} />
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#2dcc6f' }} />
+            <div className="mx-auto px-3 py-0.5 rounded font-mono text-xs" style={{ background: '#141720', color: '#6b7385', border: '1px solid #1d2029' }}>
+              goldtrader.app/trade
+            </div>
+          </div>
+          {/* Desk header */}
+          <div className="flex items-center gap-4 px-4 py-1.5 font-mono text-xs overflow-hidden" style={{ background: '#09090d', borderBottom: '1px solid #2c2410' }}>
+            <span style={{ color: '#c9a84c', fontWeight: 700 }}>◆ Bullion Desk</span>
+            <span style={{ color: '#e8c96d', fontWeight: 700 }}>XAUUSD</span>
+            <span style={{ color: '#6b7385' }}>BID <span style={{ color: '#2dcc6f' }}>3342.40</span></span>
+            <span style={{ color: '#6b7385' }}>ASK <span style={{ color: '#e84040' }}>3342.60</span></span>
+            <span style={{ color: '#6b7385' }}>SESSION <span style={{ color: '#c8cdd8' }}>LONDON</span></span>
+            <span className="ml-auto font-mono text-xs px-2 py-0.5 rounded-sm" style={{ background: '#0a1a0e', color: '#2dcc6f', border: '1px solid #2dcc6f33' }}>
+              Trader Score 84/100
+            </span>
+          </div>
+          {/* Main workspace */}
+          <div className="flex" style={{ height: 200, background: '#07080b' }}>
+            {/* Chart area */}
+            <div className="flex-1 relative overflow-hidden" style={{ borderRight: '1px solid #1d2029' }}>
+              <FakeMiniChart />
+              <div className="absolute bottom-2 left-3 font-mono text-xs" style={{ color: '#6b7385' }}>XAUUSD · 1H · <span style={{ color: '#c9a84c' }}>3342.50</span></div>
+              {/* Annotated trade */}
+              <div className="absolute" style={{ top: '38%', left: '62%', transform: 'translateY(-50%)' }}>
+                <div className="font-mono text-xs px-2 py-1 rounded-sm" style={{ background: '#1a6b3a', border: '1px solid #2dcc6f55', color: '#2dcc6f' }}>▲ BUY +14.2 oz</div>
+              </div>
+            </div>
+            {/* Order panel */}
+            <div className="flex flex-col shrink-0 p-3 gap-2" style={{ width: 160, background: '#0b0d11' }}>
+              <div style={{ color: '#c9a84c', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase' }}>Open Trade</div>
+              <div className="flex justify-between font-mono text-xs"><span style={{ color: '#6b7385' }}>Entry</span><span style={{ color: '#c8cdd8' }}>3330.50</span></div>
+              <div className="flex justify-between font-mono text-xs"><span style={{ color: '#6b7385' }}>SL</span><span style={{ color: '#e84040' }}>3320.00</span></div>
+              <div className="flex justify-between font-mono text-xs"><span style={{ color: '#6b7385' }}>TP</span><span style={{ color: '#2dcc6f' }}>3355.00</span></div>
+              <div className="flex justify-between font-mono text-xs"><span style={{ color: '#6b7385' }}>P/L</span><span style={{ color: '#2dcc6f', fontWeight: 700 }}>+$340.50</span></div>
+              <div className="flex justify-between font-mono text-xs"><span style={{ color: '#6b7385' }}>R:R</span><span style={{ color: '#c9a84c', fontWeight: 700 }}>2.33:1</span></div>
+              <div className="mt-auto text-center py-1.5 rounded-sm text-xs font-bold" style={{ background: '#0a1a0e', color: '#2dcc6f', border: '1px solid #2dcc6f33' }}>CLOSE TRADE</div>
+            </div>
+          </div>
+          {/* Stats bar */}
+          <div className="flex items-center gap-6 px-4 py-2 font-mono text-xs" style={{ background: '#0b0d11', borderTop: '1px solid #1d2029' }}>
+            <span style={{ color: '#6b7385' }}>Win rate <span style={{ color: '#2dcc6f', fontWeight: 700 }}>73%</span></span>
+            <span style={{ color: '#6b7385' }}>Drawdown <span style={{ color: '#2dcc6f', fontWeight: 700 }}>-3.2%</span></span>
+            <span style={{ color: '#6b7385' }}>Consistency <span style={{ color: '#c9a84c', fontWeight: 700 }}>78/100</span></span>
+            <span style={{ color: '#6b7385' }}>Sessions <span style={{ color: '#c8cdd8', fontWeight: 700 }}>14</span></span>
+          </div>
+        </div>
       </section>
 
       {/* ── Stats bar ── */}
