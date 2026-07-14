@@ -7,6 +7,9 @@ async function bootstrap() {
 
   const allowedOrigins = [
     process.env.FRONTEND_URL,
+    'https://goldtradermt.app',
+    'https://www.goldtradermt.app',
+    'https://frontend-eight-phi-90.vercel.app',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
   ].filter(Boolean) as string[];
