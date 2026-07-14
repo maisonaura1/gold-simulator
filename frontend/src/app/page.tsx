@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import Link from 'next/link';
@@ -8,19 +8,19 @@ import { LogoIcon } from '@/components/ui/LogoIcon';
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 
-const FEATURES: { icon: string; title: string; body: string; mock?: 'equity' | 'order' }[] = [
-  { icon: '◈', title: 'Real XAUUSD Data',       body: 'Train on 2 years of real historical gold spot prices with authentic bid/ask spreads and 8 timeframes — from 1 minute to monthly.' },
+const FEATURES: { icon: string; title: string; body: string; mock?: 'equity' | 'order' | 'data' | 'zero' | 'focus' | 'xp' }[] = [
+  { icon: '◈', title: 'Real XAUUSD Data',       body: 'Train on 2 years of real historical gold spot prices with authentic bid/ask spreads and 8 timeframes — from 1 minute to monthly.', mock: 'data' },
   { icon: '◎', title: 'Risk Calculator',         body: 'Calculate position size, stop-loss, take-profit and R:R ratio before every trade. The habit that separates profitable traders.', mock: 'order' },
   { icon: '▦', title: 'Performance Analytics',  body: 'Trader Score, win rate, drawdown, equity curve and behaviour analysis after every session. See exactly where you lose money.', mock: 'equity' },
-  { icon: '⬡', title: 'Zero Capital at Risk',   body: 'Use virtual capital. Learn real trading mechanics — entries, exits, position sizing — without putting a single euro on the line.' },
-  { icon: '◇', title: 'XAUUSD Only Focus',      body: 'Full focus on gold spot. One instrument, mastered deeply. The way professional desks and top prop firm traders operate.' },
-  { icon: '◉', title: 'Missions & XP',          body: 'Structured learning paths, daily missions and XP rewards to build consistency. Progress is tracked, not just practised.' },
+  { icon: '⬡', title: 'Zero Capital at Risk',   body: 'Use virtual capital. Learn real trading mechanics — entries, exits, position sizing — without putting a single euro on the line.', mock: 'zero' },
+  { icon: '◇', title: 'XAUUSD Only Focus',      body: 'Full focus on gold spot. One instrument, mastered deeply. The way professional desks and top prop firm traders operate.', mock: 'focus' },
+  { icon: '◉', title: 'Missions & XP',          body: 'Structured learning paths, daily missions and XP rewards to build consistency. Progress is tracked, not just practised.', mock: 'xp' },
 ];
 
 const STEPS = [
-  { n: '01', title: 'Create your free account', body: 'Sign up in 30 seconds. No credit card required. Instant access to your first 20 free simulations.' },
-  { n: '02', title: 'Load a gold session',       body: 'Pick a historical scenario or replay live XAUUSD data from real London, New York or Asian sessions.' },
-  { n: '03', title: 'Trade and review',          body: 'Enter positions, set SL/TP, review your Trader Score and analytics after each session. Iterate.' },
+  { n: '01', icon: '⚡', title: 'Crea tu cuenta gratis', body: 'Registro en 30 segundos. Sin tarjeta. Acceso inmediato a tus primeras 20 simulaciones gratuitas.' },
+  { n: '02', icon: '📊', title: 'Carga una sesión XAUUSD', body: 'Elige un escenario histórico o reproduce datos reales de sesiones London, NY o Asian con 8 timeframes.' },
+  { n: '03', icon: '🏆', title: 'Opera y analiza', body: 'Abre posiciones, fija SL/TP, revisa tu Trader Score y las métricas de challenge tras cada sesión.' },
 ];
 
 const PRO_FEATURES = [
@@ -93,6 +93,119 @@ function GoldLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+function CandlestickHero3D({ fullscreen = false }: { fullscreen?: boolean }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current!;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    function resize() {
+      const W = fullscreen ? window.innerWidth : 430;
+      const H = fullscreen ? window.innerHeight : 490;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width  = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.scale(dpr, dpr);
+    }
+    resize();
+    if (fullscreen) window.addEventListener('resize', resize);
+
+    const NUM_RAYS = 72;
+    const FAN_RAD = (170 / 2) * (Math.PI / 180);
+    const UP = -Math.PI / 2;
+    const rayAngles: number[] = Array.from({ length: NUM_RAYS }, (_, i) =>
+      UP - FAN_RAD + (i / (NUM_RAYS - 1)) * FAN_RAD * 2
+    );
+
+    interface Particle { ray: number; t: number; speed: number; size: number; bullish: boolean; }
+    function mkParticle(tInit = 0): Particle {
+      return { ray: Math.floor(Math.random() * NUM_RAYS), t: tInit, speed: 0.0010 + Math.random() * 0.0025, size: 0.5 + Math.random() * 1.2, bullish: Math.random() > 0.42 };
+    }
+    const particles: Particle[] = Array.from({ length: 90 }, () => mkParticle(Math.random() * 0.88));
+
+    function envelope(t: number) { if (t < 0.12) return t / 0.12; if (t > 0.88) return (1 - t) / 0.12; return 1; }
+
+    function bodyColor(t: number, bullish: boolean, alpha: number): string {
+      const blend = Math.min(1, t / 0.55);
+      const [gr, gg, gb] = bullish ? [45, 204, 111] : [232, 64, 64];
+      return `rgba(${Math.round(201+(gr-201)*blend)},${Math.round(168+(gg-168)*blend)},${Math.round(76+(gb-76)*blend)},${alpha})`;
+    }
+
+    let raf: number;
+    let lastTs = 0;
+
+    function draw(ts: number) {
+      const dt = Math.min((ts - lastTs) / 1000, 0.05);
+      lastTs = ts;
+      const W = canvas.width / dpr;
+      const H = canvas.height / dpr;
+      const FX = W / 2;
+      const FY = H * 0.82;
+      const MAX_R = Math.sqrt(W * W + H * H);
+
+      ctx.clearRect(0, 0, W, H);
+
+      const bg = ctx.createRadialGradient(FX, FY, 0, FX, FY, MAX_R * 0.60);
+      bg.addColorStop(0, 'rgba(201,168,76,0.16)'); bg.addColorStop(0.18, 'rgba(80,40,5,0.07)'); bg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+      ctx.lineWidth = 0.55;
+      for (let i = 0; i < NUM_RAYS; i++) {
+        const a = rayAngles[i];
+        ctx.strokeStyle = 'rgba(201,168,76,0.04)';
+        ctx.beginPath(); ctx.moveTo(FX, FY); ctx.lineTo(FX + Math.cos(a) * MAX_R, FY + Math.sin(a) * MAX_R); ctx.stroke();
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.t += p.speed * (dt / (1/60));
+        if (p.t >= 1) { particles.splice(i, 1); particles.push(mkParticle(0)); continue; }
+        const dist = p.t * MAX_R;
+        const a = rayAngles[p.ray];
+        const px = FX + Math.cos(a) * dist;
+        const py = FY + Math.sin(a) * dist;
+        if (px < -40 || px > W + 40 || py < -40 || py > H + 40) continue;
+        const alpha = envelope(p.t) * 0.92;
+        const sc = p.size * (0.65 + p.t * 0.65);
+        const bW = 5 * sc, bH = 12 * sc, wkW = Math.max(0.8, sc), wkH = bH * 0.40;
+        ctx.save(); ctx.translate(px, py); ctx.rotate(a + Math.PI / 2);
+        ctx.fillStyle = `rgba(201,168,76,${alpha * 0.55})`; ctx.fillRect(-wkW/2, -bH/2 - wkH, wkW, wkH);
+        ctx.fillStyle = bodyColor(p.t, p.bullish, alpha);
+        if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(-bW/2, -bH/2, bW, bH, bW * 0.20); ctx.fill(); }
+        else { ctx.fillRect(-bW/2, -bH/2, bW, bH); }
+        ctx.fillStyle = `rgba(201,168,76,${alpha * 0.55})`; ctx.fillRect(-wkW/2, bH/2, wkW, wkH);
+        ctx.restore();
+      }
+
+      const targetCount = fullscreen ? 240 : 160;
+      while (particles.length < targetCount) particles.push(mkParticle(Math.random() * 0.20));
+
+      const fgG = ctx.createRadialGradient(FX, FY, 0, FX, FY, 58);
+      fgG.addColorStop(0, 'rgba(255,245,160,0.98)'); fgG.addColorStop(0.30, 'rgba(201,168,76,0.60)');
+      fgG.addColorStop(0.65, 'rgba(150,100,20,0.18)'); fgG.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = fgG; ctx.beginPath(); ctx.arc(FX, FY, 58, 0, Math.PI * 2); ctx.fill();
+
+      raf = requestAnimationFrame(draw);
+    }
+
+    raf = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(raf); if (fullscreen) window.removeEventListener('resize', resize); };
+  }, [fullscreen]);
+
+  return (
+    <div style={fullscreen
+      ? { position: 'absolute', inset: 0 }
+      : { position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 490 }
+    }>
+      <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />
+    </div>
+  );
+}
+
 const EQUITY_POINTS = [
   [0,180],[60,165],[120,155],[180,170],[240,145],[300,130],[360,115],[420,125],[480,100],[540,85],[600,70],[660,80],[720,60],[780,45],[840,55],[900,35],
 ];
@@ -157,14 +270,80 @@ function MiniOrderEntry() {
   );
 }
 
-function FeatureCard({ icon, title, body, mock }: { icon: string; title: string; body: string; mock?: 'equity' | 'order' }) {
+function MiniDataBadges() {
+  return (
+    <div className="mt-4 flex flex-wrap gap-1.5">
+      {['M1','M5','M15','H1','H4','D1','W1','MN'].map((tf) => (
+        <span key={tf} className="font-mono text-xs px-2 py-0.5 rounded"
+          style={{ background: '#141720', border: '1px solid #2c2410', color: '#c9a84c' }}>{tf}</span>
+      ))}
+      <span className="font-mono text-xs px-2 py-0.5 rounded"
+        style={{ background: '#0a1a0e', border: '1px solid #2dcc6f33', color: '#2dcc6f' }}>2yr real data</span>
+    </div>
+  );
+}
+
+function MiniZeroRisk() {
+  return (
+    <div className="mt-4 flex items-center gap-3 px-3 py-2.5 rounded"
+      style={{ background: '#141720', border: '1px solid #1d2029' }}>
+      <div style={{ fontSize: 22 }}>🛡️</div>
+      <div>
+        <div className="font-mono text-xs" style={{ color: '#2dcc6f', fontWeight: 700 }}>€0 en riesgo</div>
+        <div style={{ fontSize: 10, color: '#6b7385', marginTop: 1 }}>Capital virtual · misma mecánica real</div>
+      </div>
+    </div>
+  );
+}
+
+function MiniCandleFocus() {
+  return (
+    <div className="mt-4 flex items-center justify-between px-3 py-2.5 rounded"
+      style={{ background: '#141720', border: '1px solid #2c2410' }}>
+      <div>
+        <div style={{ color: '#c9a84c', fontSize: 18, lineHeight: 1 }}>◆</div>
+        <div className="font-mono text-xs mt-1" style={{ color: '#c9a84c', fontWeight: 700 }}>XAUUSD</div>
+        <div style={{ fontSize: 10, color: '#6b7385' }}>Gold Spot</div>
+      </div>
+      <div style={{ textAlign: 'right' }}>
+        <div style={{ fontSize: 10, color: '#6b7385' }}>1 instrumento</div>
+        <div style={{ fontSize: 10, color: '#6b7385' }}>dominado en profundidad</div>
+        <div className="font-mono text-xs mt-1" style={{ color: '#2dcc6f' }}>como los pros</div>
+      </div>
+    </div>
+  );
+}
+
+function MiniXPBar() {
+  return (
+    <div className="mt-4 space-y-2">
+      {[['Gestión de riesgo', 78], ['Disciplina diaria', 55], ['Consistency', 90]].map(([label, pct]) => (
+        <div key={label as string}>
+          <div className="flex justify-between mb-0.5">
+            <span style={{ fontSize: 10, color: '#6b7385' }}>{label}</span>
+            <span className="font-mono" style={{ fontSize: 10, color: '#c9a84c' }}>{pct}%</span>
+          </div>
+          <div style={{ height: 4, background: '#1d2029', borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg,#c9a84c,#ffe082)', borderRadius: 2 }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FeatureCard({ icon, title, body, mock }: { icon: string; title: string; body: string; mock?: string }) {
   return (
     <div className="p-5 rounded-sm" style={{ background: '#0f1117', border: '1px solid #1d2029' }}>
       <div style={{ color: '#c9a84c', fontSize: 20, marginBottom: 10 }}>{icon}</div>
-      <div style={{ color: '#e8ecf4', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>{title}</div>
-      <div style={{ color: '#6b7385', fontSize: 12, lineHeight: 1.6 }}>{body}</div>
+      <div style={{ color: '#e8ecf4', fontWeight: 600, fontSize: 15, marginBottom: 8 }}>{title}</div>
+      <div style={{ color: '#6b7385', fontSize: 14, lineHeight: 1.7 }}>{body}</div>
       {mock === 'equity' && <MiniEquityCurve />}
       {mock === 'order'  && <MiniOrderEntry />}
+      {mock === 'data'   && <MiniDataBadges />}
+      {mock === 'zero'   && <MiniZeroRisk />}
+      {mock === 'focus'  && <MiniCandleFocus />}
+      {mock === 'xp'     && <MiniXPBar />}
     </div>
   );
 }
@@ -173,10 +352,13 @@ function PricingSection() {
   const [billing, setBilling] = useState<'monthly' | 'annual'>('annual');
 
   return (
-    <section id="pricing" className="max-w-4xl mx-auto px-6 py-16">
+    <section id="pricing" className="max-w-6xl mx-auto px-8 py-16">
       <h2 className="text-center font-bold mb-2" style={{ color: '#e8ecf4', fontSize: 22 }}>Simple, honest pricing</h2>
-      <p className="text-center mb-6" style={{ color: '#6b7385', fontSize: 13 }}>
+      <p className="text-center mb-1" style={{ color: '#6b7385', fontSize: 13 }}>
         Start free. Upgrade when you're ready.
+      </p>
+      <p className="text-center mb-6 font-mono text-xs" style={{ color: '#c9a84c' }}>
+        Un challenge de €300 que fallas = 4 años de GoldTrader Pro
       </p>
 
       {/* Billing toggle */}
@@ -282,7 +464,7 @@ function PricingSection() {
           <a
             href="mailto:hello@goldtrader.app?subject=Prop%20Firm%20Plan%20enquiry"
             className="block text-center py-2.5 rounded-sm text-xs font-bold"
-            style={{ background: 'linear-gradient(135deg,#4a6cf7,#2d4ed8)', color: '#fff', textDecoration: 'none' }}
+            style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}
           >
             Contact us →
           </a>
@@ -457,14 +639,14 @@ function FaqItem({ q, a }: { q: string; a: string }) {
         className="w-full flex items-center justify-between py-4 text-left gap-4"
         style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
       >
-        <span style={{ color: '#c8cdd8', fontSize: 13, fontWeight: 500 }}>{q}</span>
+        <span style={{ color: '#c8cdd8', fontSize: 15, fontWeight: 500 }}>{q}</span>
         <span style={{
           color: '#c9a84c', fontSize: 14, flexShrink: 0,
           transition: 'transform 0.2s', transform: open ? 'rotate(45deg)' : 'rotate(0)',
         }}>+</span>
       </button>
       {open && (
-        <div className="pb-4" style={{ color: '#6b7385', fontSize: 12, lineHeight: 1.8 }}>{a}</div>
+        <div className="pb-4" style={{ color: '#6b7385', fontSize: 14, lineHeight: 1.8 }}>{a}</div>
       )}
     </div>
   );
@@ -510,6 +692,84 @@ function EmailCapture() {
   );
 }
 
+// ─── Who Uses Section with B2C/B2B toggle ────────────────────────────────────
+
+const B2C_CASES = USE_CASES;
+const B2B_CASES = [
+  {
+    icon: '🏢',
+    profile: 'Prop Firm — Preselección',
+    context: 'La firma busca candidatos que ya dominen las métricas antes del challenge',
+    outcome: 'Integra GoldTrader como herramienta de warm-up oficial: los candidatos llegan con drawdown y consistency ya trabajados, y la tasa de paso sube.',
+    tag: 'PROP FIRM OPS',
+    color: '#c9a84c',
+  },
+  {
+    icon: '🎓',
+    profile: 'Academia de Trading',
+    context: 'Cursos online o presenciales con prácticas sobre oro',
+    outcome: 'Sustituye el demo broker genérico por un simulador especializado XAUUSD con Trader Score que el alumno puede incluir en su portfolio.',
+    tag: 'FORMACIÓN',
+    color: '#4a6cf7',
+  },
+  {
+    icon: '📡',
+    profile: 'Comunidad / Telegram de señales',
+    context: 'Grupo de señales XAUUSD con cientos de suscriptores activos',
+    outcome: 'Ofrece GoldTrader Pro como beneficio de membresía premium. Los miembros practican las señales en el simulador antes de ejecutarlas en real.',
+    tag: 'COMUNIDAD',
+    color: '#2dcc6f',
+  },
+];
+
+function WhoUsesSection() {
+  const [tab, setTab] = useState<'b2c' | 'b2b'>('b2c');
+  const cases = tab === 'b2c' ? B2C_CASES : B2B_CASES;
+  return (
+    <section className="max-w-7xl mx-auto px-8 py-16">
+      <h2 className="text-center font-bold mb-3" style={{ color: '#e8ecf4', fontSize: 28 }}>¿Para quién es GoldTrader?</h2>
+      <p className="text-center mb-6" style={{ color: '#6b7385', fontSize: 16 }}>
+        Traders individuales y negocios que entrenan en XAUUSD.
+      </p>
+      {/* Toggle */}
+      <div className="flex justify-center mb-10">
+        <div className="flex rounded-sm overflow-hidden" style={{ border: '1px solid #1d2029' }}>
+          {([['b2c', 'Traders individuales'], ['b2b', 'Empresas & Academias']] as const).map(([key, label]) => (
+            <button key={key} onClick={() => setTab(key)}
+              className="px-5 py-2 text-xs font-mono uppercase tracking-wide transition-colors"
+              style={{
+                background: tab === key ? '#c9a84c' : '#0f1117',
+                color: tab === key ? '#08090c' : '#6b7385',
+                fontWeight: tab === key ? 700 : 400,
+                border: 'none', cursor: 'pointer',
+              }}>
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {cases.map((u) => (
+          <div key={u.profile} className="p-6 rounded-sm flex flex-col gap-4"
+            style={{ background: '#0f1117', border: `1px solid ${u.color}22` }}>
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">{u.icon}</div>
+              <div>
+                <div className="text-xs font-mono uppercase tracking-widest mb-1" style={{ color: u.color }}>{u.tag}</div>
+                <div style={{ color: '#e8ecf4', fontWeight: 700, fontSize: 16 }}>{u.profile}</div>
+              </div>
+            </div>
+            <div style={{ color: '#6b7385', fontSize: 13, fontStyle: 'italic', borderLeft: `2px solid ${u.color}33`, paddingLeft: 12 }}>
+              {u.context}
+            </div>
+            <div style={{ color: '#8893a8', fontSize: 14, lineHeight: 1.8 }}>{u.outcome}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
@@ -537,6 +797,29 @@ export default function LandingPage() {
   return (
     <div className="landing-scroll min-h-screen font-sans" style={{ background: '#07080b', color: '#c8cdd8' }}>
 
+      {/* ── Global keyframes ── */}
+      <style>{`
+        @keyframes candleGlow {
+          0%, 100% { opacity: 0.8; transform: translate(-50%,-50%) scale(1); }
+          50%      { opacity: 1;   transform: translate(-50%,-50%) scale(1.12); }
+        }
+        @keyframes heroFadeUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pillSlide {
+          from { opacity: 0; transform: translateY(-10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .hero-text { animation: heroFadeUp 0.7s ease both; }
+        .hero-text-delay-1 { animation: heroFadeUp 0.7s 0.1s ease both; }
+        .hero-text-delay-2 { animation: heroFadeUp 0.7s 0.22s ease both; }
+        .hero-text-delay-3 { animation: heroFadeUp 0.7s 0.36s ease both; }
+        .hero-text-delay-4 { animation: heroFadeUp 0.7s 0.50s ease both; }
+        .hero-pill { animation: pillSlide 0.5s ease both; }
+        .hero-3d   { animation: heroFadeUp 0.9s 0.15s ease both; }
+      `}</style>
+
       {/* ── Nav ── */}
       <nav className="flex items-center justify-between px-6 py-3 border-b sticky top-0 z-40"
         style={{ borderColor: '#1d2029', background: 'rgba(7,8,11,0.92)', backdropFilter: 'blur(12px)' }}>
@@ -559,82 +842,125 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* ── Hero ── */}
-      <section className="max-w-4xl mx-auto px-6 pt-20 pb-10 text-center">
-        <GoldLabel>XAUUSD Prop Firm Simulator — Real data. Zero risk.</GoldLabel>
-        <h1 className="font-black leading-tight mb-5"
-          style={{ fontSize: 'clamp(28px,5vw,54px)', color: '#e8ecf4' }}>
-          ¿Pasarías el challenge{' '}
-          <span style={{ color: '#c9a84c' }}>antes de poner dinero real?</span>
-        </h1>
-        <p className="max-w-2xl mx-auto mb-6"
-          style={{ color: '#8893a8', fontSize: 15, lineHeight: 1.8 }}>
-          Los challenges de prop firm (FTMO, Funded Next, MyForexFunds) cuestan entre <strong style={{ color: '#c8cdd8' }}>€150 y €1.500</strong> — y el <strong style={{ color: '#c8cdd8' }}>85% de los traders los fallan en la primera semana</strong> por no controlar drawdown o riesgo por trade. GoldTrader te permite practicar exactamente las métricas que te van a evaluar, sobre datos reales de XAUUSD, sin arriesgar nada.
-        </p>
-
-        {/* Prop firm metrics preview */}
-        <div className="flex flex-wrap justify-center gap-3 mb-8">
-          {[
-            { label: 'Max Drawdown', value: '< 10%', ok: true },
-            { label: 'Daily DD', value: '< 5%', ok: true },
-            { label: 'Consistency', value: '≥ 70/100', ok: false },
-            { label: 'Avg R:R', value: '≥ 2:1', ok: false },
-          ].map(({ label, value, ok }) => (
-            <div key={label} className="flex items-center gap-2 px-3 py-1.5 rounded-sm font-mono text-xs"
-              style={{ background: '#0f1117', border: `1px solid ${ok ? '#2dcc6f33' : '#1d2029'}` }}>
-              <span style={{ color: ok ? '#2dcc6f' : '#e84040', fontSize: 10 }}>{ok ? '✓' : '✗'}</span>
-              <span style={{ color: '#6b7385' }}>{label}</span>
-              <span style={{ color: ok ? '#2dcc6f' : '#e84040', fontWeight: 700 }}>{value}</span>
-            </div>
-          ))}
+      {/* ── Hero — full width, animation as background ── */}
+      <section className="relative w-full overflow-hidden" style={{ minHeight: '100vh' }}>
+        {/* Animation — absolute background layer */}
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+          <CandlestickHero3D fullscreen />
         </div>
 
-        {/* CTAs */}
-        <div className="flex items-center justify-center gap-3 flex-wrap">
-          <Link href="/auth/register"
-            className="px-7 py-3 rounded-sm font-bold text-sm transition-opacity hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}>
-            Empezar gratis — 20 simulaciones →
-          </Link>
-          <a href="#preview"
-            className="px-7 py-3 rounded-sm text-sm"
-            style={{ background: '#0f1117', color: '#8893a8', border: '1px solid #1d2029', textDecoration: 'none' }}>
-            Ver demo ↓
-          </a>
-        </div>
-        <p className="flex items-center justify-center flex-wrap gap-3" style={{ fontSize: 11, marginTop: 12 }}>
-          {[
-            ['🔒', 'Sin tarjeta de crédito'],
-            ['📊', 'Datos reales Twelve Data'],
-            ['✓', '20 simulaciones gratis'],
-            ['↩', 'Garantía 30 días'],
-          ].map(([icon, text]) => (
-            <span key={text as string} style={{ color: '#6b7385' }}>
-              <span style={{ marginRight: 4 }}>{icon}</span>{text as string}
-            </span>
-          ))}
-        </p>
+        {/* Soft radial backdrop so text reads cleanly over the animation */}
+        <div className="absolute pointer-events-none" style={{
+          zIndex: 0,
+          top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '90%', maxWidth: 820,
+          height: '75%',
+          background: 'radial-gradient(ellipse at center, rgba(8,9,12,0.78) 30%, rgba(8,9,12,0.30) 70%, transparent 100%)',
+          filter: 'blur(2px)',
+        }} />
 
-        {/* Beta access badge — fixed messaging until 500+ users */}
-        <div className="flex items-center justify-center gap-3 mt-6 flex-wrap">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-sm font-mono text-xs"
-            style={{ background: '#0f1117', border: '1px solid #2c2410' }}>
-            <span style={{ color: '#c9a84c' }}>◆</span>
-            <span style={{ color: '#c8cdd8', fontWeight: 700 }}>Acceso beta</span>
-            <span style={{ color: '#6b7385' }}>· Plazas limitadas</span>
+        {/* Content — centrado sobre la animación */}
+        <div className="relative flex flex-col items-center text-center px-6 pt-28 pb-16" style={{ zIndex: 1 }}>
+
+          {/* Announcement pill */}
+          <div className="hero-pill flex items-center gap-2 mb-8 w-fit px-3 py-1.5 rounded-full"
+            style={{ background: 'rgba(15,17,23,0.80)', border: '1px solid #2c2410', backdropFilter: 'blur(8px)' }}>
+            <span style={{ color: '#c9a84c', fontSize: 10 }}>◆</span>
+            <span style={{ color: '#c8cdd8', fontSize: 11, fontWeight: 600 }}>Acceso beta</span>
+            <span style={{ color: '#6b7385', fontSize: 11 }}>· Solo 47 plazas disponibles</span>
+            <span style={{ color: '#c9a84c', fontSize: 11 }}>→</span>
           </div>
+
+          {/* Ticker */}
+          <div className="mb-6">
+            <FakeTicker />
+          </div>
+
+          {/* Headline */}
+          <h1 className="hero-text font-black leading-[1.08] mb-5"
+            style={{ fontSize: 'clamp(36px,5.5vw,72px)', color: '#e8ecf4', letterSpacing: '-0.02em', maxWidth: 820 }}>
+            ¿Pasarías el challenge{' '}
+            <span style={{
+              background: 'linear-gradient(135deg,#FFE082,#C9A84C)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>antes de poner dinero real?</span>
+          </h1>
+
+          <p className="hero-text-delay-1 mb-8"
+            style={{ color: '#8893a8', fontSize: 16, lineHeight: 1.8, maxWidth: 580 }}>
+            Los challenges (FTMO, Funded Next) cuestan entre <strong style={{ color: '#c8cdd8' }}>€150–€1.500</strong> y el <strong style={{ color: '#c8cdd8' }}>85% los fallan en la primera semana</strong>. GoldTrader te permite practicar exactamente las métricas que te evalúan, sobre datos reales de XAUUSD, sin arriesgar nada.
+          </p>
+
+          {/* Prop firm metrics preview */}
+          <div className="hero-text-delay-2 flex flex-wrap justify-center gap-2 mb-8">
+            {[
+              { label: 'Max DD', value: '< 10%', ok: true },
+              { label: 'Daily DD', value: '< 5%', ok: true },
+              { label: 'Consistency', value: '≥ 70/100', ok: false },
+              { label: 'Avg R:R', value: '≥ 2:1', ok: false },
+            ].map(({ label, value, ok }) => (
+              <div key={label} className="flex items-center gap-2 px-3 py-1.5 rounded-sm font-mono text-xs"
+                style={{ background: 'rgba(15,17,23,0.75)', border: `1px solid ${ok ? '#2dcc6f33' : '#1d2029'}`, backdropFilter: 'blur(6px)' }}>
+                <span style={{ color: ok ? '#2dcc6f' : '#e84040', fontSize: 10 }}>{ok ? '✓' : '✗'}</span>
+                <span style={{ color: '#6b7385' }}>{label}</span>
+                <span style={{ color: ok ? '#2dcc6f' : '#e84040', fontWeight: 700 }}>{value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Social proof */}
+          {publicStats && publicStats.totalTrades >= 10 && (
+            <div className="flex items-center justify-center gap-2 mb-5 px-4 py-2 rounded-full w-fit mx-auto"
+              style={{ background: 'rgba(15,17,23,0.75)', border: '1px solid rgba(45,204,111,0.25)', backdropFilter: 'blur(8px)' }}>
+              <span style={{ color: '#2dcc6f', fontSize: 10 }}>▦</span>
+              <span className="font-mono text-xs" style={{ color: '#2dcc6f', fontWeight: 700 }}>{publicStats.totalTrades.toLocaleString()}</span>
+              <span className="font-mono text-xs" style={{ color: '#6b7385' }}>simulaciones completadas por traders como tú</span>
+            </div>
+          )}
+
+          {/* CTAs */}
+          <div className="hero-text-delay-3 flex items-center justify-center gap-3 flex-wrap mb-6">
+            <Link href="/auth/register"
+              className="px-8 py-3.5 rounded-sm font-bold text-sm transition-opacity hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}>
+              Empezar gratis — 20 simulaciones →
+            </Link>
+            <a href="#preview"
+              className="px-8 py-3.5 rounded-sm text-sm transition-colors hover:text-[#c8cdd8]"
+              style={{ background: 'rgba(15,17,23,0.70)', color: '#6b7385', border: '1px solid #1d2029', textDecoration: 'none', backdropFilter: 'blur(6px)' }}>
+              Ver demo ↓
+            </a>
+          </div>
+
+          {/* Trust micro-text */}
+          <p className="hero-text-delay-4 flex flex-wrap justify-center gap-4" style={{ fontSize: 11 }}>
+            {[
+              ['🔒', 'Sin tarjeta de crédito'],
+              ['📊', 'Datos reales Twelve Data'],
+              ['✓', '20 simulaciones gratis'],
+              ['↩', 'Garantía 30 días'],
+            ].map(([icon, text]) => (
+              <span key={text as string} style={{ color: '#6b7385' }}>
+                <span style={{ marginRight: 4 }}>{icon}</span>{text as string}
+              </span>
+            ))}
+          </p>
+
           {publicStats && publicStats.totalTrades >= 50 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-sm font-mono text-xs"
-              style={{ background: '#0f1117', border: '1px solid #1d2029' }}>
+            <div className="flex items-center gap-2 mt-4 px-3 py-1.5 rounded-sm font-mono text-xs"
+              style={{ background: 'rgba(15,17,23,0.75)', border: '1px solid #1d2029', backdropFilter: 'blur(6px)' }}>
               <span style={{ color: '#2dcc6f' }}>▦</span>
               <span style={{ color: '#c8cdd8', fontWeight: 700 }}>{publicStats.totalTrades.toLocaleString()}</span>
               <span style={{ color: '#6b7385' }}>simulaciones completadas</span>
             </div>
           )}
         </div>
+      </section>
 
-        <FakeTicker />
-
+      {/* ── Hero product teaser — below the split hero ── */}
+      <section className="max-w-6xl mx-auto px-8 pb-10">
         {/* Hero product teaser — 16:9 mock of the trading desk */}
         <div className="relative mx-auto mt-10" style={{ maxWidth: 720, borderRadius: 8, overflow: 'hidden', border: '1px solid #2c2410', boxShadow: '0 0 80px rgba(201,168,76,0.10), 0 40px 80px rgba(0,0,0,0.5)' }}>
           {/* Browser bar */}
@@ -708,7 +1034,7 @@ export default function LandingPage() {
 
       {/* ── Product preview ── */}
       <CornerFrame>
-        <section id="preview" className="max-w-5xl mx-auto px-6 py-16">
+        <section id="preview" className="max-w-7xl mx-auto px-8 py-16">
           <div className="text-center mb-2">
             <GoldLabel>Live product preview</GoldLabel>
             <h2 className="font-bold" style={{ color: '#e8ecf4', fontSize: 22 }}>
@@ -719,32 +1045,44 @@ export default function LandingPage() {
             </p>
           </div>
           <ProductPreview />
+          {/* CTA secundario bajo el product mock */}
+          <div className="flex justify-center mt-8">
+            <Link href="/auth/register"
+              className="px-8 py-3 rounded-sm font-bold text-sm transition-opacity hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}>
+              Probar en el simulador →
+            </Link>
+          </div>
         </section>
       </CornerFrame>
 
       {/* ── Features ── */}
       <CornerFrame>
-        <section id="features" className="max-w-5xl mx-auto px-6 py-16">
-          <h2 className="text-center font-bold mb-2" style={{ color: '#e8ecf4', fontSize: 22 }}>Everything you need to improve</h2>
-          <p className="text-center mb-10" style={{ color: '#6b7385', fontSize: 13 }}>
-            Built specifically for gold spot traders who want measurable, repeatable progress.
+        <section id="features" className="max-w-7xl mx-auto px-8 py-16">
+          <h2 className="text-center font-bold mb-3" style={{ color: '#e8ecf4', fontSize: 28 }}>Las 4 razones por las que el 85% falla — y cómo las trabajamos</h2>
+          <p className="text-center mb-12" style={{ color: '#6b7385', fontSize: 16 }}>
+            Cada feature resuelve una causa concreta de fallo en los challenges de prop firm.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map((f) => <FeatureCard key={f.title} {...f} />)}
           </div>
         </section>
       </CornerFrame>
 
       {/* ── How it works ── */}
-      <section className="border-y py-14" style={{ borderColor: '#1d2029', background: '#0b0d11' }}>
-        <div className="max-w-3xl mx-auto px-6">
-          <h2 className="text-center font-bold mb-10" style={{ color: '#e8ecf4', fontSize: 22 }}>How it works</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+      <section className="border-y py-16" style={{ borderColor: '#1d2029', background: '#0b0d11' }}>
+        <div className="max-w-6xl mx-auto px-8">
+          <h2 className="text-center font-bold mb-12" style={{ color: '#e8ecf4', fontSize: 28 }}>Cómo funciona</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-12">
             {STEPS.map((s) => (
-              <div key={s.n} className="text-center">
-                <div style={{ color: '#c9a84c', fontFamily: 'monospace', fontSize: 30, fontWeight: 800, lineHeight: 1, marginBottom: 10 }}>{s.n}</div>
-                <div style={{ color: '#e8ecf4', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>{s.title}</div>
-                <div style={{ color: '#6b7385', fontSize: 12, lineHeight: 1.7 }}>{s.body}</div>
+              <div key={s.n} className="text-center flex flex-col items-center">
+                <div className="flex items-center justify-center mb-4 rounded-full"
+                  style={{ width: 68, height: 68, background: '#0f1117', border: '1px solid #2c2410', fontSize: 28 }}>
+                  {s.icon}
+                </div>
+                <div className="font-mono text-xs mb-2" style={{ color: '#c9a84c55', fontWeight: 700 }}>{s.n}</div>
+                <div style={{ color: '#e8ecf4', fontWeight: 600, fontSize: 16, marginBottom: 8 }}>{s.title}</div>
+                <div style={{ color: '#6b7385', fontSize: 14, lineHeight: 1.8 }}>{s.body}</div>
               </div>
             ))}
           </div>
@@ -752,49 +1090,21 @@ export default function LandingPage() {
       </section>
 
       {/* ── Who it's for ── */}
-      <section className="max-w-5xl mx-auto px-6 py-16">
-        <h2 className="text-center font-bold mb-2" style={{ color: '#e8ecf4', fontSize: 22 }}>Who uses GoldTrader</h2>
-        <p className="text-center mb-10" style={{ color: '#6b7385', fontSize: 13 }}>
-          Three types of traders. One simulator built for all of them.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {USE_CASES.map((u) => (
-            <div key={u.profile} className="p-6 rounded-sm flex flex-col gap-4"
-              style={{ background: '#0f1117', border: `1px solid ${u.color}22` }}>
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">{u.icon}</div>
-                <div>
-                  <div className="text-xs font-mono uppercase tracking-widest mb-1"
-                    style={{ color: u.color }}>
-                    {u.tag}
-                  </div>
-                  <div style={{ color: '#e8ecf4', fontWeight: 700, fontSize: 14 }}>{u.profile}</div>
-                </div>
-              </div>
-              <div style={{ color: '#6b7385', fontSize: 11, fontStyle: 'italic', borderLeft: `2px solid ${u.color}33`, paddingLeft: 10 }}>
-                {u.context}
-              </div>
-              <div style={{ color: '#8893a8', fontSize: 12, lineHeight: 1.7 }}>
-                {u.outcome}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <WhoUsesSection />
 
       {/* ── Prop Firm B2B Banner ── */}
       <section className="border-y py-12" style={{ borderColor: '#4a6cf733', background: 'linear-gradient(135deg,#07080b 0%,#080d14 100%)' }}>
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center gap-8">
+        <div className="max-w-6xl mx-auto px-8">
+          <div className="flex flex-col md:flex-row items-center gap-10">
             <div className="flex-1">
               <div className="text-xs font-mono uppercase tracking-widest mb-3 px-2 py-1 inline-block rounded-sm"
                 style={{ background: '#4a6cf722', color: '#4a6cf7', border: '1px solid #4a6cf744' }}>
                 ◈ For Prop Firm Operators
               </div>
-              <h2 className="font-bold mb-3" style={{ color: '#e8ecf4', fontSize: 20 }}>
+              <h2 className="font-bold mb-4" style={{ color: '#e8ecf4', fontSize: 24 }}>
                 Prepare your candidates before they hit the challenge.
               </h2>
-              <p style={{ color: '#6b7385', fontSize: 13, lineHeight: 1.8, marginBottom: 16 }}>
+              <p style={{ color: '#6b7385', fontSize: 15, lineHeight: 1.8, marginBottom: 16 }}>
                 Run your prop firm's screening process with a simulator that enforces FTMO-style rules — daily drawdown &lt;5%, max drawdown &lt;10%, consistency score — on real XAUUSD data. Give every candidate an equal baseline before they trade real capital.
               </p>
               <div className="flex flex-wrap gap-2">
@@ -845,50 +1155,111 @@ export default function LandingPage() {
 
       {/* ── FAQ ── */}
       <section id="faq" className="border-t py-14" style={{ borderColor: '#1d2029', background: '#0b0d11' }}>
-        <div className="max-w-2xl mx-auto px-6">
+        <div className="max-w-3xl mx-auto px-8">
           <h2 className="text-center font-bold mb-10" style={{ color: '#e8ecf4', fontSize: 22 }}>Frequently asked questions</h2>
           {FAQS.map((f) => <FaqItem key={f.q} {...f} />)}
         </div>
       </section>
 
-      {/* ── Email capture ── */}
-      <section className="border-t py-12" style={{ borderColor: '#1d2029' }}>
-        <div className="max-w-xl mx-auto px-6 text-center">
-          <h3 style={{ color: '#e8ecf4', fontSize: 16, fontWeight: 700, marginBottom: 6 }}>
-            Not ready to sign up yet?
-          </h3>
-          <p style={{ color: '#6b7385', fontSize: 12, marginBottom: 20 }}>
-            Leave your email and we'll let you know when we add new features — no spam, one email max per month.
+      {/* ── Final CTA — cierre emocional ── */}
+      <section className="border-t py-20 text-center relative overflow-hidden" style={{ borderColor: '#1d2029', background: '#07080b' }}>
+        {/* Glow de fondo */}
+        <div className="absolute pointer-events-none" style={{
+          top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+          width: 600, height: 400, borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(201,168,76,0.08) 0%, transparent 70%)',
+          filter: 'blur(40px)',
+        }} />
+        <div className="relative max-w-3xl mx-auto px-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6"
+            style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.25)' }}>
+            <span style={{ color: '#c9a84c', fontSize: 10 }}>◆</span>
+            <span style={{ color: '#c9a84c', fontSize: 11, fontWeight: 600, letterSpacing: '0.06em' }}>EMPIEZA HOY · GRATIS</span>
+          </div>
+          <h2 className="font-black mb-4" style={{ fontSize: 'clamp(28px,4vw,48px)', color: '#e8ecf4', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+            ¿Listo para entrenar antes<br />
+            <span style={{ background: 'linear-gradient(135deg,#FFE082,#C9A84C)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              del challenge?
+            </span>
+          </h2>
+          <p style={{ color: '#6b7385', fontSize: 14, marginBottom: 32, lineHeight: 1.7 }}>
+            Un challenge de €300 que fallas cuesta más que <strong style={{ color: '#8893a8' }}>4 años de GoldTrader Pro</strong>.<br />
+            Tus primeras 20 simulaciones son gratis. Sin tarjeta.
           </p>
-          <EmailCapture />
+          <div className="flex items-center justify-center gap-3 flex-wrap mb-8">
+            <Link href="/auth/register"
+              className="inline-block px-9 py-4 rounded-sm font-bold text-sm transition-opacity hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none', fontSize: 15 }}>
+              Empezar gratis — 20 simulaciones →
+            </Link>
+            <a href="#pricing"
+              className="inline-block px-9 py-4 rounded-sm text-sm transition-colors hover:text-[#c8cdd8]"
+              style={{ background: 'transparent', color: '#6b7385', border: '1px solid #1d2029', textDecoration: 'none' }}>
+              Ver planes
+            </a>
+          </div>
+          <div className="flex items-center justify-center gap-6 flex-wrap">
+            {[['🔒','Sin tarjeta'], ['⚡','Acceso inmediato'], ['↩','Garantía 30 días'], ['🇪🇺','GDPR compliant']].map(([icon,text]) => (
+              <span key={text} style={{ color: '#3a3f4d', fontSize: 11 }}>{icon} {text}</span>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ── Final CTA ── */}
-      <section className="border-t py-14 text-center" style={{ borderColor: '#1d2029', background: '#09090d' }}>
-        <GoldLabel>◆ Start today</GoldLabel>
-        <h2 className="font-bold mb-4" style={{ color: '#e8ecf4', fontSize: 22 }}>
-          Your first 20 simulations are free
-        </h2>
-        <p style={{ color: '#6b7385', fontSize: 13, marginBottom: 20 }}>
-          No credit card. No subscription. Just practice.
-        </p>
-        <div className="flex items-center justify-center gap-3 flex-wrap">
-          <Link href="/auth/register"
-            className="inline-block px-8 py-3 rounded-sm font-bold text-sm transition-opacity hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}>
-            Create free account →
-          </Link>
-          <a href="#pricing"
-            className="inline-block px-8 py-3 rounded-sm text-sm"
-            style={{ background: '#0f1117', color: '#8893a8', border: '1px solid #1d2029', textDecoration: 'none' }}>
-            View pricing
-          </a>
-        </div>
-        <div className="flex items-center justify-center gap-6 mt-8 flex-wrap">
-          {['✓ No credit card', '✓ Instant access', '✓ 30-day refund', '✓ GDPR compliant'].map((t) => (
-            <span key={t} style={{ color: '#3a3f4d', fontSize: 11 }}>{t}</span>
-          ))}
+      {/* ── Guide download + Email capture ── */}
+      <section className="border-t py-16" style={{ borderColor: '#1d2029', background: '#09090d' }}>
+        <div className="max-w-3xl mx-auto px-8">
+
+          {/* Guía descargable */}
+          <div className="rounded-lg p-8 mb-10 text-center" style={{
+            background: 'linear-gradient(135deg, #0f1117 0%, #141720 100%)',
+            border: '1px solid #2c2410',
+          }}>
+            {/* Badge clicable */}
+            <Link href="/guide" className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5"
+              style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.30)',
+                       textDecoration: 'none', transition: 'border-color .2s' }}>
+              <span style={{ color: '#c9a84c', fontSize: 10 }}>◆</span>
+              <span style={{ color: '#c9a84c', fontSize: 11, fontWeight: 700, letterSpacing: '0.10em' }}>
+                CHALLENGE PREP GUIDE · GRATIS
+              </span>
+              <span style={{ color: '#6b7385', fontSize: 10 }}>→</span>
+            </Link>
+
+            <h3 className="font-black mb-3" style={{ fontSize: 22, color: '#e8ecf4', letterSpacing: '-.02em' }}>
+              15 capítulos para dominar el oro<br />
+              <span style={{ background: 'linear-gradient(135deg,#FFE082,#C9A84C)',
+                             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                             backgroundClip: 'text' }}>desde cero hasta el challenge</span>
+            </h3>
+            <p style={{ color: '#6b7385', fontSize: 13, lineHeight: 1.7, marginBottom: 24, maxWidth: 480, margin: '0 auto 24px' }}>
+              Trading de oro, gestión de riesgo, cómo usar el simulador y las 4 reglas
+              exactas que evalúan los prop firms. Gratuita, sin registro.
+            </p>
+            <div className="flex flex-wrap justify-center gap-2 mb-6">
+              {['15 capítulos','XAUUSD · Oro','Gestión de riesgo','Prop firm rules','Descarga en PDF'].map(t => (
+                <span key={t} className="font-mono text-xs px-3 py-1 rounded"
+                  style={{ background: '#08090c', border: '1px solid #1d2029', color: '#6b7385' }}>{t}</span>
+              ))}
+            </div>
+            <Link href="/guide"
+              className="inline-block px-8 py-3 rounded-sm font-bold text-sm hover:opacity-90 transition-opacity"
+              style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}>
+              Leer la guía completa →
+            </Link>
+          </div>
+
+          {/* Email capture */}
+          <div className="text-center">
+            <h4 className="font-bold mb-2" style={{ color: '#e8ecf4', fontSize: 15 }}>
+              ¿Prefieres recibirla por email?
+            </h4>
+            <p style={{ color: '#6b7385', fontSize: 13, marginBottom: 20, lineHeight: 1.65 }}>
+              Te enviamos la guía + novedades del simulador. Sin spam, máximo un email al mes.
+            </p>
+            <EmailCapture />
+          </div>
+
         </div>
       </section>
 

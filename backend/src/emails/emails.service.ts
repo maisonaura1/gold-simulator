@@ -130,6 +130,45 @@ export class EmailsService {
     await this.send(email, `Tu suscripción GoldTrader se renueva el ${dateStr}`, html);
   }
 
+  async sendPasswordReset(email: string, resetUrl: string) {
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="background:#09090d;color:#c8cdd8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;padding:0">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:48px 16px">
+      <table width="520" cellpadding="0" cellspacing="0" style="background:#0b0d11;border:1px solid #1d2029;border-radius:4px;overflow:hidden">
+        <tr><td style="height:3px;background:linear-gradient(90deg,#c9a84c,#4a3810)"></td></tr>
+        <tr><td style="padding:32px 32px 24px">
+          <p style="color:#c9a84c;font-family:monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 16px">◆ GoldTrader · Seguridad</p>
+          <h1 style="color:#e8ecf4;font-size:22px;font-weight:800;margin:0 0 12px;line-height:1.3">
+            Restablecer contraseña
+          </h1>
+          <p style="color:#8893a8;font-size:14px;line-height:1.7;margin:0 0 24px">
+            Has solicitado restablecer tu contraseña. El enlace es válido durante <strong style="color:#c9a84c">1 hora</strong>. Si no lo solicitaste tú, puedes ignorar este email.
+          </p>
+          <a href="${resetUrl}"
+            style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#a8893c);color:#000;font-weight:800;font-size:13px;padding:12px 28px;border-radius:4px;text-decoration:none">
+            Restablecer contraseña →
+          </a>
+          <p style="color:#3a3f4d;font-size:11px;margin-top:20px;word-break:break-all">
+            O copia este enlace: <span style="color:#6b7385">${resetUrl}</span>
+          </p>
+        </td></tr>
+        <tr><td style="padding:0 32px 32px">
+          <p style="color:#3a3f4d;font-size:11px;line-height:1.6;margin:0">
+            Si no solicitaste este cambio, tu contraseña sigue siendo la misma. Nada cambiará si ignoras este email.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+    await this.send(email, 'Restablece tu contraseña — GoldTrader', html);
+  }
+
   async sendWelcome(email: string) {
     const html = `
 <!DOCTYPE html>
