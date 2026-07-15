@@ -10,6 +10,7 @@ import { TrialBanner } from '@/components/TrialBanner';
 import { PaywallModal } from '@/components/PaywallModal';
 import { MobileShell } from '@/components/mobile/MobileShell';
 import { useAuthStore } from '@/store/auth.store';
+import { BodyScrollLock } from '@/components/BodyScroll';
 import { useSocket } from '@/hooks/useSocket';
 import { useT } from '@/hooks/useT';
 import { useSuperwall } from '@/hooks/useSuperwall';
@@ -63,6 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-[var(--mt-bg)]">
+      <BodyScrollLock />
       {/* Paywall global — controlado por Superwall.register() */}
       {showPaywall && <PaywallModal onClose={closePaywall} />}
       <OnboardingWizard />
