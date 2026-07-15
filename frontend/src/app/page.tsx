@@ -5,7 +5,6 @@ import { useAuthStore } from '@/store/auth.store';
 import Link from 'next/link';
 import { CornerFrame } from '@/components/ui/CornerFrame';
 import { LogoIcon } from '@/components/ui/LogoIcon';
-import { BodyScrollUnlock } from '@/components/BodyScroll';
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 
@@ -796,8 +795,14 @@ export default function LandingPage() {
   if (isAuthenticated()) return null;
 
   return (
-    <div className="min-h-screen font-sans" style={{ background: '#07080b', color: '#c8cdd8' }}>
-      <BodyScrollUnlock />
+    <div className="font-sans" style={{
+      background: '#07080b',
+      color: '#c8cdd8',
+      position: 'fixed',
+      inset: 0,
+      overflowY: 'auto',
+      overflowX: 'hidden',
+    }}>
 
       {/* ── Global keyframes ── */}
       <style>{`
