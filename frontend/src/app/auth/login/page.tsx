@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 
-const CRED_KEY = 'gold-saved-creds';
+const EMAIL_KEY = 'gold-saved-email';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,12 +21,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(CRED_KEY);
-      if (saved) {
-        const { email, password } = JSON.parse(saved);
-        if (emailRef.current) emailRef.current.value = email ?? '';
-        if (passRef.current)  passRef.current.value  = password ?? '';
-      }
+      const savedEmail = localStorage.getItem(EMAIL_KEY);
+      if (savedEmail && emailRef.current) emailRef.current.value = savedEmail;
     } catch {}
   }, []);
 
@@ -39,9 +35,9 @@ export default function LoginPage() {
     try {
       const { data } = await api.post('/auth/login', { email, password });
       if (remember) {
-        localStorage.setItem(CRED_KEY, JSON.stringify({ email, password }));
+        localStorage.setItem(EMAIL_KEY, email);
       } else {
-        localStorage.removeItem(CRED_KEY);
+        localStorage.removeItem(EMAIL_KEY);
       }
       setTokens(data);
       router.replace('/dashboard');

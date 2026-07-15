@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://goldtrader.app'),
-  title: 'GoldTrader — XAUUSD Trading Simulator',
-  description: 'Practice gold spot trading on real XAUUSD data. Risk calculator, Trader Score, equity curve and replay — without risking real capital.',
-  keywords: 'gold trading simulator, XAUUSD practice, trading education, prop firm preparation, risk management, FTMO',
+  metadataBase: new URL('https://goldtradermt.app'),
+  title: 'GoldTrader MT — XAUUSD Simulator | Practica Prop Firm Challenges',
+  description: '¿Pasarías el challenge de FTMO o Funded Next? Practica en datos reales de XAUUSD, controla drawdown y consistency score — sin arriesgar capital real.',
+  keywords: 'gold trading simulator, XAUUSD practice, prop firm challenge, FTMO prep, trading education, risk management, simulador oro, Funded Next',
   icons: {
     icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
   },
@@ -14,16 +14,21 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
   },
   openGraph: {
-    title: 'GoldTrader — XAUUSD Trading Simulator',
-    description: 'Practice on real gold spot data. Build discipline. Track your Trader Score.',
+    title: 'GoldTrader MT — XAUUSD Simulator',
+    description: '¿Pasarías el challenge? Practica en datos reales de oro. Drawdown, consistency, Trader Score — sin capital real.',
     type: 'website',
-    siteName: 'GoldTrader',
-    locale: 'en_US',
+    url: 'https://goldtradermt.app',
+    siteName: 'GoldTrader MT',
+    locale: 'es_ES',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'GoldTrader — XAUUSD Trading Simulator',
-    description: 'Practice gold trading. Build real discipline. Trader Score, equity curve, 8 timeframes.',
+    title: 'GoldTrader MT — XAUUSD Simulator',
+    description: '¿Pasarías el challenge de FTMO? Practica en datos reales XAUUSD. 20 simulaciones gratis.',
+    site: '@goldtradermt',
+  },
+  alternates: {
+    canonical: 'https://goldtradermt.app',
   },
 };
 

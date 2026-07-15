@@ -462,7 +462,7 @@ function PricingSection() {
             ))}
           </ul>
           <a
-            href="mailto:hello@goldtrader.app?subject=Prop%20Firm%20Plan%20enquiry"
+            href="mailto:hello@goldtradermt.app?subject=Prop%20Firm%20Plan%20enquiry"
             className="block text-center py-2.5 rounded-sm text-xs font-bold"
             style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}
           >
@@ -565,7 +565,7 @@ function ProductPreview() {
           <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#2dcc6f' }} />
           <div className="flex-1 mx-4 px-3 py-1 rounded text-xs font-mono text-center"
             style={{ background: '#141720', color: '#6b7385', border: '1px solid #1d2029', maxWidth: 300, margin: '0 auto' }}>
-            goldtrader.app/trade
+            goldtradermt.app/trade
           </div>
         </div>
         {/* Desk header */}
@@ -818,6 +818,10 @@ export default function LandingPage() {
           from { opacity: 0; transform: translateY(-10px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        @keyframes scrollBounce {
+          0%, 100% { transform: translateY(0); opacity: 0.5; }
+          50%       { transform: translateY(6px); opacity: 1; }
+        }
         .hero-text { animation: heroFadeUp 0.7s ease both; }
         .hero-text-delay-1 { animation: heroFadeUp 0.7s 0.1s ease both; }
         .hero-text-delay-2 { animation: heroFadeUp 0.7s 0.22s ease both; }
@@ -825,6 +829,7 @@ export default function LandingPage() {
         .hero-text-delay-4 { animation: heroFadeUp 0.7s 0.50s ease both; }
         .hero-pill { animation: pillSlide 0.5s ease both; }
         .hero-3d   { animation: heroFadeUp 0.9s 0.15s ease both; }
+        .scroll-hint { animation: scrollBounce 1.8s ease-in-out infinite; }
       `}</style>
 
       {/* ── Nav ── */}
@@ -873,9 +878,9 @@ export default function LandingPage() {
           {/* Announcement pill */}
           <div className="hero-pill flex items-center gap-2 mb-8 w-fit px-3 py-1.5 rounded-full"
             style={{ background: 'rgba(15,17,23,0.80)', border: '1px solid #2c2410', backdropFilter: 'blur(8px)' }}>
-            <span style={{ color: '#c9a84c', fontSize: 10 }}>◆</span>
-            <span style={{ color: '#c8cdd8', fontSize: 11, fontWeight: 600 }}>Acceso beta</span>
-            <span style={{ color: '#6b7385', fontSize: 11 }}>· Solo 47 plazas disponibles</span>
+            <span style={{ color: '#2dcc6f', fontSize: 8 }}>●</span>
+            <span style={{ color: '#c8cdd8', fontSize: 11, fontWeight: 600 }}>Acceso beta abierto</span>
+            {publicStats && <span style={{ color: '#6b7385', fontSize: 11 }}>· {publicStats.totalUsers} traders activos</span>}
             <span style={{ color: '#c9a84c', fontSize: 11 }}>→</span>
           </div>
 
@@ -963,6 +968,13 @@ export default function LandingPage() {
               <span style={{ color: '#6b7385' }}>simulaciones completadas</span>
             </div>
           )}
+
+          {/* Scroll hint */}
+          <div className="scroll-hint absolute bottom-8 left-1/2" style={{ transform: 'translateX(-50%)', zIndex: 2 }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M6 9l6 6 6-6" stroke="#c9a84c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
         </div>
       </section>
 
@@ -976,7 +988,7 @@ export default function LandingPage() {
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f0b429' }} />
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#2dcc6f' }} />
             <div className="mx-auto px-3 py-0.5 rounded font-mono text-xs" style={{ background: '#141720', color: '#6b7385', border: '1px solid #1d2029' }}>
-              goldtrader.app/trade
+              goldtradermt.app/trade
             </div>
           </div>
           {/* Desk header */}
@@ -1026,10 +1038,10 @@ export default function LandingPage() {
       <div className="border-y" style={{ borderColor: '#1d2029', background: '#0b0d11' }}>
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-center gap-8 flex-wrap">
           {[
-            ['XAUUSD',      'Gold Spot — one instrument, mastered'],
+            ['XAUUSD',      'Gold Spot · un instrumento, dominado en profundidad'],
             ['8 timeframes','M1 · M5 · M15 · H1 · H4 · D1 · W1 · MN'],
-            ['2yr history', 'Real historical price data'],
-            ['€79/yr',       'Acceso Pro completo — plan anual, cancela cuando quieras'],
+            ['2 años',      'Datos históricos reales de precio'],
+            ['€79/año',     'Plan Pro anual · cancela cuando quieras'],
           ].map(([val, label]) => (
             <div key={label} className="text-center">
               <div style={{ color: '#c9a84c', fontWeight: 700, fontSize: 14, fontFamily: 'monospace' }}>{val}</div>
