@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
+import { useLangStore } from '@/store/lang.store';
+import { landingT } from '@/lib/landing-i18n';
 
 export default function RegisterPage() {
   return <Suspense><RegisterInner /></Suspense>;
@@ -13,6 +15,8 @@ function RegisterInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setTokens } = useAuthStore();
+  const lang = useLangStore((s) => s.lang);
+  const t = lang === 'es' ? landingT.es : landingT.en;
   const [form, setForm] = useState({ email: '', password: '', name: '' });
   const [refCode, setRefCode] = useState('');
   const [error, setError] = useState('');
@@ -36,7 +40,7 @@ function RegisterInner() {
       setTokens(data);
       router.replace('/onboarding');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al crear la cuenta. Inténtalo de nuevo.');
+      setError(err.response?.data?.message || t.registerError);
     } finally {
       setLoading(false);
     }
@@ -56,26 +60,26 @@ function RegisterInner() {
         </Link>
         <div>
           <div style={{ color: '#c9a84c', fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: 12 }}>
-            ◈ CUENTA GRATUITA
+            {t.registerLeftBadge}
           </div>
           <p style={{ color: '#e8ecf4', fontSize: 22, fontWeight: 700, lineHeight: 1.35, marginBottom: 16 }}>
-            20 simulaciones gratis.<br />Sin tarjeta. Sin riesgo.
+            {t.registerLeftTitle.split('\n').map((line, i) => <span key={i}>{line}{i === 0 ? <br /> : null}</span>)}
           </p>
           <p style={{ color: '#6b7385', fontSize: 14, lineHeight: 1.7 }}>
-            Empieza a practicar XAUUSD hoy mismo. Capital virtual de $10,000. Exactamente las mismas condiciones que un challenge real.
+            {t.registerLeftSub}
           </p>
           <div className="mt-8 p-4 rounded-sm" style={{ background: '#0f1117', border: '1px solid #2c2410' }}>
-            <div style={{ color: '#c9a84c', fontSize: 11, fontFamily: 'monospace', marginBottom: 8 }}>TU CUENTA DEMO</div>
+            <div style={{ color: '#c9a84c', fontSize: 11, fontFamily: 'monospace', marginBottom: 8 }}>{t.registerDemoLabel}</div>
             <div className="flex justify-between" style={{ fontSize: 13, color: '#8893a8', marginBottom: 4 }}>
-              <span>Capital inicial</span>
+              <span>{t.registerDemoCapital}</span>
               <span style={{ color: '#e8ecf4', fontFamily: 'monospace', fontWeight: 600 }}>$10,000.00</span>
             </div>
             <div className="flex justify-between" style={{ fontSize: 13, color: '#8893a8', marginBottom: 4 }}>
-              <span>Instrumento</span>
+              <span>{t.registerDemoInstrument}</span>
               <span style={{ color: '#c9a84c', fontFamily: 'monospace', fontWeight: 600 }}>XAUUSD</span>
             </div>
             <div className="flex justify-between" style={{ fontSize: 13, color: '#8893a8' }}>
-              <span>Simulaciones gratis</span>
+              <span>{t.registerDemoSims}</span>
               <span style={{ color: '#2dcc6f', fontFamily: 'monospace', fontWeight: 600 }}>20</span>
             </div>
           </div>
@@ -91,7 +95,7 @@ function RegisterInner() {
         <div className="w-full max-w-sm mb-8">
           <Link href="/" style={{ textDecoration: 'none', color: '#6b7385', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}
             className="hover:opacity-80 transition-opacity">
-            ← Volver al inicio
+            {t.registerBackHome}
           </Link>
         </div>
 
@@ -102,11 +106,11 @@ function RegisterInner() {
             <span style={{ color: '#c9a84c', fontWeight: 700, fontSize: 16 }}>GOLDTRADER</span>
           </div>
 
-          <h1 style={{ color: '#e8ecf4', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Crear cuenta gratis</h1>
+          <h1 style={{ color: '#e8ecf4', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>{t.registerH1}</h1>
           <p style={{ color: '#6b7385', fontSize: 14, marginBottom: 28 }}>
-            ¿Ya tienes cuenta?{' '}
+            {t.registerHaveAccount}{' '}
             <Link href="/auth/login" style={{ color: '#c9a84c', textDecoration: 'none', fontWeight: 600 }}>
-              Iniciar sesión
+              {t.registerLoginLink}
             </Link>
           </p>
 
@@ -126,30 +130,30 @@ function RegisterInner() {
               <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
               <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
             </svg>
-            Continuar con Google
+            {t.registerGoogle}
           </button>
 
           <div className="flex items-center gap-3 mb-5">
             <div style={{ flex: 1, height: 1, background: '#1d2029' }} />
-            <span style={{ color: '#3a3f4d', fontSize: 12, fontFamily: 'monospace' }}>o con email</span>
+            <span style={{ color: '#3a3f4d', fontSize: 12, fontFamily: 'monospace' }}>{t.registerOrEmail}</span>
             <div style={{ flex: 1, height: 1, background: '#1d2029' }} />
           </div>
 
           {refCode && (
             <div className="mb-4 flex items-center gap-2 px-3 py-2.5 rounded-sm" style={{ background: '#1a1000', border: '1px solid #c9a84c33', fontSize: 13 }}>
               <span>🎁</span>
-              <span style={{ color: '#c8cdd8' }}>Código <span style={{ color: '#c9a84c', fontFamily: 'monospace', fontWeight: 700 }}>{refCode}</span> aplicado — 20 simulaciones gratis</span>
+              <span style={{ color: '#c8cdd8' }}>{t.registerRefCode(refCode)}</span>
             </div>
           )}
 
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <label style={{ display: 'block', color: '#8893a8', fontSize: 12, marginBottom: 6, fontWeight: 500 }}>Nombre</label>
+              <label style={{ display: 'block', color: '#8893a8', fontSize: 12, marginBottom: 6, fontWeight: 500 }}>{t.registerName}</label>
               <input
                 type="text"
                 required
                 minLength={2}
-                placeholder="Tu nombre"
+                placeholder={t.registerNamePlaceholder}
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 style={{
@@ -165,7 +169,7 @@ function RegisterInner() {
               <input
                 type="email"
                 required
-                placeholder="tu@email.com"
+                placeholder={t.registerEmailPlaceholder}
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 style={{
@@ -178,7 +182,7 @@ function RegisterInner() {
 
             <div>
               <label style={{ display: 'block', color: '#8893a8', fontSize: 12, marginBottom: 6, fontWeight: 500 }}>
-                Contraseña <span style={{ color: '#3a3f4d' }}>(mín. 8 caracteres)</span>
+                {t.registerPassword} <span style={{ color: '#3a3f4d' }}>{t.registerPasswordHint}</span>
               </label>
               <div style={{ position: 'relative' }}>
                 <input
@@ -221,15 +225,15 @@ function RegisterInner() {
                 border: 'none', borderRadius: 4, color: '#08090c',
                 fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
               }}>
-              {loading ? 'Creando cuenta…' : 'Crear cuenta gratis →'}
+              {loading ? t.registerBtnLoading : t.registerBtn}
             </button>
           </form>
 
           <p style={{ color: '#3a3f4d', fontSize: 11, textAlign: 'center', marginTop: 24, lineHeight: 1.6 }}>
-            Al registrarte aceptas los{' '}
-            <Link href="/terms" style={{ color: '#3a3f4d', textDecoration: 'underline' }}>Términos de uso</Link>
-            {' '}y la{' '}
-            <Link href="/privacy" style={{ color: '#3a3f4d', textDecoration: 'underline' }}>Política de privacidad</Link>.
+            {t.registerTerms}{' '}
+            <Link href="/terms" style={{ color: '#3a3f4d', textDecoration: 'underline' }}>{t.registerTermsLink}</Link>
+            {' '}{t.registerAnd}{' '}
+            <Link href="/privacy" style={{ color: '#3a3f4d', textDecoration: 'underline' }}>{t.registerPrivacyLink}</Link>.
           </p>
         </div>
       </div>

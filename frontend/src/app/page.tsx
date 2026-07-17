@@ -5,6 +5,8 @@ import { useAuthStore } from '@/store/auth.store';
 import Link from 'next/link';
 import { CornerFrame } from '@/components/ui/CornerFrame';
 import { LogoIcon } from '@/components/ui/LogoIcon';
+import { useLandingT } from '@/hooks/useLandingT';
+import { useLangStore } from '@/store/lang.store';
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 
@@ -17,11 +19,7 @@ const FEATURES: { icon: string; title: string; body: string; mock?: 'equity' | '
   { icon: '◉', title: 'Missions & XP',          body: 'Structured learning paths, daily missions and XP rewards to build consistency. Progress is tracked, not just practised.', mock: 'xp' },
 ];
 
-const STEPS = [
-  { n: '01', icon: '⚡', title: 'Crea tu cuenta gratis', body: 'Registro en 30 segundos. Sin tarjeta. Acceso inmediato a tus primeras 20 simulaciones gratuitas.' },
-  { n: '02', icon: '📊', title: 'Carga una sesión XAUUSD', body: 'Elige un escenario histórico o reproduce datos reales de sesiones London, NY o Asian con 8 timeframes.' },
-  { n: '03', icon: '🏆', title: 'Opera y analiza', body: 'Abre posiciones, fija SL/TP, revisa tu Trader Score y las métricas de challenge tras cada sesión.' },
-];
+// STEPS is built inside LandingPage so it reacts to lang changes
 
 const PRO_FEATURES = [
   'Unlimited trade simulations',
@@ -349,16 +347,17 @@ function FeatureCard({ icon, title, body, mock }: { icon: string; title: string;
 }
 
 function PricingSection() {
+  const t = useLandingT();
   const [billing, setBilling] = useState<'monthly' | 'annual'>('annual');
 
   return (
     <section id="pricing" className="max-w-6xl mx-auto px-8 py-16">
-      <h2 className="text-center font-bold mb-2" style={{ color: '#e8ecf4', fontSize: 22 }}>Simple, honest pricing</h2>
+      <h2 className="text-center font-bold mb-2" style={{ color: '#e8ecf4', fontSize: 22 }}>{t.pricingH2}</h2>
       <p className="text-center mb-1" style={{ color: '#6b7385', fontSize: 13 }}>
-        Start free. Upgrade when you're ready.
+        {t.pricingSub}
       </p>
       <p className="text-center mb-6 font-mono text-xs" style={{ color: '#c9a84c' }}>
-        Un challenge de €300 que fallas = 4 años de GoldTrader Pro
+        {t.pricingHook}
       </p>
 
       {/* Billing toggle */}
@@ -372,7 +371,7 @@ function PricingSection() {
             border: `1px solid ${billing === 'monthly' ? '#1d2029' : 'transparent'}`,
             cursor: 'pointer',
           }}
-        >Monthly</button>
+        >{t.billingMonthly}</button>
         <button
           onClick={() => setBilling('annual')}
           className="px-4 py-1.5 rounded-sm text-xs font-medium transition-colors"
@@ -382,18 +381,18 @@ function PricingSection() {
             border: `1px solid ${billing === 'annual' ? '#1d2029' : 'transparent'}`,
             cursor: 'pointer',
           }}
-        >Annual</button>
+        >{t.billingAnnual}</button>
         <span className="text-xs font-mono px-2 py-0.5 rounded-sm" style={{ background: '#0d1a08', color: '#2dcc6f', border: '1px solid #2dcc6f33' }}>
-          Ahorra 33%
+          {t.billingBadge}
         </span>
       </div>
 
       <div className="flex gap-4 flex-wrap justify-center">
         {/* Free */}
         <div className="p-6 rounded-sm flex flex-col" style={{ background: '#0b0d11', border: '1px solid #1d2029', minWidth: 210, flex: 1, maxWidth: 260 }}>
-          <div style={{ color: '#6b7385', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Free</div>
-          <div style={{ color: '#c8cdd8', fontSize: 36, fontWeight: 800, fontFamily: 'monospace', lineHeight: 1 }}>€0</div>
-          <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 20 }}>forever · no card required</div>
+          <div style={{ color: '#6b7385', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>{t.freePlanLabel}</div>
+          <div style={{ color: '#c8cdd8', fontSize: 36, fontWeight: 800, fontFamily: 'monospace', lineHeight: 1 }}>{t.freePlanPrice}</div>
+          <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 20 }}>{t.freePlanSub}</div>
           <ul className="space-y-2 mb-6 flex-1">
             {['20 trade simulations', 'Basic stats: win rate & P/L', 'XAUUSD chart · 5 timeframes', 'Risk calculator', 'Missions & XP'].map((f) => (
               <li key={f} className="flex items-start gap-2 text-xs" style={{ color: '#c8cdd8' }}>
@@ -407,7 +406,7 @@ function PricingSection() {
             ))}
           </ul>
           <Link href="/auth/register" className="block text-center py-2.5 rounded-sm text-xs font-bold" style={{ background: '#141720', color: '#c9a84c', border: '1px solid #2c2410', textDecoration: 'none' }}>
-            Start free
+            {t.freeCta}
           </Link>
         </div>
 
@@ -415,17 +414,17 @@ function PricingSection() {
         <div className="p-6 rounded-sm flex flex-col" style={{ background: '#0d1008', border: '1px solid #c9a84c55', boxShadow: '0 0 60px rgba(201,168,76,0.08)', minWidth: 210, flex: 1, maxWidth: 260 }}>
           <div className="text-center text-xs font-mono uppercase tracking-widest mb-4 py-1 rounded-sm"
             style={{ background: '#c9a84c22', color: '#c9a84c', border: '1px solid #c9a84c44' }}>
-            {billing === 'annual' ? '◆ Best value' : '◆ Pro'}
+            {billing === 'annual' ? t.proBadgeAnnual : t.proBadge}
           </div>
-          <div style={{ color: '#6b7385', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Pro</div>
+          <div style={{ color: '#6b7385', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>{t.proLabel}</div>
           <div style={{ color: '#e8c96d', fontSize: 36, fontWeight: 800, fontFamily: 'monospace', lineHeight: 1 }}>
             {billing === 'monthly' ? '€9.95' : '€79'}
           </div>
           <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 2 }}>
-            {billing === 'monthly' ? 'por mes · cancela cuando quieras' : 'por año · cancela cuando quieras'}
+            {billing === 'monthly' ? t.proSubMonthly : t.proSubAnnual}
           </div>
           {billing === 'annual' && (
-            <div style={{ color: '#2dcc6f', fontSize: 10, marginBottom: 16 }}>≈ €6.58/mes · ahorras €40 vs mensual</div>
+            <div style={{ color: '#2dcc6f', fontSize: 10, marginBottom: 16 }}>{t.proSavings}</div>
           )}
           {billing === 'monthly' && <div style={{ marginBottom: 16 }} />}
           <ul className="space-y-2 mb-6 flex-1">
@@ -440,7 +439,7 @@ function PricingSection() {
             className="block text-center py-2.5 rounded-sm text-xs font-bold"
             style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}
           >
-            {billing === 'annual' ? 'Get annual access →' : 'Get monthly access →'}
+            {billing === 'annual' ? t.proCtaAnnual : t.proCtaMonthly}
           </Link>
         </div>
 
@@ -448,12 +447,12 @@ function PricingSection() {
         <div className="p-6 rounded-sm flex flex-col" style={{ background: '#080d14', border: '1px solid #4a6cf755', boxShadow: '0 0 60px rgba(74,108,247,0.06)', minWidth: 210, flex: 1, maxWidth: 260 }}>
           <div className="text-center text-xs font-mono uppercase tracking-widest mb-4 py-1 rounded-sm"
             style={{ background: '#4a6cf722', color: '#4a6cf7', border: '1px solid #4a6cf744' }}>
-            ◈ B2B · Prop Firm
+            {t.propBadge}
           </div>
-          <div style={{ color: '#8893a8', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Prop Firm</div>
+          <div style={{ color: '#8893a8', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>{t.propLabel}</div>
           <div style={{ color: '#a8b8f0', fontSize: 36, fontWeight: 800, fontFamily: 'monospace', lineHeight: 1 }}>€149</div>
-          <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 2 }}>per year · per firm</div>
-          <div style={{ color: '#4a6cf7', fontSize: 10, marginBottom: 16 }}>≈ €12.40/mo · billed annually</div>
+          <div style={{ color: '#6b7385', fontSize: 10, marginTop: 4, marginBottom: 2 }}>{t.propSub}</div>
+          <div style={{ color: '#4a6cf7', fontSize: 10, marginBottom: 16 }}>{t.propSavings}</div>
           <ul className="space-y-2 mb-6 flex-1">
             {PROPFIRM_FEATURES.map((f) => (
               <li key={f} className="flex items-start gap-2 text-xs" style={{ color: f === 'Everything in Pro' ? '#8893a8' : '#c8cdd8' }}>
@@ -466,14 +465,14 @@ function PricingSection() {
             className="block text-center py-2.5 rounded-sm text-xs font-bold"
             style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}
           >
-            Contact us →
+            {t.propCta}
           </a>
-          <p className="text-center mt-2" style={{ color: '#3a3f4d', fontSize: 10 }}>Custom volume pricing for &gt;5 seats</p>
+          <p className="text-center mt-2" style={{ color: '#3a3f4d', fontSize: 10 }}>{t.propVolumeNote}</p>
         </div>
       </div>
 
       <p className="text-center mt-6" style={{ color: '#3a3f4d', fontSize: 11 }}>
-        iDEAL · Credit & debit card · Stripe · 30-day refund guarantee · GDPR compliant
+        {t.paymentNote}
       </p>
     </section>
   );
@@ -653,6 +652,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 }
 
 function EmailCapture() {
+  const t = useLandingT();
   const [email, setEmail] = useState('');
   const [done,  setDone]  = useState(false);
 
@@ -667,13 +667,13 @@ function EmailCapture() {
       {done ? (
         <div className="text-center py-3 px-6 rounded-sm font-mono text-sm"
           style={{ background: '#0a1a0e', border: '1px solid #2dcc6f33', color: '#2dcc6f' }}>
-          ✓ You're on the list — we'll be in touch.
+          {t.emailDone}
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             type="email"
-            placeholder="your@email.com"
+            placeholder={t.emailPlaceholder}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="flex-1 px-4 py-2.5 rounded-sm text-sm font-mono"
@@ -684,7 +684,7 @@ function EmailCapture() {
           />
           <button type="submit" className="px-5 py-2.5 rounded-sm text-sm font-bold shrink-0"
             style={{ background: '#141720', color: '#c9a84c', border: '1px solid #2c2410', cursor: 'pointer' }}>
-            Notify me
+            {t.emailBtn}
           </button>
         </form>
       )}
@@ -723,18 +723,19 @@ const B2B_CASES = [
 ];
 
 function WhoUsesSection() {
+  const t = useLandingT();
   const [tab, setTab] = useState<'b2c' | 'b2b'>('b2c');
   const cases = tab === 'b2c' ? B2C_CASES : B2B_CASES;
   return (
     <section className="max-w-7xl mx-auto px-8 py-16">
-      <h2 className="text-center font-bold mb-3" style={{ color: '#e8ecf4', fontSize: 28 }}>¿Para quién es GoldTrader?</h2>
+      <h2 className="text-center font-bold mb-3" style={{ color: '#e8ecf4', fontSize: 28 }}>{t.whoH2}</h2>
       <p className="text-center mb-6" style={{ color: '#6b7385', fontSize: 16 }}>
-        Traders individuales y negocios que entrenan en XAUUSD.
+        {t.whoSub}
       </p>
       {/* Toggle */}
       <div className="flex justify-center mb-10">
         <div className="flex rounded-sm overflow-hidden" style={{ border: '1px solid #1d2029' }}>
-          {([['b2c', 'Traders individuales'], ['b2b', 'Empresas & Academias']] as const).map(([key, label]) => (
+          {([['b2c', t.whoTabB2C], ['b2b', t.whoTabB2B]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               className="px-5 py-2 text-xs font-mono uppercase tracking-wide transition-colors"
               style={{
@@ -773,10 +774,18 @@ function WhoUsesSection() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
+  const t = useLandingT();
+  const { lang, setLang } = useLangStore();
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const [ready, setReady] = useState(false);
   const [publicStats, setPublicStats] = useState<{ totalUsers: number; totalTrades: number } | null>(null);
+
+  const STEPS = [
+    { n: '01', icon: '⚡', title: t.step1Title, body: t.step1Body },
+    { n: '02', icon: '📊', title: t.step2Title, body: t.step2Body },
+    { n: '03', icon: '🏆', title: t.step3Title, body: t.step3Body },
+  ];
 
   useEffect(() => {
     useAuthStore.persist.rehydrate();
@@ -840,16 +849,21 @@ export default function LandingPage() {
           <span style={{ color: '#e8b84b', fontWeight: 700, fontSize: 14, letterSpacing: '0.02em' }}>GoldTrader</span>
         </div>
         <div className="hidden sm:flex items-center gap-6 text-xs" style={{ color: '#6b7385' }}>
-          <a href="#features" style={{ color: '#6b7385', textDecoration: 'none' }} className="hover:text-[#c8cdd8] transition-colors">Features</a>
-          <a href="#pricing"  style={{ color: '#6b7385', textDecoration: 'none' }} className="hover:text-[#c8cdd8] transition-colors">Pricing</a>
-          <a href="#faq"      style={{ color: '#6b7385', textDecoration: 'none' }} className="hover:text-[#c8cdd8] transition-colors">FAQ</a>
+          <a href="#features" style={{ color: '#6b7385', textDecoration: 'none' }} className="hover:text-[#c8cdd8] transition-colors">{t.navFeatures}</a>
+          <a href="#pricing"  style={{ color: '#6b7385', textDecoration: 'none' }} className="hover:text-[#c8cdd8] transition-colors">{t.navPricing}</a>
+          <a href="#faq"      style={{ color: '#6b7385', textDecoration: 'none' }} className="hover:text-[#c8cdd8] transition-colors">{t.navFaq}</a>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/auth/login" style={{ color: '#8893a8', fontSize: 12, textDecoration: 'none' }}>Log in</Link>
+          <button onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
+            style={{ color: '#6b7385', fontSize: 12, background: 'none', border: '1px solid #1d2029',
+                     padding: '3px 10px', borderRadius: 3, cursor: 'pointer', fontFamily: 'monospace' }}>
+            {lang === 'en' ? 'ES' : 'EN'}
+          </button>
+          <Link href="/auth/login" style={{ color: '#8893a8', fontSize: 12, textDecoration: 'none' }}>{t.navLogin}</Link>
           <Link href="/auth/register"
             className="px-4 py-1.5 rounded-sm text-xs font-bold transition-opacity hover:opacity-90"
             style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}>
-            Start free →
+            {t.navStart}
           </Link>
         </div>
       </nav>
@@ -879,8 +893,8 @@ export default function LandingPage() {
           <div className="hero-pill flex items-center gap-2 mb-8 w-fit px-3 py-1.5 rounded-full"
             style={{ background: 'rgba(15,17,23,0.80)', border: '1px solid #2c2410', backdropFilter: 'blur(8px)' }}>
             <span style={{ color: '#2dcc6f', fontSize: 8 }}>●</span>
-            <span style={{ color: '#c8cdd8', fontSize: 11, fontWeight: 600 }}>Acceso beta abierto</span>
-            {publicStats && <span style={{ color: '#6b7385', fontSize: 11 }}>· {publicStats.totalUsers} traders activos</span>}
+            <span style={{ color: '#c8cdd8', fontSize: 11, fontWeight: 600 }}>{t.heroPill}</span>
+            {publicStats && <span style={{ color: '#6b7385', fontSize: 11 }}>{t.heroPillTraders(publicStats.totalUsers)}</span>}
             <span style={{ color: '#c9a84c', fontSize: 11 }}>→</span>
           </div>
 
@@ -892,18 +906,18 @@ export default function LandingPage() {
           {/* Headline */}
           <h1 className="hero-text font-black leading-[1.08] mb-5"
             style={{ fontSize: 'clamp(36px,5.5vw,72px)', color: '#e8ecf4', letterSpacing: '-0.02em', maxWidth: 820 }}>
-            ¿Pasarías el challenge{' '}
+            {t.heroH1a}{' '}
             <span style={{
               background: 'linear-gradient(135deg,#FFE082,#C9A84C)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
-            }}>antes de poner dinero real?</span>
+            }}>{t.heroH1b}</span>
           </h1>
 
           <p className="hero-text-delay-1 mb-8"
-            style={{ color: '#8893a8', fontSize: 16, lineHeight: 1.8, maxWidth: 580 }}>
-            Los challenges (FTMO, Funded Next) cuestan entre <strong style={{ color: '#c8cdd8' }}>€150–€1.500</strong> y el <strong style={{ color: '#c8cdd8' }}>85% los fallan en la primera semana</strong>. GoldTrader te permite practicar exactamente las métricas que te evalúan, sobre datos reales de XAUUSD, sin arriesgar nada.
-          </p>
+            style={{ color: '#8893a8', fontSize: 16, lineHeight: 1.8, maxWidth: 580 }}
+            dangerouslySetInnerHTML={{ __html: t.heroSub.replace(/<strong>/g, '<strong style="color:#c8cdd8">') }}
+          />
 
           {/* Prop firm metrics preview */}
           <div className="hero-text-delay-2 flex flex-wrap justify-center gap-2 mb-8">
@@ -928,7 +942,7 @@ export default function LandingPage() {
               style={{ background: 'rgba(15,17,23,0.75)', border: '1px solid rgba(45,204,111,0.25)', backdropFilter: 'blur(8px)' }}>
               <span style={{ color: '#2dcc6f', fontSize: 10 }}>▦</span>
               <span className="font-mono text-xs" style={{ color: '#2dcc6f', fontWeight: 700 }}>{publicStats.totalTrades.toLocaleString()}</span>
-              <span className="font-mono text-xs" style={{ color: '#6b7385' }}>simulaciones completadas por traders como tú</span>
+              <span className="font-mono text-xs" style={{ color: '#6b7385' }}>{lang === 'es' ? 'simulaciones completadas por traders como tú' : 'simulations completed by traders like you'}</span>
             </div>
           )}
 
@@ -937,25 +951,25 @@ export default function LandingPage() {
             <Link href="/auth/register"
               className="px-8 py-3.5 rounded-sm font-bold text-sm transition-opacity hover:opacity-90"
               style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}>
-              Empezar gratis — 20 simulaciones →
+              {t.ctaStart}
             </Link>
             <a href="#preview"
               className="px-8 py-3.5 rounded-sm text-sm transition-colors hover:text-[#c8cdd8]"
               style={{ background: 'rgba(15,17,23,0.70)', color: '#6b7385', border: '1px solid #1d2029', textDecoration: 'none', backdropFilter: 'blur(6px)' }}>
-              Ver demo ↓
+              {t.ctaDemo}
             </a>
           </div>
 
           {/* Trust micro-text */}
           <p className="hero-text-delay-4 flex flex-wrap justify-center gap-4" style={{ fontSize: 11 }}>
-            {[
-              ['🔒', 'Sin tarjeta de crédito'],
-              ['📊', 'Datos reales Twelve Data'],
-              ['✓', '20 simulaciones gratis'],
-              ['↩', 'Garantía 30 días'],
-            ].map(([icon, text]) => (
-              <span key={text as string} style={{ color: '#6b7385' }}>
-                <span style={{ marginRight: 4 }}>{icon}</span>{text as string}
+            {([
+              ['🔒', t.trustNoCard],
+              ['📊', t.trustData],
+              ['✓', t.trustFree],
+              ['↩', t.trustRefund],
+            ] as [string, string][]).map(([icon, text]) => (
+              <span key={text} style={{ color: '#6b7385' }}>
+                <span style={{ marginRight: 4 }}>{icon}</span>{text}
               </span>
             ))}
           </p>
@@ -965,7 +979,7 @@ export default function LandingPage() {
               style={{ background: 'rgba(15,17,23,0.75)', border: '1px solid #1d2029', backdropFilter: 'blur(6px)' }}>
               <span style={{ color: '#2dcc6f' }}>▦</span>
               <span style={{ color: '#c8cdd8', fontWeight: 700 }}>{publicStats.totalTrades.toLocaleString()}</span>
-              <span style={{ color: '#6b7385' }}>simulaciones completadas</span>
+              <span style={{ color: '#6b7385' }}>{lang === 'es' ? 'simulaciones completadas' : 'simulations completed'}</span>
             </div>
           )}
 
@@ -1037,12 +1051,12 @@ export default function LandingPage() {
       {/* ── Stats bar ── */}
       <div className="border-y" style={{ borderColor: '#1d2029', background: '#0b0d11' }}>
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-center gap-8 flex-wrap">
-          {[
-            ['XAUUSD',      'Gold Spot · un instrumento, dominado en profundidad'],
-            ['8 timeframes','M1 · M5 · M15 · H1 · H4 · D1 · W1 · MN'],
-            ['2 años',      'Datos históricos reales de precio'],
-            ['€79/año',     'Plan Pro anual · cancela cuando quieras'],
-          ].map(([val, label]) => (
+          {([
+            [t.statsXAUUSD,  t.statsXAUUSDLabel],
+            [t.statsTF,      t.statsTFLabel],
+            [t.statsHistory, t.statsHistoryLabel],
+            [t.statsPrice,   t.statsPriceLabel],
+          ] as [string, string][]).map(([val, label]) => (
             <div key={label} className="text-center">
               <div style={{ color: '#c9a84c', fontWeight: 700, fontSize: 14, fontFamily: 'monospace' }}>{val}</div>
               <div style={{ color: '#6b7385', fontSize: 10, marginTop: 1 }}>{label}</div>
@@ -1055,12 +1069,12 @@ export default function LandingPage() {
       <CornerFrame>
         <section id="preview" className="max-w-7xl mx-auto px-8 py-16">
           <div className="text-center mb-2">
-            <GoldLabel>Live product preview</GoldLabel>
+            <GoldLabel>{t.previewLabel}</GoldLabel>
             <h2 className="font-bold" style={{ color: '#e8ecf4', fontSize: 22 }}>
-              A real trading desk. Zero risk.
+              {t.previewH2}
             </h2>
             <p style={{ color: '#6b7385', fontSize: 13, marginTop: 6 }}>
-              Gold ticker, order blotter, full audit workflow — exactly how institutional desks operate.
+              {t.previewSub}
             </p>
           </div>
           <ProductPreview />
@@ -1069,7 +1083,7 @@ export default function LandingPage() {
             <Link href="/auth/register"
               className="px-8 py-3 rounded-sm font-bold text-sm transition-opacity hover:opacity-90"
               style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}>
-              Probar en el simulador →
+              {t.previewCta}
             </Link>
           </div>
         </section>
@@ -1078,9 +1092,9 @@ export default function LandingPage() {
       {/* ── Features ── */}
       <CornerFrame>
         <section id="features" className="max-w-7xl mx-auto px-8 py-16">
-          <h2 className="text-center font-bold mb-3" style={{ color: '#e8ecf4', fontSize: 28 }}>Las 4 razones por las que el 85% falla — y cómo las trabajamos</h2>
+          <h2 className="text-center font-bold mb-3" style={{ color: '#e8ecf4', fontSize: 28 }}>{t.featuresH2}</h2>
           <p className="text-center mb-12" style={{ color: '#6b7385', fontSize: 16 }}>
-            Cada feature resuelve una causa concreta de fallo en los challenges de prop firm.
+            {t.featuresSub}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map((f) => <FeatureCard key={f.title} {...f} />)}
@@ -1091,7 +1105,7 @@ export default function LandingPage() {
       {/* ── How it works ── */}
       <section className="border-y py-16" style={{ borderColor: '#1d2029', background: '#0b0d11' }}>
         <div className="max-w-6xl mx-auto px-8">
-          <h2 className="text-center font-bold mb-12" style={{ color: '#e8ecf4', fontSize: 28 }}>Cómo funciona</h2>
+          <h2 className="text-center font-bold mb-12" style={{ color: '#e8ecf4', fontSize: 28 }}>{t.howH2}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-12">
             {STEPS.map((s) => (
               <div key={s.n} className="text-center flex flex-col items-center">
@@ -1118,16 +1132,16 @@ export default function LandingPage() {
             <div className="flex-1">
               <div className="text-xs font-mono uppercase tracking-widest mb-3 px-2 py-1 inline-block rounded-sm"
                 style={{ background: '#4a6cf722', color: '#4a6cf7', border: '1px solid #4a6cf744' }}>
-                ◈ For Prop Firm Operators
+                {t.b2bLabel}
               </div>
               <h2 className="font-bold mb-4" style={{ color: '#e8ecf4', fontSize: 24 }}>
-                Prepare your candidates before they hit the challenge.
+                {t.b2bH2}
               </h2>
               <p style={{ color: '#6b7385', fontSize: 15, lineHeight: 1.8, marginBottom: 16 }}>
-                Run your prop firm's screening process with a simulator that enforces FTMO-style rules — daily drawdown &lt;5%, max drawdown &lt;10%, consistency score — on real XAUUSD data. Give every candidate an equal baseline before they trade real capital.
+                {t.b2bBody}
               </p>
               <div className="flex flex-wrap gap-2">
-                {['FTMO-style rules enforced', 'Real XAUUSD data', 'CSV blotter export', 'Consistency scoring', 'Daily DD alerts'].map((tag) => (
+                {t.b2bTags.map((tag) => (
                   <span key={tag} className="text-xs px-2 py-1 rounded-sm font-mono"
                     style={{ background: '#0f1520', color: '#8893a8', border: '1px solid #4a6cf733' }}>
                     {tag}
@@ -1154,10 +1168,10 @@ export default function LandingPage() {
                 ))}
                 <div className="pt-2 mt-2" style={{ borderTop: '1px solid #1d2029' }}>
                   <div className="flex items-center justify-between">
-                    <span style={{ color: '#8893a8', fontSize: 11 }}>Challenge status</span>
+                    <span style={{ color: '#8893a8', fontSize: 11 }}>{t.b2bChallengeStatus}</span>
                     <span className="px-2 py-0.5 rounded-sm font-bold text-xs"
                       style={{ background: '#0a1a0e', color: '#2dcc6f', border: '1px solid #2dcc6f33' }}>
-                      PASSING ✓
+                      {t.b2bPassing}
                     </span>
                   </div>
                 </div>
@@ -1175,7 +1189,7 @@ export default function LandingPage() {
       {/* ── FAQ ── */}
       <section id="faq" className="border-t py-14" style={{ borderColor: '#1d2029', background: '#0b0d11' }}>
         <div className="max-w-3xl mx-auto px-8">
-          <h2 className="text-center font-bold mb-10" style={{ color: '#e8ecf4', fontSize: 22 }}>Frequently asked questions</h2>
+          <h2 className="text-center font-bold mb-10" style={{ color: '#e8ecf4', fontSize: 22 }}>{t.faqH2}</h2>
           {FAQS.map((f) => <FaqItem key={f.q} {...f} />)}
         </div>
       </section>
@@ -1193,32 +1207,31 @@ export default function LandingPage() {
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6"
             style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.25)' }}>
             <span style={{ color: '#c9a84c', fontSize: 10 }}>◆</span>
-            <span style={{ color: '#c9a84c', fontSize: 11, fontWeight: 600, letterSpacing: '0.06em' }}>EMPIEZA HOY · GRATIS</span>
+            <span style={{ color: '#c9a84c', fontSize: 11, fontWeight: 600, letterSpacing: '0.06em' }}>{t.finalPill}</span>
           </div>
           <h2 className="font-black mb-4" style={{ fontSize: 'clamp(28px,4vw,48px)', color: '#e8ecf4', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-            ¿Listo para entrenar antes<br />
+            {t.finalH2a}<br />
             <span style={{ background: 'linear-gradient(135deg,#FFE082,#C9A84C)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              del challenge?
+              {t.finalH2b}
             </span>
           </h2>
-          <p style={{ color: '#6b7385', fontSize: 14, marginBottom: 32, lineHeight: 1.7 }}>
-            Un challenge de €300 que fallas cuesta más que <strong style={{ color: '#8893a8' }}>4 años de GoldTrader Pro</strong>.<br />
-            Tus primeras 20 simulaciones son gratis. Sin tarjeta.
-          </p>
+          <p style={{ color: '#6b7385', fontSize: 14, marginBottom: 32, lineHeight: 1.7 }}
+            dangerouslySetInnerHTML={{ __html: t.finalSub.replace(/<strong>/g, '<strong style="color:#8893a8">') }}
+          />
           <div className="flex items-center justify-center gap-3 flex-wrap mb-8">
             <Link href="/auth/register"
               className="inline-block px-9 py-4 rounded-sm font-bold text-sm transition-opacity hover:opacity-90"
               style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none', fontSize: 15 }}>
-              Empezar gratis — 20 simulaciones →
+              {t.finalCtaPrimary}
             </Link>
             <a href="#pricing"
               className="inline-block px-9 py-4 rounded-sm text-sm transition-colors hover:text-[#c8cdd8]"
               style={{ background: 'transparent', color: '#6b7385', border: '1px solid #1d2029', textDecoration: 'none' }}>
-              Ver planes
+              {t.finalCtaSecondary}
             </a>
           </div>
           <div className="flex items-center justify-center gap-6 flex-wrap">
-            {[['🔒','Sin tarjeta'], ['⚡','Acceso inmediato'], ['↩','Garantía 30 días'], ['🇪🇺','GDPR compliant']].map(([icon,text]) => (
+            {([['🔒', t.finalTrustNoCard], ['⚡', t.finalTrustInstant], ['↩', t.finalTrustRefund], ['🇪🇺', t.finalTrustGDPR]] as [string,string][]).map(([icon,text]) => (
               <span key={text} style={{ color: '#3a3f4d', fontSize: 11 }}>{icon} {text}</span>
             ))}
           </div>
@@ -1240,41 +1253,40 @@ export default function LandingPage() {
                        textDecoration: 'none', transition: 'border-color .2s' }}>
               <span style={{ color: '#c9a84c', fontSize: 10 }}>◆</span>
               <span style={{ color: '#c9a84c', fontSize: 11, fontWeight: 700, letterSpacing: '0.10em' }}>
-                CHALLENGE PREP GUIDE · GRATIS
+                {t.guideLabel}
               </span>
               <span style={{ color: '#6b7385', fontSize: 10 }}>→</span>
             </Link>
 
             <h3 className="font-black mb-3" style={{ fontSize: 22, color: '#e8ecf4', letterSpacing: '-.02em' }}>
-              15 capítulos para dominar el oro<br />
+              {t.guideH3a}<br />
               <span style={{ background: 'linear-gradient(135deg,#FFE082,#C9A84C)',
                              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                             backgroundClip: 'text' }}>desde cero hasta el challenge</span>
+                             backgroundClip: 'text' }}>{t.guideH3b}</span>
             </h3>
             <p style={{ color: '#6b7385', fontSize: 13, lineHeight: 1.7, marginBottom: 24, maxWidth: 480, margin: '0 auto 24px' }}>
-              Trading de oro, gestión de riesgo, cómo usar el simulador y las 4 reglas
-              exactas que evalúan los prop firms. Gratuita, sin registro.
+              {t.guideSub}
             </p>
             <div className="flex flex-wrap justify-center gap-2 mb-6">
-              {['15 capítulos','XAUUSD · Oro','Gestión de riesgo','Prop firm rules','Descarga en PDF'].map(t => (
-                <span key={t} className="font-mono text-xs px-3 py-1 rounded"
-                  style={{ background: '#08090c', border: '1px solid #1d2029', color: '#6b7385' }}>{t}</span>
+              {t.guideTags.map(tag => (
+                <span key={tag} className="font-mono text-xs px-3 py-1 rounded"
+                  style={{ background: '#08090c', border: '1px solid #1d2029', color: '#6b7385' }}>{tag}</span>
               ))}
             </div>
             <Link href="/guide"
               className="inline-block px-8 py-3 rounded-sm font-bold text-sm hover:opacity-90 transition-opacity"
               style={{ background: 'linear-gradient(135deg,#c9a84c,#a8893c)', color: '#000', textDecoration: 'none' }}>
-              Leer la guía completa →
+              {t.guideCta}
             </Link>
           </div>
 
           {/* Email capture */}
           <div className="text-center">
             <h4 className="font-bold mb-2" style={{ color: '#e8ecf4', fontSize: 15 }}>
-              ¿Prefieres recibirla por email?
+              {t.emailH4}
             </h4>
             <p style={{ color: '#6b7385', fontSize: 13, marginBottom: 20, lineHeight: 1.65 }}>
-              Te enviamos la guía + novedades del simulador. Sin spam, máximo un email al mes.
+              {t.emailSub}
             </p>
             <EmailCapture />
           </div>
@@ -1287,7 +1299,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-2" style={{ color: '#3a3f4d', fontSize: 11 }}>
             <LogoIcon size={14} />
-            <span>GoldTrader · XAUUSD Simulator · Not financial advice</span>
+            <span>{t.footerTagline}</span>
           </div>
           <div className="flex gap-5 flex-wrap">
             {[

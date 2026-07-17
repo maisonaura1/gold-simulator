@@ -4,12 +4,16 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
+import { useLangStore } from '@/store/lang.store';
+import { landingT } from '@/lib/landing-i18n';
 
 const EMAIL_KEY = 'gold-saved-email';
 
 export default function LoginPage() {
   const router = useRouter();
   const { setTokens } = useAuthStore();
+  const lang = useLangStore((s) => s.lang);
+  const t = lang === 'es' ? landingT.es : landingT.en;
 
   const emailRef = useRef<HTMLInputElement>(null);
   const passRef  = useRef<HTMLInputElement>(null);
@@ -42,7 +46,7 @@ export default function LoginPage() {
       setTokens(data);
       router.replace('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Credenciales incorrectas. Verifica tu email y contraseña.');
+      setError(err.response?.data?.message || t.loginError);
     } finally {
       setLoading(false);
     }
@@ -62,22 +66,18 @@ export default function LoginPage() {
         </Link>
         <div>
           <div style={{ color: '#2dcc6f', fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: 12 }}>
-            ▦ SIMULADOR XAUUSD
+            {t.loginLeftBadge}
           </div>
           <p style={{ color: '#e8ecf4', fontSize: 22, fontWeight: 700, lineHeight: 1.35, marginBottom: 16 }}>
-            Entrena como un profesional.<br />Sin arriesgar nada.
+            {t.loginLeftTitle.split('\n').map((line, i) => <span key={i}>{line}{i === 0 ? <br /> : null}</span>)}
           </p>
           <p style={{ color: '#6b7385', fontSize: 14, lineHeight: 1.7 }}>
-            Practica los challenges de prop firms — FTMO, Funded Next — sobre datos reales de XAUUSD. Tu capital virtual, tus métricas reales.
+            {t.loginLeftSub}
           </p>
           <div className="flex flex-col gap-3 mt-8">
-            {[
-              ['✓', 'Datos reales XAUUSD · 8 timeframes'],
-              ['✓', 'Max DD · Daily DD · Consistency score'],
-              ['✓', '20 simulaciones gratis, sin tarjeta'],
-            ].map(([icon, text]) => (
+            {t.loginLeftBullets.map((text) => (
               <div key={text} className="flex items-center gap-3" style={{ fontSize: 13, color: '#8893a8' }}>
-                <span style={{ color: '#2dcc6f', fontWeight: 700 }}>{icon}</span>
+                <span style={{ color: '#2dcc6f', fontWeight: 700 }}>✓</span>
                 {text}
               </div>
             ))}
@@ -95,7 +95,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm mb-8">
           <Link href="/" style={{ textDecoration: 'none', color: '#6b7385', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}
             className="hover:opacity-80 transition-opacity">
-            ← Volver al inicio
+            {t.loginBackHome}
           </Link>
         </div>
 
@@ -106,11 +106,11 @@ export default function LoginPage() {
             <span style={{ color: '#c9a84c', fontWeight: 700, fontSize: 16 }}>GOLDTRADER</span>
           </div>
 
-          <h1 style={{ color: '#e8ecf4', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Iniciar sesión</h1>
+          <h1 style={{ color: '#e8ecf4', fontSize: 24, fontWeight: 700, marginBottom: 4 }}>{t.loginH1}</h1>
           <p style={{ color: '#6b7385', fontSize: 14, marginBottom: 28 }}>
-            ¿No tienes cuenta?{' '}
+            {t.loginNoAccount}{' '}
             <Link href="/auth/register" style={{ color: '#c9a84c', textDecoration: 'none', fontWeight: 600 }}>
-              Créala gratis
+              {t.loginCreateFree}
             </Link>
           </p>
 
@@ -130,12 +130,12 @@ export default function LoginPage() {
               <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
               <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
             </svg>
-            Continuar con Google
+            {t.loginGoogle}
           </button>
 
           <div className="flex items-center gap-3 mb-5">
             <div style={{ flex: 1, height: 1, background: '#1d2029' }} />
-            <span style={{ color: '#3a3f4d', fontSize: 12, fontFamily: 'monospace' }}>o con email</span>
+            <span style={{ color: '#3a3f4d', fontSize: 12, fontFamily: 'monospace' }}>{t.loginOrEmail}</span>
             <div style={{ flex: 1, height: 1, background: '#1d2029' }} />
           </div>
 
@@ -148,7 +148,7 @@ export default function LoginPage() {
                 ref={emailRef}
                 type="email"
                 required
-                placeholder="tu@email.com"
+                placeholder={t.registerEmailPlaceholder}
                 autoComplete="email"
                 style={{
                   width: '100%', padding: '10px 12px',
@@ -160,10 +160,10 @@ export default function LoginPage() {
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label style={{ color: '#8893a8', fontSize: 12, fontWeight: 500 }}>Contraseña</label>
+                <label style={{ color: '#8893a8', fontSize: 12, fontWeight: 500 }}>{t.loginPassword}</label>
                 <Link href="/auth/forgot-password" style={{ color: '#c9a84c', fontSize: 12, textDecoration: 'none', opacity: 0.8 }}
                   className="hover:opacity-100">
-                  ¿Olvidaste tu contraseña?
+                  {t.loginForgot}
                 </Link>
               </div>
               <div style={{ position: 'relative' }}>
@@ -195,7 +195,7 @@ export default function LoginPage() {
                 onChange={(e) => setRemember(e.target.checked)}
                 style={{ accentColor: '#c9a84c', width: 14, height: 14 }}
               />
-              <span style={{ color: '#8893a8', fontSize: 13 }}>Recordar sesión</span>
+              <span style={{ color: '#8893a8', fontSize: 13 }}>{t.loginRemember}</span>
             </label>
 
             {error && (
@@ -217,12 +217,12 @@ export default function LoginPage() {
                 fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
                 transition: 'opacity 0.2s',
               }}>
-              {loading ? 'Iniciando sesión…' : 'Iniciar sesión →'}
+              {loading ? t.loginBtnLoading : t.loginBtn}
             </button>
           </form>
 
           <p style={{ color: '#3a3f4d', fontSize: 11, textAlign: 'center', marginTop: 24 }}>
-            Sin tarjeta de crédito · Sin riesgo real · 100% simulador
+            {t.loginFooter}
           </p>
         </div>
       </div>
