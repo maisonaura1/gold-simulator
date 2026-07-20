@@ -2,8 +2,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { useLandingT } from '@/hooks/useLandingT';
 
 export default function ForgotPasswordPage() {
+  const t = useLandingT();
   const [email, setEmail]     = useState('');
   const [sent, setSent]       = useState(false);
   const [loading, setLoading] = useState(false);
@@ -16,8 +18,8 @@ export default function ForgotPasswordPage() {
     try {
       await api.post('/auth/forgot-password', { email });
       setSent(true);
-    } catch (err: any) {
-      // Don't reveal whether email exists — show success always for security
+    } catch {
+      // Never reveal whether email exists — always show success
       setSent(true);
     } finally {
       setLoading(false);
@@ -26,17 +28,16 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: '#07080c' }}>
-
       <div className="w-full max-w-sm">
 
         <div className="mb-8">
-          <Link href="/auth/login" style={{ textDecoration: 'none', color: '#6b7385', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          <Link href="/auth/login"
+            style={{ textDecoration: 'none', color: '#6b7385', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}
             className="hover:opacity-80 transition-opacity">
-            ← Volver al login
+            {t.forgotBackLogin}
           </Link>
         </div>
 
-        {/* Logo */}
         <div className="flex items-center gap-2 mb-8">
           <span style={{ fontSize: 20, color: '#c9a84c' }}>◆</span>
           <span style={{ color: '#c9a84c', fontWeight: 700, fontSize: 16 }}>GOLDTRADER</span>
@@ -46,13 +47,13 @@ export default function ForgotPasswordPage() {
           <div>
             <div style={{ fontSize: 36, marginBottom: 16 }}>📬</div>
             <h1 style={{ color: '#e8ecf4', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
-              Revisa tu email
+              {t.forgotSentH1}
             </h1>
             <p style={{ color: '#6b7385', fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
-              Si <strong style={{ color: '#c8cdd8' }}>{email}</strong> tiene una cuenta en GoldTrader, recibirás un enlace para restablecer tu contraseña en los próximos minutos.
+              {t.forgotSentBody(email)}
             </p>
             <p style={{ color: '#3a3f4d', fontSize: 13, marginBottom: 24 }}>
-              ¿No lo ves? Revisa la carpeta de spam.
+              {t.forgotSentSpam}
             </p>
             <Link href="/auth/login"
               style={{
@@ -61,16 +62,16 @@ export default function ForgotPasswordPage() {
                 borderRadius: 4, color: '#08090c', fontSize: 14, fontWeight: 700,
                 textDecoration: 'none',
               }}>
-              Volver al login →
+              {t.forgotBackLogin} →
             </Link>
           </div>
         ) : (
           <div>
             <h1 style={{ color: '#e8ecf4', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
-              ¿Olvidaste tu contraseña?
+              {t.forgotH1}
             </h1>
             <p style={{ color: '#6b7385', fontSize: 14, lineHeight: 1.7, marginBottom: 28 }}>
-              Introduce tu email y te enviaremos un enlace para restablecer tu contraseña.
+              {t.forgotSub}
             </p>
 
             <form onSubmit={submit} className="space-y-4">
@@ -81,7 +82,7 @@ export default function ForgotPasswordPage() {
                 <input
                   type="email"
                   required
-                  placeholder="tu@email.com"
+                  placeholder={t.forgotEmailPlaceholder}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   style={{
@@ -110,25 +111,25 @@ export default function ForgotPasswordPage() {
                   border: 'none', borderRadius: 4, color: '#08090c',
                   fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
                 }}>
-                {loading ? 'Enviando…' : 'Enviar enlace de recuperación →'}
+                {loading ? t.forgotBtnLoading : t.forgotBtn}
               </button>
             </form>
 
             <div className="flex items-center justify-between mt-6" style={{ fontSize: 13, color: '#6b7385' }}>
               <Link href="/auth/login" style={{ color: '#6b7385', textDecoration: 'none' }}
                 className="hover:opacity-80">
-                ← Login
+                {t.forgotBackLogin}
               </Link>
               <Link href="/auth/register" style={{ color: '#c9a84c', textDecoration: 'none', fontWeight: 500 }}
                 className="hover:opacity-80">
-                Crear cuenta gratis
+                {t.forgotCreateAccount}
               </Link>
             </div>
           </div>
         )}
 
         <p style={{ color: '#3a3f4d', fontSize: 11, textAlign: 'center', marginTop: 32 }}>
-          Sin tarjeta de crédito · Sin riesgo real · 100% simulador
+          {t.forgotFooter}
         </p>
       </div>
     </div>

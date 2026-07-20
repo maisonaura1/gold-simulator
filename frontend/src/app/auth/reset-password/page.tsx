@@ -3,12 +3,14 @@ import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useLandingT } from '@/hooks/useLandingT';
 
 export default function ResetPasswordPage() {
   return <Suspense><ResetPasswordInner /></Suspense>;
 }
 
 function ResetPasswordInner() {
+  const t      = useLandingT();
   const router = useRouter();
   const params = useSearchParams();
   const token  = params.get('token') ?? '';
@@ -23,15 +25,15 @@ function ResetPasswordInner() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (password !== confirm) { setError('Las contraseñas no coinciden.'); return; }
-    if (password.length < 8)  { setError('Mínimo 8 caracteres.'); return; }
+    if (password !== confirm) { setError(t.resetErrorMismatch); return; }
+    if (password.length < 8)  { setError(t.resetErrorLength);   return; }
     setLoading(true);
     try {
       await api.post('/auth/reset-password-token', { token, newPassword: password });
       setDone(true);
       setTimeout(() => router.replace('/auth/login'), 3000);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'El enlace es inválido o ha expirado.');
+      setError(err.response?.data?.message || t.resetErrorExpired);
     } finally {
       setLoading(false);
     }
@@ -42,11 +44,15 @@ function ResetPasswordInner() {
       <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: '#07080c' }}>
         <div className="w-full max-w-sm text-center">
           <div style={{ fontSize: 36, marginBottom: 16 }}>⚠️</div>
-          <h1 style={{ color: '#e8ecf4', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Enlace inválido</h1>
-          <p style={{ color: '#6b7385', fontSize: 14, marginBottom: 24 }}>Este enlace de recuperación no es válido.</p>
+          <h1 style={{ color: '#e8ecf4', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
+            {t.forgotInvalidLink}
+          </h1>
+          <p style={{ color: '#6b7385', fontSize: 14, marginBottom: 24 }}>
+            {t.forgotInvalidBody}
+          </p>
           <Link href="/auth/forgot-password"
             style={{ color: '#c9a84c', fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>
-            Solicitar nuevo enlace →
+            {t.forgotRequestNew}
           </Link>
         </div>
       </div>
@@ -66,10 +72,10 @@ function ResetPasswordInner() {
           <div>
             <div style={{ fontSize: 36, marginBottom: 16 }}>✅</div>
             <h1 style={{ color: '#e8ecf4', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
-              Contraseña actualizada
+              {t.resetDoneH1}
             </h1>
             <p style={{ color: '#6b7385', fontSize: 14, marginBottom: 24 }}>
-              Redirigiendo al login en unos segundos…
+              {t.resetDoneSub}
             </p>
             <Link href="/auth/login"
               style={{
@@ -78,22 +84,22 @@ function ResetPasswordInner() {
                 borderRadius: 4, color: '#08090c', fontSize: 14, fontWeight: 700,
                 textDecoration: 'none',
               }}>
-              Ir al login →
+              {t.resetDoneBtn}
             </Link>
           </div>
         ) : (
           <div>
             <h1 style={{ color: '#e8ecf4', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
-              Nueva contraseña
+              {t.resetH1}
             </h1>
             <p style={{ color: '#6b7385', fontSize: 14, marginBottom: 28 }}>
-              Elige una contraseña segura de al menos 8 caracteres.
+              {t.resetSub}
             </p>
 
             <form onSubmit={submit} className="space-y-4">
               <div>
                 <label style={{ display: 'block', color: '#8893a8', fontSize: 12, marginBottom: 6, fontWeight: 500 }}>
-                  Nueva contraseña
+                  {t.resetLabelNew}
                 </label>
                 <div style={{ position: 'relative' }}>
                   <input
@@ -117,7 +123,7 @@ function ResetPasswordInner() {
 
               <div>
                 <label style={{ display: 'block', color: '#8893a8', fontSize: 12, marginBottom: 6, fontWeight: 500 }}>
-                  Confirmar contraseña
+                  {t.resetLabelConfirm}
                 </label>
                 <input
                   type={showPass ? 'text' : 'password'}
@@ -146,7 +152,7 @@ function ResetPasswordInner() {
                   border: 'none', borderRadius: 4, color: '#08090c',
                   fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
                 }}>
-                {loading ? 'Actualizando…' : 'Actualizar contraseña →'}
+                {loading ? t.resetBtnLoading : t.resetBtn}
               </button>
             </form>
           </div>
