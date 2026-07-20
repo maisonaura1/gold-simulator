@@ -27,7 +27,7 @@ function GoogleSuccessInner() {
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#07080c' }}>
       <div className="text-center">
         <div style={{ fontSize: 32, marginBottom: 12 }}>◆</div>
-        <p style={{ color: '#6b7385', fontSize: 14 }}>Iniciando sesión con Google…</p>
+        <p style={{ color: '#6b7385', fontSize: 14 }}>Signing in with Google…</p>
       </div>
     </div>
   );

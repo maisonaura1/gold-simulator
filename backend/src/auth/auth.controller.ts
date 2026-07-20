@@ -65,7 +65,8 @@ export class AuthController {
 
   @Post('reset-password')
   resetPassword(@Body() body: { email: string; newPassword: string; adminKey: string }) {
-    if (body.adminKey !== 'goldadmin2024') throw new Error('Unauthorized');
+    const key = process.env.ADMIN_RESET_KEY;
+    if (!key || body.adminKey !== key) throw new Error('Unauthorized');
     return this.authService.resetPassword(body.email, body.newPassword);
   }
 }

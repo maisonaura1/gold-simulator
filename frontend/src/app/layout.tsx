@@ -3,9 +3,9 @@ import './globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://goldtradermt.app'),
-  title: 'GoldTrader MT — XAUUSD Simulator | Practica Prop Firm Challenges',
-  description: '¿Pasarías el challenge de FTMO o Funded Next? Practica en datos reales de XAUUSD, controla drawdown y consistency score — sin arriesgar capital real.',
-  keywords: 'gold trading simulator, XAUUSD practice, prop firm challenge, FTMO prep, trading education, risk management, simulador oro, Funded Next',
+  title: 'GoldTrader MT — XAUUSD Simulator | Practice Prop Firm Challenges',
+  description: 'Would you pass the FTMO or Funded Next challenge? Practice on real XAUUSD data, master drawdown and consistency score — without risking real capital.',
+  keywords: 'gold trading simulator, XAUUSD practice, prop firm challenge, FTMO prep, Funded Next, trading education, risk management, gold spot simulator, trader score',
   icons: {
     icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
   },
@@ -15,16 +15,16 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'GoldTrader MT — XAUUSD Simulator',
-    description: '¿Pasarías el challenge? Practica en datos reales de oro. Drawdown, consistency, Trader Score — sin capital real.',
+    description: 'Would you pass the challenge? Practice on real gold data. Drawdown, consistency, Trader Score — zero capital at risk.',
     type: 'website',
     url: 'https://goldtradermt.app',
     siteName: 'GoldTrader MT',
-    locale: 'es_ES',
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'GoldTrader MT — XAUUSD Simulator',
-    description: '¿Pasarías el challenge de FTMO? Practica en datos reales XAUUSD. 20 simulaciones gratis.',
+    description: 'Would you pass the FTMO challenge? Practice on real XAUUSD data. 20 free simulations, zero capital at risk.',
     site: '@goldtradermt',
   },
   alternates: {
