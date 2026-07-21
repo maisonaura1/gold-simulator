@@ -72,7 +72,7 @@ export function Navigator() {
   const [resetting, setResetting] = useState(false);
 
   const handleReset = async () => {
-    if (!confirm('¿Reiniciar la cuenta a $10,000? Se perderán todos los trades abiertos.')) return;
+    if (!confirm('Reset account to $10,000? All open trades will be lost.')) return;
     setResetting(true);
     await reset();
     setResetting(false);
@@ -94,7 +94,7 @@ export function Navigator() {
           action: handleAccountData,
         },
         {
-          label: resetting ? 'Reiniciando...' : t.resetAccount,
+          label: resetting ? 'Resetting…' : t.resetAccount,
           action: handleReset,
         },
       ],
@@ -103,42 +103,12 @@ export function Navigator() {
       label: t.indicators,
       icon: '📐',
       children: [
-        {
-          label: 'Media Móvil MA20',
-          icon: '〰️',
-          active: chart.showMA20,
-          action: chart.toggleMA20,
-        },
-        {
-          label: 'Media Móvil MA50',
-          icon: '〰️',
-          active: chart.showMA50,
-          action: chart.toggleMA50,
-        },
-        {
-          label: 'RSI',
-          icon: '〰️',
-          active: chart.showRSI,
-          action: chart.toggleRSI,
-        },
-        {
-          label: 'MACD',
-          icon: '〰️',
-          active: chart.showMACD,
-          action: chart.toggleMACD,
-        },
-        {
-          label: 'Bandas Bollinger',
-          icon: '〰️',
-          active: chart.showBB,
-          action: chart.toggleBB,
-        },
-        {
-          label: 'Volumen',
-          icon: '〰️',
-          active: chart.showVolume,
-          action: chart.toggleVolume,
-        },
+        { label: 'MA 20',             icon: '〰️', active: chart.showMA20,   action: chart.toggleMA20   },
+        { label: 'MA 50',             icon: '〰️', active: chart.showMA50,   action: chart.toggleMA50   },
+        { label: 'RSI',               icon: '〰️', active: chart.showRSI,    action: chart.toggleRSI    },
+        { label: 'MACD',              icon: '〰️', active: chart.showMACD,   action: chart.toggleMACD   },
+        { label: 'Bollinger Bands',   icon: '〰️', active: chart.showBB,     action: chart.toggleBB     },
+        { label: 'Volume',            icon: '〰️', active: chart.showVolume, action: chart.toggleVolume },
       ],
     },
     {
@@ -150,12 +120,12 @@ export function Navigator() {
       ],
     },
     {
-      label: 'Academia XAU',
+      label: 'Academy',
       icon: '🎓',
       children: [
-        { label: 'Nivel 1 — Principiante', href: '/academy' },
-        { label: 'Nivel 2 — Intermedio',   href: '/academy' },
-        { label: 'Nivel 3 — Avanzado',     href: '/academy' },
+        { label: 'Level 1 — Beginner',     href: '/academy' },
+        { label: 'Level 2 — Intermediate', href: '/academy' },
+        { label: 'Level 3 — Advanced',     href: '/academy' },
       ],
     },
     {
