@@ -310,6 +310,7 @@ export const defaultContent: SiteContent = {
     },
     packagesModal: {
       eyebrow: 'Package options',
+      sectionTitle: 'Choose the format that fits you', // DRAFT
       body: 'All lessons are customized to the professional needs we discuss in your consultation.',
       note: "Not sure which format fits? We'll choose it together during your free consultation.",
       primaryLabel: CONSULTATION,
@@ -579,7 +580,7 @@ export const defaultContent: SiteContent = {
         'Something else',
       ],
       messageLabel: "Tell me a little about your goals and what you're looking for",
-      consentLabel: 'I agree that my details will be used to reply to my message, as described in the privacy policy.',
+      consentLabel: 'I agree that my details will be used to reply to my message.',
       submitLabel: 'Send Message',
       successTitle: 'Thank you — your message is on its way.',
       successBody: "I'll get back to you as soon as possible. In the meantime, feel free to book your free consultation.",

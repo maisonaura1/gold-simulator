@@ -40,6 +40,7 @@ export function PageHero({
   motif,
   children,
   cta,
+  breadcrumb,
 }: {
   eyebrow: string
   title: string
@@ -47,12 +48,14 @@ export function PageHero({
   motif?: Motif
   children?: ReactNode
   cta?: string
+  breadcrumb?: ReactNode
 }) {
   return (
     <section className="grain relative overflow-hidden bg-cream pt-36 pb-20 sm:pt-44 sm:pb-24">
       <div aria-hidden className="pointer-events-none absolute -top-32 -left-32 size-[30rem] rounded-full bg-blush/70 blur-[100px]" />
       <div className="container-site relative grid items-center gap-12 lg:grid-cols-[1.35fr_1fr]">
         <div>
+          {breadcrumb}
           <Reveal>
             <p className="eyebrow">{eyebrow}</p>
           </Reveal>

@@ -36,8 +36,11 @@ export function ConsultationBadge({ text, className }: { text: string; className
         <defs>
           <path id="badge-circle" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0" />
         </defs>
-        <text className="fill-current font-sans text-[10.5px] font-bold tracking-[0.22em] uppercase">
-          <textPath href="#badge-circle">{label}</textPath>
+        <text className="fill-current font-sans text-[10px] font-bold uppercase">
+          {/* textLength = circumference (2π·44) so the phrase always closes the circle exactly */}
+          <textPath href="#badge-circle" textLength="276" lengthAdjust="spacing">
+            {label}
+          </textPath>
         </text>
       </svg>
       <span className="grid size-12 place-items-center rounded-full bg-clay text-white transition group-hover:bg-clay-dark">

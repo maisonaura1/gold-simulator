@@ -28,10 +28,14 @@ export function Photo({ photo, sizes, className, imgClassName, preload = false }
     if (img?.complete && img.naturalWidth === 0) setFailed(true)
   }, [])
 
+  // Callers usually pass `absolute inset-0`; only default to `relative` when no position is given
+  // (both classes together would conflict and collapse the frame).
+  const positioned = /(^|\s)(absolute|relative|fixed|sticky)(\s|$)/.test(className ?? '')
   return (
     <div
       className={cn(
-        'relative overflow-hidden bg-[radial-gradient(120%_90%_at_20%_10%,var(--color-blush),var(--color-sand)_55%,var(--color-cream))]',
+        !positioned && 'relative',
+        'overflow-hidden bg-[radial-gradient(120%_90%_at_20%_10%,var(--color-blush),var(--color-sand)_55%,var(--color-cream))]',
         className,
       )}
     >

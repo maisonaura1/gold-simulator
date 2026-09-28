@@ -178,7 +178,7 @@ export default async function HomePage() {
                       {course.name}
                     </Link>
                   </h3>
-                  <p className="mt-2 text-xs font-bold tracking-[0.14em] text-sage-dark uppercase">{course.formats}</p>
+                  <p className="mt-2 text-[0.8125rem] leading-snug font-medium text-sage-dark">{course.formats}</p>
                   <p className="mt-4 flex-1 text-[0.95rem] leading-relaxed text-ink-soft">{course.cardDescription}</p>
                   <div className="mt-6 flex items-center justify-between gap-4 border-t border-line pt-5">
                     <PackagesButton slug={course.slug}>{home.services.cardCtaLabel}</PackagesButton>

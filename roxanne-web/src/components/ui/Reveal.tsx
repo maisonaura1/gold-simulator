@@ -3,7 +3,7 @@
 import { motion, useReducedMotion, type HTMLMotionProps } from 'motion/react'
 import type { ReactNode } from 'react'
 
-type Tag = 'div' | 'section' | 'li' | 'article' | 'header' | 'p' | 'span' | 'ul' | 'h2'
+type Tag = 'div' | 'section' | 'li' | 'article' | 'header' | 'p' | 'span' | 'ul' | 'ol' | 'h2'
 
 interface RevealProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
   children: ReactNode

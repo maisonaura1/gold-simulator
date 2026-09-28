@@ -107,6 +107,7 @@ export interface SiteContent {
     }
     packagesModal: {
       eyebrow: string
+      sectionTitle: string
       body: string
       note: string
       primaryLabel: string

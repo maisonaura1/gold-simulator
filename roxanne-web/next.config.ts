@@ -35,6 +35,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  // Fonts read from disk by the generated social image.
+  outputFileTracingIncludes: { '/*': ['./src/assets/fonts/*.woff'] },
   images: {
     formats: ['image/avif', 'image/webp'],
     qualities: [75, 85],
