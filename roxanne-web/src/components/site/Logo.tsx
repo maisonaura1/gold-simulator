@@ -32,10 +32,10 @@ export function Logo({
     <span className={cn('flex items-center gap-3', className)}>
       <LogoMark className={tone === 'ink' ? 'text-clay' : 'text-clay-soft'} />
       <span className="leading-none">
-        <span className={cn('block font-display text-[1.65rem] font-semibold tracking-tight', tone === 'ink' ? 'text-ink' : 'text-ivory')}>
+        <span className={cn('block font-display text-[1.65rem] tracking-tight', tone === 'ink' ? 'text-ink' : 'text-ivory')}>
           {first}
-          {second && <span className={cn('font-normal italic', tone === 'ink' ? 'text-clay' : 'text-clay-soft')}>{second}</span>}
-        </span>
+          {second && <span className={cn('italic', tone === 'ink' ? 'text-clay' : 'text-clay-soft')}>{second}</span>}
+        </span>{' '}
         <span className={cn('mt-1 block text-[0.625rem] font-bold uppercase tracking-[0.3em]', tone === 'ink' ? 'text-ink-soft' : 'text-ivory/60')}>
           {descriptor}
         </span>

@@ -36,7 +36,7 @@ export function PackagesModal({ open, course, onClose, onBook, data }: PackagesM
           <ol className="relative mt-8 grid gap-3 sm:grid-cols-3">
             {course.packages.map((pkg, i) => (
               <li key={pkg.name} className="flex flex-col rounded-2xl border border-line bg-white/70 p-5">
-                <span className="font-display text-sm tracking-[0.2em] text-gold">{String(i + 1).padStart(2, '0')}</span>
+                <span className="font-display text-sm tracking-[0.2em] text-gold-deep">{String(i + 1).padStart(2, '0')}</span>
                 <h3 className="mt-3 font-sans text-base font-bold leading-snug text-ink">{pkg.name}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink-soft">{pkg.description}</p>
               </li>

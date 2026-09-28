@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { Motif3D, type Motif } from '@/components/three'
 import { Reveal } from '@/components/ui/Reveal'
 import { cn } from '@/lib/cn'
@@ -25,7 +25,7 @@ export function SectionHeading({
 }) {
   return (
     <Reveal className={cn(align === 'center' && 'mx-auto text-center', 'max-w-3xl', className)}>
-      {eyebrow && <p className={cn('eyebrow', align === 'center' && 'justify-center', tone === 'light' && 'text-clay-soft')}>{eyebrow}</p>}
+      {eyebrow && <p className={cn('eyebrow', align === 'center' && 'justify-center', tone === 'light' && 'text-gold-soft')}>{eyebrow}</p>}
       <Heading className={cn(size === 'lg' ? 'display-lg' : 'display-md', eyebrow && 'mt-5', tone === 'light' ? 'text-ivory' : 'text-ink')}>{title}</Heading>
       {subtitle && <p className={cn('lead mt-5', tone === 'light' && 'text-ivory/70', align === 'center' && 'mx-auto')}>{subtitle}</p>}
     </Reveal>
@@ -54,25 +54,22 @@ export function PageHero({
     <section className="grain relative overflow-hidden bg-cream pt-36 pb-20 sm:pt-44 sm:pb-24">
       <div aria-hidden className="pointer-events-none absolute -top-32 -left-32 size-[30rem] rounded-full bg-blush/70 blur-[100px]" />
       <div className="container-site relative grid items-center gap-12 lg:grid-cols-[1.35fr_1fr]">
+        {/* Pure-CSS entrance so the headline is visible at first paint (see .enter in globals.css). */}
         <div>
           {breadcrumb}
-          <Reveal>
-            <p className="eyebrow">{eyebrow}</p>
-          </Reveal>
-          <Reveal delay={0.05}>
-            <h1 className="display-xl mt-6 max-w-4xl">{title}</h1>
-          </Reveal>
+          <p className="eyebrow enter">{eyebrow}</p>
+          <h1 className="display-xl enter-lift mt-6 max-w-4xl">{title}</h1>
           {subtitle && (
-            <Reveal delay={0.12}>
-              <p className="lead mt-7 max-w-2xl">{subtitle}</p>
-            </Reveal>
+            <p className="lead enter mt-7 max-w-2xl" style={{ '--enter-delay': '0.1s' } as CSSProperties}>
+              {subtitle}
+            </p>
           )}
           {cta && (
-            <Reveal delay={0.18} className="mt-10">
+            <div className="enter mt-10" style={{ '--enter-delay': '0.18s' } as CSSProperties}>
               <ConsultationButton size="lg" arrow>
                 {cta}
               </ConsultationButton>
-            </Reveal>
+            </div>
           )}
           {children}
         </div>
@@ -101,7 +98,7 @@ export function CtaBand({ title, body, buttonLabel }: { title: string; body?: st
             <circle cx="100" cy="100" r="42" fill="none" stroke="currentColor" strokeWidth="0.4" />
           </svg>
           <h2 className="display-lg relative mx-auto max-w-3xl text-white">{title}</h2>
-          {body && <p className="relative mx-auto mt-5 max-w-xl text-lg text-white/85">{body}</p>}
+          {body && <p className="relative mx-auto mt-5 max-w-xl text-lg text-white">{body}</p>}
           <div className="relative mt-10 flex justify-center">
             <ConsultationButton variant="light" size="lg" arrow>
               {buttonLabel}
@@ -119,7 +116,7 @@ export function CheckList({ items, tone = 'ink' }: { items: string[]; tone?: 'in
     <ul className="space-y-4">
       {items.map((item, i) => (
         <li key={item} className="flex gap-4">
-          <span className={cn('mt-1 font-display text-sm tracking-[0.2em]', tone === 'ink' ? 'text-gold' : 'text-gold-soft')}>
+          <span className={cn('mt-1 font-display text-sm tracking-[0.2em]', tone === 'ink' ? 'text-gold-deep' : 'text-gold-soft')}>
             {String(i + 1).padStart(2, '0')}
           </span>
           <span className={cn('leading-relaxed', tone === 'ink' ? 'text-ink' : 'text-ivory/90')}>{item}</span>

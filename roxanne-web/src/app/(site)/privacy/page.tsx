@@ -31,7 +31,7 @@ export default async function PrivacyPage() {
             <Reveal>
               <p className="rounded-2xl bg-cream px-6 py-5 text-ink-soft">
                 Contact:{' '}
-                <a href={`mailto:${settings.email}`} className="font-semibold text-ink underline decoration-line underline-offset-4 hover:decoration-clay">
+                <a href={`mailto:${settings.email}`} className="font-semibold break-all text-ink underline decoration-line underline-offset-4 hover:decoration-clay">
                   {settings.email}
                 </a>
               </p>

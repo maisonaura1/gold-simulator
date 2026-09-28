@@ -1,66 +1,74 @@
 'use client'
 
-import { motion, useReducedMotion, type HTMLMotionProps } from 'motion/react'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type CSSProperties, type ElementType, type ReactNode } from 'react'
 
 type Tag = 'div' | 'section' | 'li' | 'article' | 'header' | 'p' | 'span' | 'ul' | 'ol' | 'h2'
 
-interface RevealProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
+/**
+ * Marks the element with `data-shown` the first time it scrolls into view.
+ * The fade/slide itself is pure CSS (globals.css), so no animation library ships
+ * to the browser; content is only hidden once JS is running (`.js` on <html>).
+ */
+function useRevealOnView() {
+  const ref = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (!('IntersectionObserver' in window)) {
+      el.dataset.shown = ''
+      return
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          el.dataset.shown = ''
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '0px 0px -8% 0px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  return ref
+}
+
+interface RevealProps {
   children: ReactNode
   as?: Tag
   delay?: number
   y?: number
   className?: string
+  id?: string
 }
 
 /** Fades content up as it enters the viewport (once). Honors prefers-reduced-motion. */
-export function Reveal({ children, as = 'div', delay = 0, y = 28, className, ...rest }: RevealProps) {
-  const reduce = useReducedMotion()
-  const Component = motion[as] as typeof motion.div
+export function Reveal({ children, as = 'div', delay = 0, y = 28, className, id }: RevealProps) {
+  const ref = useRevealOnView()
+  const Component = as as ElementType
+  const style = { '--reveal-delay': `${delay}s`, '--reveal-y': `${y}px` } as CSSProperties
   return (
-    <Component
-      data-reveal=""
-      className={className}
-      initial={reduce ? false : { opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '0px 0px -8% 0px' }}
-      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay }}
-      {...rest}
-    >
+    <Component ref={ref} id={id} data-reveal="" className={className} style={style}>
       {children}
     </Component>
   )
 }
 
-/** Staggers direct children that are <RevealItem>. */
-export function RevealGroup({ children, className, as = 'div', stagger = 0.09 }: { children: ReactNode; className?: string; as?: Tag; stagger?: number }) {
-  const reduce = useReducedMotion()
-  const Component = motion[as] as typeof motion.div
+/** Staggers its direct <RevealItem> children as the group enters the viewport. */
+export function RevealGroup({ children, className, as = 'div' }: { children: ReactNode; className?: string; as?: Tag }) {
+  const ref = useRevealOnView()
+  const Component = as as ElementType
   return (
-    <Component
-      data-reveal=""
-      className={className}
-      initial={reduce ? false : 'hidden'}
-      whileInView="shown"
-      viewport={{ once: true, margin: '0px 0px -8% 0px' }}
-      variants={{ hidden: {}, shown: { transition: { staggerChildren: stagger } } }}
-    >
+    <Component ref={ref} data-reveal-group="" className={className}>
       {children}
     </Component>
   )
 }
 
-export function RevealItem({ children, className, as = 'div', y = 24 }: { children: ReactNode; className?: string; as?: Tag; y?: number }) {
-  const Component = motion[as] as typeof motion.div
+export function RevealItem({ children, className, as = 'div' }: { children: ReactNode; className?: string; as?: Tag }) {
+  const Component = as as ElementType
   return (
-    <Component
-      data-reveal=""
-      className={className}
-      variants={{
-        hidden: { opacity: 0, y },
-        shown: { opacity: 1, y: 0, transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] } },
-      }}
-    >
+    <Component data-reveal-item="" className={className}>
       {children}
     </Component>
   )

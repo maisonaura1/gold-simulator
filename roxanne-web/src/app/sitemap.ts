@@ -16,10 +16,8 @@ const PAGES: Entry[] = [
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteUrl()
-  const lastModified = new Date()
   return PAGES.map(({ path, priority, changeFrequency = 'monthly' }) => ({
     url: `${base}${path === '/' ? '' : path}`,
-    lastModified,
     changeFrequency,
     priority,
   }))

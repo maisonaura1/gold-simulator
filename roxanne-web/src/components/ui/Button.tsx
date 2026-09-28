@@ -7,12 +7,12 @@ type Variant = 'primary' | 'secondary' | 'light' | 'outline-light'
 type Size = 'sm' | 'md' | 'lg'
 
 const base =
-  'group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full font-sans font-semibold tracking-[0.01em] whitespace-nowrap transition-[background-color,color,border-color,box-shadow,transform] duration-300 ease-out-expo active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60'
+  'group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full text-center font-sans font-semibold tracking-[0.01em] sm:whitespace-nowrap transition-[background-color,color,border-color,box-shadow,transform] duration-300 ease-out-expo active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60'
 
 const sizes: Record<Size, string> = {
-  sm: 'h-10 px-5 text-sm',
-  md: 'h-12 px-7 text-[0.9375rem]',
-  lg: 'h-14 px-8 text-base',
+  sm: 'min-h-10 px-5 py-2 text-sm',
+  md: 'min-h-12 px-7 py-3 text-[0.9375rem]',
+  lg: 'min-h-14 px-8 py-3.5 text-base',
 }
 
 const variants: Record<Variant, string> = {

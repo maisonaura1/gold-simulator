@@ -2,9 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ArrowRight, ChevronDown, Menu, X } from 'lucide-react'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 import type { CourseSlug } from '@/content/types'
 import { WhatsAppIcon } from '@/components/icons/brand'
 import { cn } from '@/lib/cn'
@@ -24,6 +23,8 @@ export function Header({ brand, nav, courses }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [lastPath, setLastPath] = useState(pathname)
+  const headerRef = useRef<HTMLElement>(null)
+  const toggleRef = useRef<HTMLButtonElement>(null)
 
   // Close the mobile menu whenever the route changes.
   if (pathname !== lastPath) {
@@ -38,25 +39,41 @@ export function Header({ brand, nav, courses }: HeaderProps) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  // While the mobile menu is open: lock scroll, make the page behind it inert
+  // (keeps keyboard focus inside the menu) and close on Esc, returning focus to the toggle.
   useEffect(() => {
-    document.documentElement.classList.toggle('overflow-hidden', menuOpen)
     if (!menuOpen) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpen(false)
+    const root = document.documentElement
+    root.classList.add('overflow-hidden')
+    const background = Array.from(document.body.children).filter(
+      (el): el is HTMLElement => el instanceof HTMLElement && el !== headerRef.current && !['SCRIPT', 'DIALOG'].includes(el.tagName),
+    )
+    background.forEach((el) => (el.inert = true))
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setMenuOpen(false)
+      toggleRef.current?.focus()
+    }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    return () => {
+      root.classList.remove('overflow-hidden')
+      background.forEach((el) => (el.inert = false))
+      window.removeEventListener('keydown', onKey)
+    }
   }, [menuOpen])
 
   const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`))
 
   return (
     <header
+      ref={headerRef}
       className={cn(
         'fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,backdrop-filter] duration-500',
         scrolled || menuOpen ? 'bg-ivory/85 shadow-[0_1px_0_var(--color-line)] backdrop-blur-xl' : 'bg-transparent',
       )}
     >
       <div className={cn('container-site flex items-center justify-between transition-[height] duration-500', scrolled ? 'h-[4.5rem]' : 'h-24')}>
-        <Link href="/" className="relative z-10 rounded-lg" aria-label={`${brand.name} ${brand.descriptor} — home`}>
+        <Link href="/" className="relative z-10 rounded-lg">
           <Logo name={brand.name} descriptor={brand.descriptor} />
         </Link>
 
@@ -91,6 +108,7 @@ export function Header({ brand, nav, courses }: HeaderProps) {
             {data.global.consultationCta}
           </button>
           <button
+            ref={toggleRef}
             type="button"
             className="relative z-10 grid size-11 place-items-center rounded-full border border-ink/10 bg-ivory/70 text-ink lg:hidden"
             aria-expanded={menuOpen}
@@ -132,6 +150,7 @@ function CoursesMenu({
   const [open, setOpen] = useState(false)
   const panelId = useId()
   const wrapper = useRef<HTMLDivElement>(null)
+  const button = useRef<HTMLButtonElement>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
@@ -139,7 +158,12 @@ function CoursesMenu({
     const onDown = (e: PointerEvent) => {
       if (!wrapper.current?.contains(e.target as Node)) setOpen(false)
     }
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      const hadFocus = wrapper.current?.contains(document.activeElement)
+      setOpen(false)
+      if (hadFocus) button.current?.focus()
+    }
     document.addEventListener('pointerdown', onDown)
     document.addEventListener('keydown', onKey)
     return () => {
@@ -166,6 +190,7 @@ function CoursesMenu({
       }}
     >
       <button
+        ref={button}
         type="button"
         aria-expanded={open}
         aria-controls={panelId}
@@ -238,76 +263,64 @@ function MobileMenu({
   whatsappLabel: string
   ctaLabel: string
 }) {
-  const reduce = useReducedMotion()
+  // Staggered entrance: each row waits a little longer than the previous one.
+  const row = (i: number): CSSProperties => ({ transitionDelay: open ? `${120 + i * 60}ms` : '0ms' })
+  const rowClass = cn(
+    'transition-[opacity,transform] duration-700 ease-out-expo motion-reduce:transition-none',
+    open ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0',
+  )
+
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          id="mobile-menu"
-          className="fixed inset-x-0 top-0 -z-10 h-dvh overflow-y-auto bg-ivory px-5 pt-28 pb-10 lg:hidden"
-          initial={reduce ? false : { opacity: 0, clipPath: 'inset(0 0 100% 0)' }}
-          animate={{ opacity: 1, clipPath: 'inset(0 0 0% 0)' }}
-          exit={reduce ? { opacity: 0 } : { opacity: 0, clipPath: 'inset(0 0 100% 0)' }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <nav aria-label="Mobile">
-            <ul className="space-y-1">
-              {nav.map((item, i) => (
-                <motion.li
-                  key={item.href}
-                  initial={reduce ? false : { opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.12 + i * 0.06, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  <Link
-                    href={item.href}
-                    aria-current={isActive(item.href) ? 'page' : undefined}
-                    className={cn('block py-2 font-display text-4xl', isActive(item.href) ? 'text-clay' : 'text-ink')}
-                  >
-                    {item.label}
-                  </Link>
-                  {item.href === '/courses' && (
-                    <ul className="mt-1 mb-3 space-y-1 border-l border-line pl-4">
-                      {courses.map((course) => (
-                        <li key={course.slug}>
-                          <Link href={courseHref(course.slug)} className="block py-1.5 text-base text-ink-soft">
-                            {course.name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </motion.li>
-              ))}
-            </ul>
-          </nav>
-          <motion.div
-            className="mt-10 grid gap-3"
-            initial={reduce ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <button
-              type="button"
-              onClick={onBook}
-              className="inline-flex h-14 items-center justify-center rounded-full bg-clay text-base font-semibold text-white"
-            >
-              {ctaLabel}
-            </button>
-            {whatsapp && (
-              <a
-                href={whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-14 items-center justify-center gap-2.5 rounded-full border border-ink/15 text-base font-semibold"
-              >
-                <WhatsAppIcon className="size-5 text-[#1f9e55]" />
-                {whatsappLabel}
-              </a>
-            )}
-          </motion.div>
-        </motion.div>
+    <div
+      id="mobile-menu"
+      inert={!open}
+      className={cn(
+        'fixed inset-x-0 top-0 -z-10 h-dvh overflow-y-auto bg-ivory px-5 pt-28 pb-10 transition-[clip-path,opacity,visibility] duration-700 ease-out-expo motion-reduce:transition-none lg:hidden',
+        open ? 'visible opacity-100 [clip-path:inset(0_0_0%_0)]' : 'invisible opacity-0 [clip-path:inset(0_0_100%_0)]',
       )}
-    </AnimatePresence>
+    >
+      <nav aria-label="Mobile">
+        <ul className="space-y-1">
+          {nav.map((item, i) => (
+            <li key={item.href} className={rowClass} style={row(i)}>
+              <Link
+                href={item.href}
+                aria-current={isActive(item.href) ? 'page' : undefined}
+                className={cn('block py-2 font-display text-4xl', isActive(item.href) ? 'text-clay' : 'text-ink')}
+              >
+                {item.label}
+              </Link>
+              {item.href === '/courses' && (
+                <ul className="mt-1 mb-3 space-y-1 border-l border-line pl-4">
+                  {courses.map((course) => (
+                    <li key={course.slug}>
+                      <Link href={courseHref(course.slug)} className="block py-1.5 text-base text-ink-soft">
+                        {course.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div className={cn('mt-10 grid gap-3', rowClass)} style={row(nav.length)}>
+        <button type="button" onClick={onBook} className="inline-flex h-14 items-center justify-center rounded-full bg-clay text-base font-semibold text-white">
+          {ctaLabel}
+        </button>
+        {whatsapp && (
+          <a
+            href={whatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-14 items-center justify-center gap-2.5 rounded-full border border-ink/15 text-base font-semibold"
+          >
+            <WhatsAppIcon className="size-5 text-[#1f9e55]" />
+            {whatsappLabel}
+          </a>
+        )}
+      </div>
+    </div>
   )
 }

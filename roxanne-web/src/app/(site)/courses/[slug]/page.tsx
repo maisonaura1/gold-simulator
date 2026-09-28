@@ -78,7 +78,7 @@ export default async function CoursePage(props: PageProps<'/courses/[slug]'>) {
         <div className="container-site grid items-center gap-14 lg:grid-cols-2 lg:gap-24">
           <Reveal className="relative">
             <div className="relative aspect-[4/5] overflow-hidden rounded-t-[16rem] rounded-b-[1.75rem] shadow-soft">
-              <Photo photo={resolvePhoto(course.photo, settings.photos)} preload sizes="(min-width: 1024px) 45vw, 92vw" className="absolute inset-0" />
+              <Photo photo={resolvePhoto(course.photo, settings.photos)} sizes="(min-width: 1024px) 45vw, 92vw" className="absolute inset-0" />
             </div>
             <div aria-hidden className="absolute -right-4 -bottom-4 -z-10 size-40 rounded-full bg-blush" />
           </Reveal>
@@ -110,7 +110,7 @@ export default async function CoursePage(props: PageProps<'/courses/[slug]'>) {
               <RevealItem key={area.title}>
                 <TiltCard className="h-full">
                   <article className="group h-full rounded-[1.75rem] border border-line bg-ivory p-8 transition-shadow duration-500 hover:shadow-lift">
-                    <span className="font-display text-sm tracking-[0.2em] text-gold">{String(i + 1).padStart(2, '0')}</span>
+                    <span className="font-display text-sm tracking-[0.2em] text-gold-deep">{String(i + 1).padStart(2, '0')}</span>
                     <h3 className="mt-6 font-display text-2xl leading-tight">{area.title}</h3>
                     <p className="mt-3 text-[0.95rem] leading-relaxed text-ink-soft">{area.description}</p>
                   </article>
@@ -166,7 +166,7 @@ export default async function CoursePage(props: PageProps<'/courses/[slug]'>) {
 
       {/* ───────────── Specialist track (e.g. Litigation English) ───────────── */}
       {page.specialism && (
-        <section className="relative overflow-hidden bg-navy py-24 text-ivory sm:py-32">
+        <section id="specialist-track" className="relative overflow-hidden bg-navy py-24 text-ivory sm:py-32">
           <div aria-hidden className="pointer-events-none absolute -top-40 -left-40 size-[34rem] rounded-full bg-clay/25 blur-[120px]" />
           <div className="container-site relative">
             <SectionHeading eyebrow={page.specialism.eyebrow} title={page.specialism.title} subtitle={page.specialism.subtitle} tone="light" />
@@ -202,7 +202,7 @@ export default async function CoursePage(props: PageProps<'/courses/[slug]'>) {
           <RevealGroup as="ol" className="mt-12 grid gap-5 md:grid-cols-3">
             {course.packages.map((pkg, i) => (
               <RevealItem as="li" key={pkg.name} className="rounded-[1.75rem] border border-line bg-ivory p-8">
-                <span className="font-display text-sm tracking-[0.2em] text-gold">{String(i + 1).padStart(2, '0')}</span>
+                <span className="font-display text-sm tracking-[0.2em] text-gold-deep">{String(i + 1).padStart(2, '0')}</span>
                 <h3 className="mt-5 font-display text-2xl leading-tight">{pkg.name}</h3>
                 <p className="mt-3 leading-relaxed text-ink-soft">{pkg.description}</p>
               </RevealItem>

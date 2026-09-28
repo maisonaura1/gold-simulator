@@ -15,7 +15,7 @@ export default function NotFound() {
         <div className="container-site relative text-center">
           <p className="eyebrow justify-center">Error 404</p>
           <h1 className="display-xl mx-auto mt-6 max-w-3xl">
-            Lost in <em className="font-normal text-clay">translation?</em>
+            Lost in <em className="text-clay">translation?</em>
           </h1>
           <p className="lead mx-auto mt-6 max-w-lg">The page you were looking for doesn&apos;t exist or has moved. Let&apos;s get you back on track.</p>
           <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">

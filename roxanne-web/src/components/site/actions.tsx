@@ -25,7 +25,7 @@ export function ConsultationBadge({ text, className }: { text: string; className
     <button
       type="button"
       onClick={openConsultation}
-      aria-label={data.global.consultationCta}
+      aria-label={`${text} — ${data.global.consultationCta}`}
       aria-haspopup="dialog"
       className={cn(
         'group grid size-32 place-items-center rounded-full bg-ivory/90 text-ink shadow-card backdrop-blur transition duration-500 hover:scale-105 hover:bg-white',

@@ -52,7 +52,7 @@ export function Photo({ photo, sizes, className, imgClassName, preload = false }
           onError={() => setFailed(true)}
           className={cn(
             'object-cover transition-[opacity,transform] duration-[1.2s] ease-out-expo',
-            loaded ? 'scale-100 opacity-100' : 'scale-[1.03] opacity-0',
+            loaded || preload ? 'scale-100 opacity-100' : 'scale-[1.03] opacity-0',
             imgClassName,
           )}
         />

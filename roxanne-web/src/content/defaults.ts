@@ -115,9 +115,9 @@ export const defaultCourses: Course[] = [
     photo: 'legal',
     page: {
       meta: {
-        title: 'Legal English | Roxanne Maison — Law Business English', // DRAFT (tab 5 empty)
+        title: 'Legal English Course Online for Lawyers | Roxanne Maison', // DRAFT (tab 5 empty)
         description:
-          'Specialist Legal English courses for lawyers, paralegals, and legal professionals: contract drafting, advocacy, negotiations, and litigation English. 1-to-1 or group. Book a free consultation.', // DRAFT
+          'Legal English for lawyers, paralegals and legal professionals: contract drafting, advocacy, negotiations and litigation English. Book a free consultation.', // DRAFT
       },
       hero: {
         eyebrow: 'Legal English',
@@ -201,9 +201,9 @@ export const defaultCourses: Course[] = [
     photo: 'beginner',
     page: {
       meta: {
-        title: 'Beginner English for Adults | Roxanne Maison — Law Business English', // DRAFT (tab 6 holds other copy)
+        title: 'Beginner English Lessons for Adults | Roxanne Maison', // DRAFT (tab 6 holds other copy)
         description:
-          'Beginner English lessons for adults: a patient, structured, zero-judgment approach to conversation, workplace language, grammar, and pronunciation. 1-to-1 or group. Book a free consultation.', // DRAFT
+          'Beginner English for adults: a patient, zero-judgment approach to conversation, workplace language, grammar and pronunciation. Book a free consultation.', // DRAFT
       },
       hero: {
         eyebrow: 'Beginner English for Adults',
@@ -256,9 +256,9 @@ export const defaultCourses: Course[] = [
     photo: 'speech',
     page: {
       meta: {
-        title: 'Speech & Presentation Coaching | Roxanne Maison — Law Business English', // DRAFT (tab 7 empty)
+        title: 'Speech & Presentation Coaching in English | Roxanne Maison', // DRAFT (tab 7 empty)
         description:
-          'Speech and presentation coaching in English: public speaking, storytelling, vocal delivery, body language, and executive presence. 1-to-1 or group. Book a free consultation.', // DRAFT
+          'Presentation and public speaking coaching in English: storytelling, vocal delivery, body language and executive presence. Book a free consultation.', // DRAFT
       },
       hero: {
         eyebrow: 'Speech & Presentation Coaching',
@@ -498,9 +498,9 @@ export const defaultContent: SiteContent = {
   courseList: defaultCourses,
   freelance: {
     meta: {
-      title: 'Freelance Legal Assistant | Roxanne Maison — Law Business English', // DRAFT
+      title: 'Remote Freelance Legal Assistant | Roxanne Maison', // DRAFT
       description:
-        'Remote freelance legal assistant supporting law firms and solo lawyers across Europe: legal English proofreading, drafting support, document preparation, and project support.', // DRAFT
+        'Remote freelance legal assistant for law firms and solo lawyers across Europe: legal English proofreading, drafting support and document preparation.', // DRAFT
     },
     hero: {
       eyebrow: 'Freelance & Project Needs',

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import { ArrowUpRight, Globe2, Mic2, PenLine, Presentation } from 'lucide-react'
 import { resolvePhoto } from '@/content/photos'
@@ -27,7 +28,7 @@ function HeroTitle({ text }: { text: string }) {
   if (!parts) return <>{text}</>
   return (
     <>
-      {parts[1]} <em className="font-normal text-clay">{parts[2]}</em>
+      {parts[1]} <em className="text-clay">{parts[2]}</em>
     </>
   )
 }
@@ -47,29 +48,26 @@ export default async function HomePage() {
         <div aria-hidden className="pointer-events-none absolute bottom-[-20%] left-[-10%] size-[30rem] rounded-full bg-sand/70 blur-[100px]" />
 
         <div className="container-site relative grid items-center gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10">
+          {/* Hero entrance is pure CSS (.enter / .enter-lift): visible at first paint, no JS needed. */}
           <div className="relative z-10">
-            <Reveal>
-              <p className="eyebrow">{home.hero.eyebrow}</p>
-            </Reveal>
-            <Reveal delay={0.06}>
-              <h1 className="display-xl mt-7 max-w-[13ch]">
-                <HeroTitle text={home.hero.title} />
-              </h1>
-            </Reveal>
-            <Reveal delay={0.14}>
-              <p className="lead mt-8 max-w-xl">{home.hero.subtitle}</p>
-            </Reveal>
-            <Reveal delay={0.2} className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <p className="eyebrow enter">{home.hero.eyebrow}</p>
+            <h1 className="display-xl enter-lift mt-7 max-w-[13ch]">
+              <HeroTitle text={home.hero.title} />
+            </h1>
+            <p className="lead enter mt-8 max-w-xl" style={{ '--enter-delay': '0.12s' } as CSSProperties}>
+              {home.hero.subtitle}
+            </p>
+            <div className="enter mt-10 flex flex-col gap-3 sm:flex-row sm:items-center" style={{ '--enter-delay': '0.2s' } as CSSProperties}>
               <ConsultationButton size="lg" arrow>
                 {home.hero.ctaLabel}
               </ConsultationButton>
               <ButtonLink href="/courses" variant="secondary" size="lg">
                 {home.hero.secondaryCtaLabel}
               </ButtonLink>
-            </Reveal>
+            </div>
           </div>
 
-          <Reveal delay={0.1} y={40} className="relative mx-auto w-full max-w-[34rem]">
+          <div className="enter relative mx-auto w-full max-w-[34rem]" style={{ '--enter-delay': '0.1s' } as CSSProperties}>
             <div className="relative aspect-[4/5]">
               <Photo photo={heroPhoto} preload sizes="(min-width: 1024px) 34rem, 90vw" className="arch absolute inset-0 shadow-soft" imgClassName="object-[60%_center]" />
               <div aria-hidden className="arch pointer-events-none absolute inset-0 ring-1 ring-ink/10 ring-inset" />
@@ -77,7 +75,7 @@ export default async function HomePage() {
             </div>
             <Hero3D className="pointer-events-none absolute -inset-[14%] z-10" />
             <ConsultationBadge text="Free consultation" className="absolute -bottom-6 -left-4 z-20 sm:-left-10" />
-          </Reveal>
+          </div>
         </div>
       </section>
 
@@ -129,7 +127,7 @@ export default async function HomePage() {
                 <RevealItem key={item.title}>
                   <TiltCard className="h-full">
                     <article className="group relative h-full overflow-hidden rounded-[1.75rem] border border-line bg-ivory p-8 transition-shadow duration-500 hover:shadow-lift sm:p-10">
-                      <span className="absolute top-8 right-8 font-display text-5xl text-sand transition-colors duration-500 group-hover:text-blush sm:top-10 sm:right-10">
+                      <span aria-hidden className="absolute top-8 right-8 font-display text-5xl text-sand transition-colors duration-500 group-hover:text-blush sm:top-10 sm:right-10">
                         {String(i + 1).padStart(2, '0')}
                       </span>
                       <span className="grid size-14 place-items-center rounded-full bg-blush/70 text-clay transition-colors duration-500 group-hover:bg-clay group-hover:text-white">
@@ -183,7 +181,7 @@ export default async function HomePage() {
                   <div className="mt-6 flex items-center justify-between gap-4 border-t border-line pt-5">
                     <PackagesButton slug={course.slug}>{home.services.cardCtaLabel}</PackagesButton>
                     <Link href={courseHref(course.slug)} className="text-sm font-semibold text-clay hover:text-clay-dark">
-                      Learn more
+                      Learn more<span className="sr-only"> about {course.name}</span>
                     </Link>
                   </div>
                 </div>
@@ -205,7 +203,7 @@ export default async function HomePage() {
           </Reveal>
           <div className="order-1 lg:order-2">
             <Reveal>
-              <p className="eyebrow text-clay-soft">{home.freelance.eyebrow}</p>
+              <p className="eyebrow text-gold-soft">{home.freelance.eyebrow}</p>
             </Reveal>
             <Reveal delay={0.06}>
               <h2 className="display-md mt-6 text-ivory">{home.freelance.title}</h2>

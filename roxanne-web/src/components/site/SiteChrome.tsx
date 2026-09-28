@@ -35,9 +35,6 @@ export async function SiteChrome({ children }: { children: React.ReactNode }) {
       <main id="main">{children}</main>
       <Footer content={content} settings={settings} />
       <JsonLd data={organizationJsonLd(content, settings)} />
-      <noscript>
-        <style>{'[data-reveal]{opacity:1!important;transform:none!important}'}</style>
-      </noscript>
     </SiteProvider>
   )
 }

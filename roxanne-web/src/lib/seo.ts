@@ -2,9 +2,20 @@ import type { Metadata } from 'next'
 import type { Course, Meta, SiteContent, SiteSettings } from '@/content/types'
 import { courseHref, siteUrl, telHref } from './site'
 
-/** Page metadata with canonical URL and social cards. */
+const SOCIAL_IMAGE = {
+  url: '/opengraph-image',
+  width: 1200,
+  height: 630,
+  alt: 'RoxanneAlexia Language Coach — Law & Business English',
+}
+
+/**
+ * Page metadata with canonical URL and social cards. A page-level `openGraph`
+ * replaces the root one entirely, so the generated social image is listed here.
+ */
 export function pageMetadata(meta: Meta, path: string, options: { image?: string; noindex?: boolean } = {}): Metadata {
   const url = `${siteUrl()}${path === '/' ? '' : path}`
+  const image = options.image ? { url: options.image } : SOCIAL_IMAGE
   return {
     title: { absolute: meta.title },
     description: meta.description,
@@ -16,9 +27,9 @@ export function pageMetadata(meta: Meta, path: string, options: { image?: string
       description: meta.description,
       siteName: 'RoxanneAlexia Language Coach',
       locale: 'en_US',
-      ...(options.image ? { images: [{ url: options.image }] } : {}),
+      images: [image],
     },
-    twitter: { card: 'summary_large_image', title: meta.title, description: meta.description },
+    twitter: { card: 'summary_large_image', title: meta.title, description: meta.description, images: [image.url] },
     ...(options.noindex ? { robots: { index: false, follow: true } } : {}),
   }
 }
@@ -31,13 +42,15 @@ export function organizationJsonLd(content: SiteContent, settings: SiteSettings)
     '@context': 'https://schema.org',
     '@graph': [
       {
-        '@type': ['ProfessionalService', 'EducationalOrganization'],
+        '@type': 'EducationalOrganization',
         '@id': `${base}/#business`,
         name: `${content.brand.name} ${content.brand.descriptor}`,
         alternateName: 'Law Business English Speech Coaching',
         slogan: content.brand.tagline,
         description: content.home.meta.description,
         url: base,
+        logo: `${base}/apple-icon`,
+        image: `${base}/opengraph-image`,
         ...(settings.email ? { email: settings.email } : {}),
         ...(telHref(settings.whatsappNumber) ? { telephone: telHref(settings.whatsappNumber)!.replace('tel:', '') } : {}),
         areaServed: { '@type': 'Place', name: 'Europe' },
@@ -49,7 +62,13 @@ export function organizationJsonLd(content: SiteContent, settings: SiteSettings)
           name: 'English courses for professionals',
           itemListElement: content.courseList.map((course) => ({
             '@type': 'Offer',
-            itemOffered: { '@type': 'Course', name: course.name, url: `${base}${courseHref(course.slug)}` },
+            itemOffered: {
+              '@type': 'Course',
+              name: course.name,
+              description: course.tagline,
+              url: `${base}${courseHref(course.slug)}`,
+              provider: { '@id': `${base}/#business` },
+            },
           })),
         },
       },
@@ -58,6 +77,8 @@ export function organizationJsonLd(content: SiteContent, settings: SiteSettings)
         '@id': `${base}/#person`,
         name: content.brand.personName,
         jobTitle: 'English Language Coach — Law & Business English',
+        description: content.about.meta.description,
+        knowsAbout: ['Legal English', 'Business English', 'English for lawyers', 'Public speaking', 'Presentation skills', 'English as a foreign language'],
         worksFor: { '@id': `${base}/#business` },
         url: `${base}/about`,
         ...(sameAs.length ? { sameAs } : {}),
@@ -85,10 +106,7 @@ export function courseJsonLd(course: Course) {
     provider: { '@id': `${base}/#business` },
     inLanguage: 'en',
     teaches: course.focusAreas.map((f) => f.title),
-    hasCourseInstance: [
-      { '@type': 'CourseInstance', courseMode: 'online', courseWorkload: 'Flexible — scheduled around you' },
-    ],
-    offers: { '@type': 'Offer', category: 'Consultation', price: 0, priceCurrency: 'EUR', description: 'Free consultation' },
+    hasCourseInstance: [{ '@type': 'CourseInstance', courseMode: 'Online', instructor: { '@id': `${base}/#person` } }],
   }
 }
 

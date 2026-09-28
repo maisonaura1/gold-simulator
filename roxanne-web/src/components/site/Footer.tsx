@@ -65,7 +65,7 @@ export function Footer({ content, settings }: { content: SiteContent; settings: 
           </FooterColumn>
 
           <div>
-            <h2 className="text-xs font-bold tracking-[0.22em] text-ivory/50 uppercase">Get in touch</h2>
+            <h2 className="text-xs font-bold tracking-[0.22em] text-ivory/60 uppercase">Get in touch</h2>
             <ul className="mt-5 space-y-3 text-sm">
               {settings.email && (
                 <li>
@@ -88,9 +88,12 @@ export function Footer({ content, settings }: { content: SiteContent; settings: 
           </div>
         </div>
 
-        <p aria-hidden className="pointer-events-none mt-20 font-display text-[clamp(3.5rem,13vw,11.5rem)] leading-[0.8] tracking-[-0.03em] whitespace-nowrap text-ivory/[0.06] select-none">
-          {brand.name}
-        </p>
+        {/* Decorative wordmark: SVG text stretched to the container width. */}
+        <svg aria-hidden viewBox="0 0 1000 150" className="pointer-events-none mt-20 block h-auto w-full select-none" preserveAspectRatio="xMinYMid meet">
+          <text x="0" y="118" textLength="1000" lengthAdjust="spacingAndGlyphs" className="fill-ivory/[0.06] font-display" fontSize="150">
+            {brand.name}
+          </text>
+        </svg>
 
         <div className="mt-6 flex flex-col gap-3 border-t border-ivory/10 pt-6 text-xs text-ivory/50 sm:flex-row sm:items-center sm:justify-between">
           <p>
@@ -113,7 +116,7 @@ export function Footer({ content, settings }: { content: SiteContent; settings: 
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="text-xs font-bold tracking-[0.22em] text-ivory/50 uppercase">{title}</h2>
+      <h2 className="text-xs font-bold tracking-[0.22em] text-ivory/60 uppercase">{title}</h2>
       <ul className="mt-5 space-y-3 text-sm">{children}</ul>
     </div>
   )

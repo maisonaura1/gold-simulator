@@ -22,6 +22,9 @@
   --color-sage-dark: #5b6a55;
   --color-gold: #b08d57;
   --color-gold-soft: #d8c19a;
+  /* Text-safe brass (4.9:1 on ivory) and input borders (3.6:1, WCAG 1.4.11) */
+  --color-gold-deep: #846639;
+  --color-line-strong: #948573;
 
   --font-display: var(--font-cormorant), Georgia, 'Times New Roman', serif;
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
@@ -89,6 +92,11 @@
     outline: 2px solid var(--color-clay);
     outline-offset: 3px;
     border-radius: 4px;
+  }
+
+  /* On dark or terracotta surfaces the clay ring disappears — switch to ivory. */
+  :where(.bg-navy, .bg-navy-soft, .bg-clay, .bg-ink) :focus-visible {
+    outline-color: var(--color-ivory);
   }
 
   [hidden] { display: none !important; }
@@ -186,6 +194,47 @@
 }
 
 html:has(dialog[open]) { overflow: hidden; }
+
+/*
+ * Motion without JavaScript on the critical path.
+ * - .enter / .enter-lift: hero entrance, runs at first paint (the h1 only moves,
+ *   it is never invisible, so LCP is not delayed).
+ * - [data-reveal]: scroll reveals; hidden only once the inline script has added
+ *   .js to <html>, and shown by an IntersectionObserver (components/ui/Reveal.tsx).
+ */
+@keyframes rise-in {
+  from { opacity: 0; transform: translate3d(0, 26px, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes lift-in {
+  from { transform: translate3d(0, 22px, 0); }
+  to { transform: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .enter { animation: rise-in 1s var(--ease-out-expo) both; animation-delay: var(--enter-delay, 0s); }
+  .enter-lift { animation: lift-in 1.1s var(--ease-out-expo) both; }
+
+  .js [data-reveal]:not([data-shown]) {
+    opacity: 0;
+    transform: translate3d(0, var(--reveal-y, 28px), 0);
+  }
+  .js [data-reveal-group]:not([data-shown]) > [data-reveal-item] {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+  }
+  [data-reveal],
+  [data-reveal-group] > [data-reveal-item] {
+    transition:
+      opacity 0.9s var(--ease-out-expo) var(--reveal-delay, 0s),
+      transform 0.9s var(--ease-out-expo) var(--reveal-delay, 0s);
+  }
+  [data-reveal-group] > [data-reveal-item]:nth-child(2) { --reveal-delay: 0.09s; }
+  [data-reveal-group] > [data-reveal-item]:nth-child(3) { --reveal-delay: 0.18s; }
+  [data-reveal-group] > [data-reveal-item]:nth-child(4) { --reveal-delay: 0.27s; }
+  [data-reveal-group] > [data-reveal-item]:nth-child(5) { --reveal-delay: 0.36s; }
+  [data-reveal-group] > [data-reveal-item]:nth-child(n + 6) { --reveal-delay: 0.45s; }
+}
 
 @layer utilities {
   .text-balance { text-wrap: balance; }

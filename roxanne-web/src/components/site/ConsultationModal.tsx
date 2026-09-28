@@ -89,7 +89,7 @@ export function ConsultationModal({ open, onClose, data }: { open: boolean; onCl
           {data.email && (
             <p className="relative mt-6 flex items-center gap-2 text-sm text-ink-soft">
               <Mail className="size-4 text-clay" aria-hidden />
-              <a className="underline decoration-line underline-offset-4 hover:decoration-clay" href={`mailto:${data.email}`}>
+              <a className="break-all underline decoration-line underline-offset-4 hover:decoration-clay" href={`mailto:${data.email}`}>
                 {data.email}
               </a>
             </p>

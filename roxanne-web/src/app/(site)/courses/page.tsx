@@ -42,7 +42,7 @@ export default async function CoursesPage() {
                   href={`#${course.slug}`}
                   className="group relative flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-line bg-cream/60 p-7 transition duration-500 hover:-translate-y-1 hover:border-clay/30 hover:bg-ivory hover:shadow-lift"
                 >
-                  <span className="font-display text-sm tracking-[0.2em] text-gold">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="font-display text-sm tracking-[0.2em] text-gold-deep">{String(i + 1).padStart(2, '0')}</span>
                   <span className="mt-5 font-display text-[1.75rem] leading-tight">{course.name}</span>
                   <span className="mt-3 flex-1 text-[0.95rem] leading-relaxed text-ink-soft">{course.tagline}</span>
                   <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-clay">
