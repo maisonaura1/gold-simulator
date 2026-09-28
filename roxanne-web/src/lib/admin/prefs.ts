@@ -19,7 +19,8 @@ export async function getAdminPrefs(): Promise<AdminPrefs> {
 }
 
 export async function updateAdminPrefs(patch: Partial<AdminPrefs>): Promise<AdminPrefs> {
-  const next = prefsSchema.parse({ ...(await getAdminPrefs()), ...patch })
-  await getStore().setJSON(PREFS_KEY, next)
-  return next
+  return getStore().update<AdminPrefs>(PREFS_KEY, (stored) => {
+    const current = prefsSchema.safeParse(stored ?? {})
+    return prefsSchema.parse({ ...(current.success ? current.data : {}), ...patch })
+  })
 }

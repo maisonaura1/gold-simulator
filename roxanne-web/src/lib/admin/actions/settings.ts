@@ -124,7 +124,7 @@ export async function changePassword(_prev: PasswordState, formData: FormData): 
     return actionFailure('Please check the highlighted fields.', fieldErrors)
   }
 
-  if (!rateLimit(`admin-password:${await getClientIp()}`, 5, 15 * 60 * 1000)) {
+  if (!(await rateLimit(`admin-password:${await getClientIp()}`, 5, 15 * 60 * 1000))) {
     return actionFailure('Too many attempts. Please wait 15 minutes before trying again.')
   }
   if ((await checkPassword(parsed.data.current)) !== 'ok') {

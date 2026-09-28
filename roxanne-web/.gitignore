@@ -10,10 +10,9 @@ next-env.d.ts
 # local data store (messages, uploads, edits) — never commit client data
 data/
 
-# env files
-.env
-.env.local
-.env.*.local
+# env files (all but the documented example)
+.env*
+!.env.example
 
 # misc
 .DS_Store

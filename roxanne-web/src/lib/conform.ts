@@ -37,7 +37,7 @@ function clip(value: string): string {
   return value.length > MAX_STRING ? value.slice(0, MAX_STRING) : value
 }
 
-const SAFE_HREF = /^(\/(?!\/)|#|https?:\/\/|mailto:|tel:)/i
+const SAFE_HREF = /^(\/(?![/\\\s])|#|https?:\/\/|mailto:|tel:)/i
 
 /** Only allow internal paths, anchors, http(s), mailto and tel links. */
 export function safeHref(href: string, fallback = '/'): string {

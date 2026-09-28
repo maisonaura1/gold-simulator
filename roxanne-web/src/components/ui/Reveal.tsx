@@ -5,32 +5,54 @@ import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 // Rendered as `as as 'div'`: a plain string tag union, kept narrow so R3F's JSX typings don't widen it.
 type Tag = 'div' | 'section' | 'li' | 'article' | 'header' | 'p' | 'span' | 'ul' | 'ol' | 'h2'
 
-/**
- * Marks the element with `data-shown` the first time it scrolls into view.
- * The fade/slide itself is pure CSS (globals.css), so no animation library ships
- * to the browser; content is only hidden once JS is running (`.js` on <html>).
+/*
+ * One shared, rAF-throttled scroll check reveals every element whose top has
+ * passed the reveal line — including elements scrolled past in a single frame
+ * (an IntersectionObserver can miss those when frames are slow or the user flicks).
+ * The fade/slide itself is pure CSS (globals.css); content is only hidden while
+ * JS runs (`.js` on <html>), and each element is marked with `data-shown` once.
  */
+const pending = new Set<HTMLElement>()
+let frame = 0
+
+function check() {
+  frame = 0
+  const line = window.innerHeight * 0.92
+  for (const el of pending) {
+    if (el.getBoundingClientRect().top < line) {
+      el.dataset.shown = ''
+      pending.delete(el)
+    }
+  }
+  if (pending.size === 0) {
+    window.removeEventListener('scroll', schedule)
+    window.removeEventListener('resize', schedule)
+  }
+}
+
+function schedule() {
+  if (!frame) frame = requestAnimationFrame(check)
+}
+
+function register(el: HTMLElement) {
+  if (pending.size === 0) {
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule, { passive: true })
+  }
+  pending.add(el)
+  schedule()
+}
+
 function useRevealOnView() {
   // Typed as a div for JSX purposes; the element may be any tag from `Tag`.
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = ref.current
-    if (!el) return
-    if (!('IntersectionObserver' in window)) {
-      el.dataset.shown = ''
-      return
+    if (!el || 'shown' in el.dataset) return
+    register(el)
+    return () => {
+      pending.delete(el)
     }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          el.dataset.shown = ''
-          observer.disconnect()
-        }
-      },
-      { rootMargin: '0px 0px -8% 0px' },
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
   }, [])
   return ref
 }

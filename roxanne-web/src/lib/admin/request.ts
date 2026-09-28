@@ -1,13 +1,7 @@
 import 'server-only'
-import { headers } from 'next/headers'
 
-/** Best-effort client IP for rate limiting (first hop of X-Forwarded-For, then X-Real-IP). */
-export async function getClientIp(): Promise<string> {
-  const list = await headers()
-  const forwarded = list.get('x-forwarded-for')?.split(',')[0]?.trim()
-  const ip = forwarded || list.get('x-real-ip')?.trim()
-  return ip && ip.length <= 64 ? ip : 'unknown'
-}
+/** Trusted-proxy aware client IP (see lib/client-ip.ts). */
+export { getClientIp } from '@/lib/client-ip'
 
 /**
  * CSRF guard for Route Handlers that change data: the Origin header must

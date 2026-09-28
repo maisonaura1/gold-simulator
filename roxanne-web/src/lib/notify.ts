@@ -29,7 +29,7 @@ export async function notifyNewMessage(message: ContactMessage, settings: SiteSe
       from: process.env.RESEND_FROM ?? 'Website <onboarding@resend.dev>',
       to: [settings.email],
       reply_to: message.email,
-      subject: `New enquiry${message.topic ? ` — ${message.topic}` : ''} (${message.name})`.slice(0, 200),
+      subject: `New enquiry${message.topic ? ` — ${message.topic}` : ''} (${message.name})`.replace(/[\u0000-\u001f\u007f]+/g, ' ').slice(0, 200),
       text,
     }),
     signal: AbortSignal.timeout(8000),

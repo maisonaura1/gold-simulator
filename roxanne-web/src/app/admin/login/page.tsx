@@ -6,7 +6,7 @@ import { LoginForm } from '@/components/admin/login/LoginForm'
 import { SetupInstructions } from '@/components/admin/login/SetupInstructions'
 import { Logo } from '@/components/site/Logo'
 import { safeAdminPath } from '@/lib/admin/paths'
-import { getSecrets, isAdmin } from '@/lib/auth'
+import { envAdminPassword, getSecrets, isAdmin } from '@/lib/auth'
 import { getContent } from '@/lib/data'
 import { sessionSecretConfigured } from '@/lib/session'
 
@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: 'Sign in' }
 
 async function passwordConfigured(): Promise<boolean> {
   if (!sessionSecretConfigured()) return false
-  if (process.env.ADMIN_PASSWORD) return true
+  if (envAdminPassword()) return true
   return Boolean((await getSecrets()).passwordHash)
 }
 

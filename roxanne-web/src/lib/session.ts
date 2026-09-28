@@ -2,7 +2,8 @@
  * Signed session cookie for the dashboard (HMAC-SHA256 via Web Crypto, so it
  * works both in proxy.ts and in server code). No user data is stored in it.
  */
-export const SESSION_COOKIE = 'rx_admin'
+// `__Host-` (production, HTTPS): the browser only accepts it Secure, host-only and on Path=/.
+export const SESSION_COOKIE = process.env.NODE_ENV === 'production' ? '__Host-rx_admin' : 'rx_admin'
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7 // 7 days
 
 interface SessionPayload {

@@ -73,20 +73,18 @@ export async function getEditedSections(): Promise<ContentSectionKey[]> {
 
 export async function saveContentSection<K extends ContentSectionKey>(key: K, value: unknown): Promise<SiteContent[K]> {
   if (!(key in defaultContent)) throw new Error(`Unknown content section: ${String(key)}`)
-  const store = getStore()
-  const overrides = (await store.getJSON<ContentOverrides>('content')) ?? {}
   const clean = sanitizeSection(key, value)
-  overrides[key] = clean
-  await store.setJSON('content', overrides)
+  await getStore().update<ContentOverrides>('content', (overrides) => ({ ...(overrides ?? {}), [key]: clean }))
   revalidateSite()
   return clean
 }
 
 export async function resetContentSection(key: ContentSectionKey): Promise<void> {
-  const store = getStore()
-  const overrides = (await store.getJSON<ContentOverrides>('content')) ?? {}
-  delete overrides[key]
-  await store.setJSON('content', overrides)
+  await getStore().update<ContentOverrides>('content', (overrides) => {
+    const next = { ...(overrides ?? {}) }
+    delete next[key]
+    return next
+  })
   revalidateSite()
 }
 
@@ -188,38 +186,43 @@ export async function getMessages(): Promise<ContactMessage[]> {
   return (await getStore().getJSON<ContactMessage[]>('messages')) ?? []
 }
 
+export class InboxFullError extends Error {}
+
+/**
+ * Adds a message atomically. When the inbox is full, the oldest messages Roxanne
+ * has already handled make room; unread ones are never dropped — new messages are
+ * refused instead (so a flood can't wipe real enquiries).
+ */
 export async function addMessage(input: ContactInput): Promise<ContactMessage> {
-  const store = getStore()
-  const messages = await getMessages()
   const message: ContactMessage = {
     id: newId(),
     ...input,
     status: 'new',
     createdAt: new Date().toISOString(),
   }
-  await store.setJSON('messages', [message, ...messages].slice(0, MAX_MESSAGES))
+  await getStore().update<ContactMessage[]>('messages', (current) => {
+    const messages = [message, ...(current ?? [])]
+    for (let i = messages.length - 1; messages.length > MAX_MESSAGES && i > 0; i--) {
+      if (messages[i].status !== 'new') messages.splice(i, 1)
+    }
+    if (messages.length > MAX_MESSAGES) throw new InboxFullError('Inbox is full of unread messages')
+    return messages
+  })
   return message
 }
 
 export async function setMessageStatus(id: string, status: MessageStatus): Promise<void> {
-  const messages = await getMessages()
-  await getStore().setJSON(
-    'messages',
-    messages.map((m) => (m.id === id ? { ...m, status } : m)),
-  )
+  await getStore().update<ContactMessage[]>('messages', (messages) => (messages ?? []).map((m) => (m.id === id ? { ...m, status } : m)))
 }
 
 export async function deleteMessage(id: string): Promise<void> {
-  const messages = await getMessages()
-  await getStore().setJSON(
-    'messages',
-    messages.filter((m) => m.id !== id),
-  )
+  await getStore().update<ContactMessage[]>('messages', (messages) => (messages ?? []).filter((m) => m.id !== id))
 }
 
 /* ─────────────────────────────── Media ─────────────────────────────── */
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+const MAX_MEDIA = 500
 const IMAGE_SIGNATURES: { type: string; test: (b: Buffer) => boolean }[] = [
   { type: 'image/jpeg', test: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
   { type: 'image/png', test: (b) => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) },
@@ -256,17 +259,21 @@ export async function saveMedia(
     createdAt: new Date().toISOString(),
     label: meta.label.slice(0, 120),
   }
-  await store.setJSON('media', [item, ...(await getMediaIndex())].slice(0, 500))
+  let dropped: MediaItem[] = []
+  await store.update<MediaItem[]>('media', (current) => {
+    const all = [item, ...(current ?? [])]
+    dropped = all.slice(MAX_MEDIA)
+    return all.slice(0, MAX_MEDIA)
+  })
+  // Files that fall off the index are deleted too, so nothing stays reachable unlisted.
+  await Promise.all(dropped.map((old) => store.deleteBinary(old.id)))
   return item
 }
 
 export async function deleteMedia(id: string): Promise<void> {
   const store = getStore()
   await store.deleteBinary(id)
-  await store.setJSON(
-    'media',
-    (await getMediaIndex()).filter((m) => m.id !== id),
-  )
+  await store.update<MediaItem[]>('media', (current) => (current ?? []).filter((m) => m.id !== id))
 }
 
 /* ─────────────────────────────── Helpers ───────────────────────────── */

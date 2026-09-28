@@ -1,4 +1,5 @@
 import 'server-only'
+import { randomUUID } from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
@@ -9,6 +10,8 @@ import path from 'node:path'
  *
  * Reads use plain `fetch` without cache options, so public pages that read
  * the store are still prerendered and refreshed with revalidatePath().
+ * Read-modify-write goes through `update()`, which is serialized per key
+ * (in-process, plus a Redis lock across serverless instances).
  */
 export interface BinaryObject {
   data: Buffer
@@ -19,10 +22,15 @@ export interface Store {
   readonly kind: 'file' | 'redis'
   getJSON<T>(key: string): Promise<T | null>
   setJSON(key: string, value: unknown): Promise<void>
+  /** Atomically read, transform and write one JSON document. */
+  update<T>(key: string, fn: (current: T | null) => T | Promise<T>): Promise<T>
   deleteKey(key: string): Promise<void>
   getBinary(id: string): Promise<BinaryObject | null>
   setBinary(id: string, obj: BinaryObject): Promise<void>
   deleteBinary(id: string): Promise<void>
+  /** Rate-limit counter: adds one hit and returns the count inside the current window. */
+  hit(key: string, windowMs: number): Promise<number>
+  resetHits(key: string): Promise<void>
 }
 
 const KEY_RE = /^[a-z0-9][a-z0-9-]{0,63}$/
@@ -30,8 +38,30 @@ function assertKey(key: string) {
   if (!KEY_RE.test(key)) throw new Error(`Invalid store key: ${key}`)
 }
 
+/* ─────────────── In-process serialization of read-modify-write ─────────────── */
+
+const queues = new Map<string, Promise<unknown>>()
+
+function serialized<T>(key: string, task: () => Promise<T>): Promise<T> {
+  const previous = queues.get(key) ?? Promise.resolve()
+  const run = previous.then(task, task)
+  const tail = run.catch(() => undefined)
+  queues.set(key, tail)
+  void tail.then(() => {
+    if (queues.get(key) === tail) queues.delete(key)
+  })
+  return run
+}
+
+/* ───────────────────────────────── Files ───────────────────────────────── */
+
+const MAX_COUNTERS = 10_000
+
 class FileStore implements Store {
   readonly kind = 'file' as const
+  // Single-process host: counters can live in memory (bounded).
+  private readonly counters = new Map<string, { count: number; resetAt: number }>()
+
   constructor(private readonly dir: string) {}
 
   private jsonPath(key: string) {
@@ -45,9 +75,10 @@ class FileStore implements Store {
   }
 
   private async atomicWrite(file: string, data: string | Buffer) {
-    await fs.mkdir(path.dirname(file), { recursive: true })
-    const tmp = `${file}.${process.pid}.${Date.now()}.tmp`
-    await fs.writeFile(tmp, data)
+    // Private to the app user: the data folder holds the password hash and messages.
+    await fs.mkdir(path.dirname(file), { recursive: true, mode: 0o700 })
+    const tmp = `${file}.${randomUUID()}.tmp`
+    await fs.writeFile(tmp, data, { mode: 0o600 })
     await fs.rename(tmp, file)
   }
 
@@ -61,19 +92,24 @@ class FileStore implements Store {
   }
 
   async setJSON(key: string, value: unknown) {
-    await this.atomicWrite(this.jsonPath(key), JSON.stringify(value, null, 2))
+    await serialized(key, () => this.atomicWrite(this.jsonPath(key), JSON.stringify(value, null, 2)))
+  }
+
+  update<T>(key: string, fn: (current: T | null) => T | Promise<T>): Promise<T> {
+    return serialized(key, async () => {
+      const next = await fn(await this.getJSON<T>(key))
+      await this.atomicWrite(this.jsonPath(key), JSON.stringify(next, null, 2))
+      return next
+    })
   }
 
   async deleteKey(key: string) {
-    await fs.rm(this.jsonPath(key), { force: true })
+    await serialized(key, () => fs.rm(this.jsonPath(key), { force: true }))
   }
 
   async getBinary(id: string): Promise<BinaryObject | null> {
     try {
-      const [data, meta] = await Promise.all([
-        fs.readFile(this.binPath(id)),
-        fs.readFile(`${this.binPath(id)}.type`, 'utf8'),
-      ])
+      const [data, meta] = await Promise.all([fs.readFile(this.binPath(id)), fs.readFile(`${this.binPath(id)}.type`, 'utf8')])
       return { data, contentType: meta.trim() }
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null
@@ -87,12 +123,39 @@ class FileStore implements Store {
   }
 
   async deleteBinary(id: string) {
-    await Promise.all([
-      fs.rm(this.binPath(id), { force: true }),
-      fs.rm(`${this.binPath(id)}.type`, { force: true }),
-    ])
+    await Promise.all([fs.rm(this.binPath(id), { force: true }), fs.rm(`${this.binPath(id)}.type`, { force: true })])
+  }
+
+  async hit(key: string, windowMs: number): Promise<number> {
+    assertKey(key)
+    const now = Date.now()
+    const entry = this.counters.get(key)
+    if (entry && entry.resetAt > now) {
+      entry.count += 1
+      return entry.count
+    }
+    this.counters.delete(key)
+    this.counters.set(key, { count: 1, resetAt: now + windowMs })
+    if (this.counters.size > MAX_COUNTERS) {
+      for (const [k, e] of this.counters) if (e.resetAt <= now) this.counters.delete(k)
+      // Still too many live keys: drop the oldest (Maps iterate in insertion order).
+      for (const k of this.counters.keys()) {
+        if (this.counters.size <= MAX_COUNTERS) break
+        this.counters.delete(k)
+      }
+    }
+    return 1
+  }
+
+  async resetHits(key: string) {
+    this.counters.delete(key)
   }
 }
+
+/* ───────────────────────────────── Redis ───────────────────────────────── */
+
+const RELEASE_LOCK = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"
+const HIT = "local c = redis.call('incr', KEYS[1]) if c == 1 then redis.call('pexpire', KEYS[1], ARGV[1]) end return c"
 
 class RedisStore implements Store {
   readonly kind = 'redis' as const
@@ -124,6 +187,28 @@ class RedisStore implements Store {
     await this.command(['SET', `${this.prefix}${key}`, JSON.stringify(value)])
   }
 
+  /** Cross-instance mutex (SET NX PX) around a GET → transform → SET. */
+  update<T>(key: string, fn: (current: T | null) => T | Promise<T>): Promise<T> {
+    assertKey(key)
+    return serialized(key, async () => {
+      const lockKey = `${this.prefix}lock:${key}`
+      const token = randomUUID()
+      for (let attempt = 0; ; attempt++) {
+        const acquired = await this.command<string | null>(['SET', lockKey, token, 'NX', 'PX', '10000'])
+        if (acquired === 'OK') break
+        if (attempt >= 60) throw new Error(`Store busy: could not lock "${key}"`)
+        await new Promise((resolve) => setTimeout(resolve, 40 + Math.random() * 80))
+      }
+      try {
+        const next = await fn(await this.getJSON<T>(key))
+        await this.setJSON(key, next)
+        return next
+      } finally {
+        await this.command(['EVAL', RELEASE_LOCK, '1', lockKey, token]).catch(() => {})
+      }
+    })
+  }
+
   async deleteKey(key: string) {
     assertKey(key)
     await this.command(['DEL', `${this.prefix}${key}`])
@@ -146,6 +231,17 @@ class RedisStore implements Store {
   async deleteBinary(id: string) {
     assertKey(id)
     await this.command(['DEL', `${this.prefix}media:${id}`])
+  }
+
+  /** Shared by every serverless instance, so limits hold across cold starts. */
+  async hit(key: string, windowMs: number): Promise<number> {
+    assertKey(key)
+    return Number(await this.command<number>(['EVAL', HIT, '1', `${this.prefix}rl:${key}`, String(windowMs)]))
+  }
+
+  async resetHits(key: string) {
+    assertKey(key)
+    await this.command(['DEL', `${this.prefix}rl:${key}`])
   }
 }
 

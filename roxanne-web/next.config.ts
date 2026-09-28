@@ -56,7 +56,9 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      { source: '/:path*', headers: securityHeaders },
+      // Page CSP everywhere except /media and /api, whose handlers set a stricter `default-src 'none'`.
+      { source: '/((?!media/|api/).*)', headers: securityHeaders },
+      { source: '/:prefix(media|api)/:path*', headers: securityHeaders.filter((h) => h.key !== 'Content-Security-Policy') },
       { source: '/admin/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
     ]
   },

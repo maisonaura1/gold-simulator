@@ -1,6 +1,9 @@
 import 'server-only'
+import { lookup as lookupCallback, type LookupAddress } from 'node:dns'
 import { lookup } from 'node:dns/promises'
-import { isIP } from 'node:net'
+import type { IncomingMessage } from 'node:http'
+import { request } from 'node:https'
+import { isIP, type LookupFunction } from 'node:net'
 import { sniffImageType } from '@/lib/data'
 
 /**
@@ -36,11 +39,14 @@ function isPrivateIPv4(ip: string): boolean {
 
 function isPrivateIPv6(ip: string): boolean {
   const value = ip.toLowerCase()
-  if (value === '::' || value === '::1') return true
   const mapped = value.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/)
   if (mapped) return isPrivateIPv4(mapped[1])
   return (
-    value.startsWith('::ffff:') || // other IPv4-mapped forms
+    value.startsWith('::') || // unspecified, loopback, IPv4-compatible (::/96) and mapped forms
+    value.startsWith('0:') || // same ranges written without compression
+    value.startsWith('100::') || // discard-only 100::/64
+    value.startsWith('2002:') || // 6to4 (embeds an IPv4 address)
+    /^2001:0?:/.test(value) || // Teredo 2001::/32
     value.startsWith('64:ff9b:') || // NAT64
     value.startsWith('2001:db8') || // documentation
     /^f[cd]/.test(value) || // unique local fc00::/7
@@ -69,20 +75,55 @@ async function assertPublicHost(hostname: string): Promise<void> {
   }
 }
 
-async function readLimited(res: Response, limit: number): Promise<Buffer> {
-  if (!res.body) return Buffer.alloc(0)
-  const reader = res.body.getReader()
-  const chunks: Uint8Array[] = []
+/**
+ * DNS lookup used for the actual connection: every resolved address is checked
+ * again at connect time, so a hostname can't pass the check above and then
+ * resolve to a private address (DNS rebinding).
+ */
+const publicOnlyLookup: LookupFunction = (hostname, options, callback) => {
+  lookupCallback(hostname, { ...options, all: true, verbatim: true }, (error, addresses) => {
+    if (error) return callback(error, '', 4)
+    const list = addresses as unknown as LookupAddress[]
+    const blocked = list.length === 0 || list.some(({ address, family }) => (family === 4 ? isPrivateIPv4(address) : isPrivateIPv6(address)))
+    if (blocked) return callback(new Error('Blocked private address'), '', 4)
+    if (options.all) return (callback as unknown as (err: null, all: LookupAddress[]) => void)(null, list)
+    callback(null, list[0].address, list[0].family)
+  })
+}
+
+function get(url: URL): Promise<IncomingMessage> {
+  return new Promise((resolve, reject) => {
+    const req = request(
+      url,
+      {
+        method: 'GET',
+        lookup: publicOnlyLookup,
+        timeout: TIMEOUT_MS,
+        headers: { Accept: 'image/avif,image/webp,image/png,image/jpeg,image/*;q=0.8', 'User-Agent': 'Mozilla/5.0 (compatible; RoxanneAlexiaDashboard/1.0)' },
+      },
+      resolve,
+    )
+    req.on('timeout', () => req.destroy(new Error('timeout')))
+    req.on('error', reject)
+    req.end()
+  })
+}
+
+async function readLimited(res: IncomingMessage, limit: number): Promise<Buffer> {
+  const chunks: Buffer[] = []
   let total = 0
-  for (;;) {
-    const { done, value } = await reader.read()
-    if (done) break
-    total += value.byteLength
-    if (total > limit) {
-      await reader.cancel().catch(() => {})
-      throw new RemoteImageError('That image is too large (over 15 MB). Please choose a smaller one.')
+  const deadline = setTimeout(() => res.destroy(new Error('timeout')), TIMEOUT_MS)
+  try {
+    for await (const chunk of res) {
+      total += (chunk as Buffer).byteLength
+      if (total > limit) {
+        res.destroy()
+        throw new RemoteImageError('That image is too large (over 15 MB). Please choose a smaller one.')
+      }
+      chunks.push(chunk as Buffer)
     }
-    chunks.push(value)
+  } finally {
+    clearTimeout(deadline)
   }
   return Buffer.concat(chunks)
 }
@@ -102,30 +143,37 @@ export async function fetchRemoteImage(link: string): Promise<{ data: Buffer; co
     }
     await assertPublicHost(url.hostname)
 
-    let res: Response
+    let res: IncomingMessage
     try {
-      res = await fetch(url, {
-        redirect: 'manual',
-        cache: 'no-store',
-        signal: AbortSignal.timeout(TIMEOUT_MS),
-        headers: { Accept: 'image/avif,image/webp,image/png,image/jpeg,image/*;q=0.8' },
-      })
+      res = await get(url)
     } catch {
       throw new RemoteImageError(DOWNLOAD_FAILED)
     }
 
-    if (res.status >= 300 && res.status < 400) {
-      const location = res.headers.get('location')
+    const status = res.statusCode ?? 0
+    if (status >= 300 && status < 400) {
+      res.resume()
+      const location = res.headers.location
       if (!location) throw new RemoteImageError(DOWNLOAD_FAILED)
       url = new URL(location, url)
       continue
     }
-    if (!res.ok) throw new RemoteImageError(`${DOWNLOAD_FAILED} (The website answered with error ${res.status}.)`)
-    if (Number(res.headers.get('content-length') ?? 0) > MAX_REMOTE_BYTES) {
+    if (status < 200 || status >= 300) {
+      res.resume()
+      throw new RemoteImageError(`${DOWNLOAD_FAILED} (The website answered with error ${status}.)`)
+    }
+    if (Number(res.headers['content-length'] ?? 0) > MAX_REMOTE_BYTES) {
+      res.destroy()
       throw new RemoteImageError('That image is too large (over 15 MB). Please choose a smaller one.')
     }
 
-    const data = await readLimited(res, MAX_REMOTE_BYTES)
+    let data: Buffer
+    try {
+      data = await readLimited(res, MAX_REMOTE_BYTES)
+    } catch (error) {
+      if (error instanceof RemoteImageError) throw error
+      throw new RemoteImageError(DOWNLOAD_FAILED)
+    }
     const contentType = sniffImageType(data)
     if (!contentType) {
       throw new RemoteImageError(

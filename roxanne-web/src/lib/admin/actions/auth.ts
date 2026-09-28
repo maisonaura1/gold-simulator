@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
-import { checkPassword, clearFailures, endSession, isAdmin, recordFailure, startSession, tooManyFailures } from '@/lib/auth'
+import { checkPassword, endSession, isAdmin, rateLimit, resetRateLimit, rotateSessions, startSession } from '@/lib/auth'
 import { sessionSecretConfigured } from '@/lib/session'
 import { safeAdminPath } from '../paths'
 import { getClientIp, sleep } from '../request'
@@ -25,9 +25,12 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   })
   if (!parsed.success) return { ok: false, reason: 'invalid', error: 'Please enter your password.' }
 
-  // Only failed attempts count, so signing in and out repeatedly never locks Roxanne out.
+  // Every attempt is counted before the password is checked (so parallel bursts can't
+  // slip through); a successful sign-in clears this address's count. A global budget
+  // also caps attempts spread over many addresses.
   const limiterKey = `admin-login:${await getClientIp()}`
-  if (tooManyFailures(limiterKey, 5)) {
+  const allowed = (await rateLimit(limiterKey, 5, LOGIN_WINDOW_MS)) && (await rateLimit('admin-login:all', 50, LOGIN_WINDOW_MS))
+  if (!allowed) {
     return {
       ok: false,
       reason: 'rate-limited',
@@ -40,18 +43,21 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
     return { ok: false, reason: 'not-configured', error: 'The dashboard password hasn’t been set up yet.' }
   }
   if (result === 'invalid') {
-    recordFailure(limiterKey, LOGIN_WINDOW_MS)
     // A short, slightly random pause makes guessing slower and timing less informative.
     await sleep(500 + Math.floor(Math.random() * 400))
     return { ok: false, reason: 'invalid', error: 'That password isn’t right. Please try again.' }
   }
 
-  clearFailures(limiterKey)
+  await resetRateLimit(limiterKey)
   await startSession()
   redirect(safeAdminPath(parsed.data.next))
 }
 
 export async function signOut(): Promise<void> {
-  if (await isAdmin()) await endSession()
+  if (await isAdmin()) {
+    // Session tokens are stateless: bump the version so a copied cookie stops working too.
+    await rotateSessions()
+    await endSession()
+  }
   redirect('/admin/login')
 }

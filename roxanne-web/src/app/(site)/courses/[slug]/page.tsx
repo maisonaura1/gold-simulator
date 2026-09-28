@@ -16,8 +16,10 @@ import { cn } from '@/lib/cn'
 import { breadcrumbJsonLd, courseJsonLd, pageMetadata } from '@/lib/seo'
 import { courseHref, findCourse } from '@/lib/site'
 
-export const dynamicParams = false
-
+// The four courses are prerendered at build time. Params are deliberately not
+// locked with `dynamicParams = false`: after a dashboard edit (revalidatePath) Next
+// must regenerate these pages, and with locked params it answers 404 instead.
+// Unknown slugs still get a 404 through notFound() below.
 export function generateStaticParams() {
   return COURSE_SLUGS.map((slug) => ({ slug }))
 }

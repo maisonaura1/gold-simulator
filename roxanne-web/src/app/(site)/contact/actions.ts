@@ -1,8 +1,8 @@
 'use server'
 
-import { headers } from 'next/headers'
 import { rateLimit } from '@/lib/auth'
-import { addMessage, contactInputSchema, getSettings } from '@/lib/data'
+import { getClientIp } from '@/lib/client-ip'
+import { addMessage, contactInputSchema, getSettings, InboxFullError } from '@/lib/data'
 import { notifyNewMessage } from '@/lib/notify'
 
 export type ContactField = 'name' | 'email' | 'topic' | 'message' | 'consent'
@@ -15,11 +15,12 @@ export interface ContactState {
 }
 
 export async function sendContactMessage(_previous: ContactState, formData: FormData): Promise<ContactState> {
+  // Capped to the schema's limits: these values are echoed back when validation fails.
   const values = {
-    name: String(formData.get('name') ?? ''),
-    email: String(formData.get('email') ?? ''),
-    topic: String(formData.get('topic') ?? ''),
-    message: String(formData.get('message') ?? ''),
+    name: String(formData.get('name') ?? '').slice(0, 120),
+    email: String(formData.get('email') ?? '').slice(0, 200),
+    topic: String(formData.get('topic') ?? '').slice(0, 120),
+    message: String(formData.get('message') ?? '').slice(0, 5000),
     consent: formData.get('consent') === 'on' ? 'on' : '',
   }
 
@@ -42,12 +43,13 @@ export async function sendContactMessage(_previous: ContactState, formData: Form
   const startedAt = Number(formData.get('startedAt') ?? 0)
   if (startedAt && Date.now() - startedAt < 1500) return { status: 'success' }
 
-  const requestHeaders = await headers()
-  const ip = (requestHeaders.get('x-forwarded-for')?.split(',')[0] ?? requestHeaders.get('x-real-ip') ?? 'unknown').trim()
-  if (!rateLimit(`contact:${ip}`, 5, 60 * 60 * 1000)) {
+  // Per visitor, plus a site-wide hourly budget that holds even if addresses are rotated.
+  const hour = 60 * 60 * 1000
+  const allowed = (await rateLimit(`contact:${await getClientIp()}`, 5, hour)) && (await rateLimit('contact:all', 40, hour))
+  if (!allowed) {
     return {
       status: 'error',
-      message: 'You have sent several messages in a short time. Please try again later, or reach me on WhatsApp.',
+      message: 'Too many messages have been sent in a short time. Please try again later, or reach me on WhatsApp or by email.',
       values,
     }
   }
@@ -57,7 +59,11 @@ export async function sendContactMessage(_previous: ContactState, formData: Form
     const settings = await getSettings()
     await notifyNewMessage(message, settings).catch((error) => console.error('[contact] email notification failed:', error))
   } catch (error) {
-    console.error('[contact] could not save message:', error)
+    if (error instanceof InboxFullError) {
+      console.error('[contact] inbox full of unread messages — new message refused')
+    } else {
+      console.error('[contact] could not save message:', error)
+    }
     return {
       status: 'error',
       message: 'Sorry — your message could not be sent right now. Please email me directly or use WhatsApp.',

@@ -6,7 +6,16 @@ import { redirect } from 'next/navigation'
 import { getStore } from './store'
 import { SESSION_COOKIE, SESSION_TTL_SECONDS, readSession, signSession } from './session'
 
-const scrypt = promisify(scryptCb) as (password: string, salt: Buffer, keylen: number) => Promise<Buffer>
+const scrypt = promisify(scryptCb) as (
+  password: string,
+  salt: Buffer,
+  keylen: number,
+  options?: { N: number; r: number; p: number; maxmem: number },
+) => Promise<Buffer>
+
+// OWASP-recommended scrypt cost; parameters are stored in the hash so they can evolve.
+const SCRYPT = { N: 2 ** 17, r: 8, p: 1 }
+const SCRYPT_MAXMEM = 256 * 1024 * 1024
 
 interface Secrets {
   passwordHash?: string
@@ -19,22 +28,27 @@ export async function getSecrets(): Promise<Secrets> {
 }
 
 export async function updateSecrets(patch: Partial<Secrets>): Promise<void> {
-  await getStore().setJSON('secrets', { ...(await getSecrets()), ...patch })
+  await getStore().update<Secrets>('secrets', (current) => ({ ...(current ?? {}), ...patch }))
 }
 
 /* ───────────────────────────── Passwords ───────────────────────────── */
 
+/** `scrypt$N$r$p$salt$hash` (older hashes `scrypt$salt$hash` used Node's defaults and still verify). */
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16)
-  const hash = await scrypt(password.normalize('NFKC'), salt, 64)
-  return `scrypt$${salt.toString('base64')}$${hash.toString('base64')}`
+  const hash = await scrypt(password.normalize('NFKC'), salt, 64, { ...SCRYPT, maxmem: SCRYPT_MAXMEM })
+  return `scrypt$${SCRYPT.N}$${SCRYPT.r}$${SCRYPT.p}$${salt.toString('base64')}$${hash.toString('base64')}`
 }
 
 async function verifyHash(password: string, stored: string): Promise<boolean> {
-  const [scheme, saltB64, hashB64] = stored.split('$')
-  if (scheme !== 'scrypt' || !saltB64 || !hashB64) return false
+  const parts = stored.split('$')
+  if (parts[0] !== 'scrypt') return false
+  const legacy = parts.length === 3
+  const [saltB64, hashB64] = legacy ? parts.slice(1) : parts.slice(4)
+  const params = legacy ? { N: 16384, r: 8, p: 1 } : { N: Number(parts[1]), r: Number(parts[2]), p: Number(parts[3]) }
+  if (!saltB64 || !hashB64 || ![params.N, params.r, params.p].every(Number.isInteger)) return false
   const expected = Buffer.from(hashB64, 'base64')
-  const actual = await scrypt(password.normalize('NFKC'), Buffer.from(saltB64, 'base64'), expected.length)
+  const actual = await scrypt(password.normalize('NFKC'), Buffer.from(saltB64, 'base64'), expected.length, { ...params, maxmem: SCRYPT_MAXMEM })
   return actual.length === expected.length && timingSafeEqual(actual, expected)
 }
 
@@ -44,11 +58,21 @@ function sha256(value: string): Buffer {
 
 export type PasswordCheck = 'ok' | 'invalid' | 'not-configured'
 
+export const MIN_PASSWORD_LENGTH = 12
+const PLACEHOLDER_PASSWORDS = new Set(['change-me-to-a-long-password', 'password', 'changeme', 'admin'])
+
+/** The ADMIN_PASSWORD variable, only when it is strong enough to protect a public login (fail closed). */
+export function envAdminPassword(): string | null {
+  const value = process.env.ADMIN_PASSWORD
+  if (!value || value.length < MIN_PASSWORD_LENGTH || PLACEHOLDER_PASSWORDS.has(value.toLowerCase())) return null
+  return value
+}
+
 /** A password changed in the dashboard wins over the ADMIN_PASSWORD environment variable. */
 export async function checkPassword(password: string): Promise<PasswordCheck> {
   const { passwordHash } = await getSecrets()
   if (passwordHash) return (await verifyHash(password, passwordHash)) ? 'ok' : 'invalid'
-  const envPassword = process.env.ADMIN_PASSWORD
+  const envPassword = envAdminPassword()
   if (!envPassword) return 'not-configured'
   return timingSafeEqual(sha256(password), sha256(envPassword)) ? 'ok' : 'invalid'
 }
@@ -73,10 +97,12 @@ export async function endSession(): Promise<void> {
   jar.delete(SESSION_COOKIE)
 }
 
-/** Signs out every device (used after a password change). */
+/** Signs out every device (after a password change, and on sign-out: tokens are stateless). */
 export async function rotateSessions(): Promise<void> {
-  const { sessionVersion = 1 } = await getSecrets()
-  await updateSecrets({ sessionVersion: sessionVersion + 1 })
+  await getStore().update<Secrets>('secrets', (current) => ({
+    ...(current ?? {}),
+    sessionVersion: (current?.sessionVersion ?? 1) + 1,
+  }))
 }
 
 /** Full check: signature, expiry and session version. Use in every admin page, action and route handler. */
@@ -100,44 +126,20 @@ export async function assertAdmin(): Promise<void> {
 
 /* ─────────────────────────── Rate limiting ─────────────────────────── */
 
-const failures = new Map<string, { count: number; resetAt: number }>()
-
-/** True once `key` has `limit` recorded failures inside the current window (successes never count). */
-export function tooManyFailures(key: string, limit: number): boolean {
-  const entry = failures.get(key)
-  return Boolean(entry && entry.resetAt > Date.now() && entry.count >= limit)
+// Counters live in the store: in memory on a single Node server, in Redis on
+// serverless hosts — so limits survive cold starts and hold across instances.
+function counterKey(name: string): string {
+  return `rl-${createHash('sha256').update(name).digest('hex').slice(0, 40)}`
 }
-
-export function recordFailure(key: string, windowMs: number): void {
-  const now = Date.now()
-  const entry = failures.get(key)
-  if (!entry || entry.resetAt < now) failures.set(key, { count: 1, resetAt: now + windowMs })
-  else entry.count += 1
-  if (failures.size > 5000) {
-    for (const [k, e] of failures) if (e.resetAt < now) failures.delete(k)
-  }
-}
-
-export function clearFailures(key: string): void {
-  failures.delete(key)
-}
-
-const buckets = new Map<string, { count: number; resetAt: number }>()
 
 /**
- * Best-effort in-memory limiter (per server instance). Returns false when the
- * caller exceeded `limit` hits within `windowMs`.
+ * Counts one hit for `name` (atomically) and returns false once more than
+ * `limit` hits happened inside the current `windowMs` window.
  */
-export function rateLimit(key: string, limit: number, windowMs: number): boolean {
-  const now = Date.now()
-  const bucket = buckets.get(key)
-  if (!bucket || bucket.resetAt < now) {
-    buckets.set(key, { count: 1, resetAt: now + windowMs })
-    if (buckets.size > 5000) {
-      for (const [k, b] of buckets) if (b.resetAt < now) buckets.delete(k)
-    }
-    return true
-  }
-  bucket.count += 1
-  return bucket.count <= limit
+export async function rateLimit(name: string, limit: number, windowMs: number): Promise<boolean> {
+  return (await getStore().hit(counterKey(name), windowMs)) <= limit
+}
+
+export async function resetRateLimit(name: string): Promise<void> {
+  await getStore().resetHits(counterKey(name))
 }

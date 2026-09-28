@@ -24,7 +24,7 @@ Web de **Roxanne** (profesora de inglés jurídico y de negocios) construida con
 | **Panel `/admin`** | Mensajes, reuniones de Calendly, textos de todas las páginas, testimonios, fotos, ajustes, cambio de contraseña, copia de seguridad |
 | **3D y animación** | Escena 3D en el hero (balanza de la justicia en latón + forma fluida “bloom”), motivos 3D por página, tarjetas con inclinación 3D, apariciones al hacer scroll, marquee. Respeta `prefers-reduced-motion` |
 | **SEO** | Títulos y descripciones del Excel por página, canonical, Open Graph + imagen social generada, `sitemap.xml`, `robots.txt`, JSON‑LD (ProfessionalService, Person, Course, FAQPage, BreadcrumbList) |
-| **Seguridad** | CSP y cabeceras, cookie de sesión firmada (HMAC), proxy + verificación en cada acción, rate‑limit de login y formulario, validación zod, subida de imágenes verificando bytes reales (sin SVG) |
+| **Seguridad** | Auditada (sin hallazgos críticos; todos los altos/medios corregidos): CSP y cabeceras, cookie `__Host-` firmada (HMAC), verificación de sesión en cada acción, bloqueo de login y límites del formulario guardados en el almacén (válidos entre instancias), IP de cliente solo desde proxies de confianza, escrituras atómicas, bandeja que nunca borra mensajes sin leer, scrypt reforzado, descarga de imágenes protegida contra SSRF |
 
 ---
 
@@ -46,7 +46,8 @@ Comprobaciones: `npm run typecheck && npm run lint && npm run build`
 2. **Storage → Upstash Redis** (Marketplace) y conéctalo al proyecto. Es
    imprescindible: el disco de Vercel es de solo lectura y sin Redis el panel no
    puede guardar cambios (el panel muestra un aviso si falta).
-3. Variables de entorno: `NEXT_PUBLIC_SITE_URL`, `ADMIN_PASSWORD`,
+3. Variables de entorno: `NEXT_PUBLIC_SITE_URL`, `ADMIN_PASSWORD`
+   (**mínimo 12 caracteres**; si es más corta el login queda desactivado a propósito),
    `SESSION_SECRET` (32+ caracteres) y, opcionales, `CALENDLY_TOKEN`,
    `RESEND_API_KEY`, `RESEND_FROM`.
 4. Añade el dominio.
@@ -54,6 +55,9 @@ Comprobaciones: `npm run typecheck && npm run lint && npm run build`
 ### Opción B — Servidor Node (Railway, Render, VPS, Docker)
 `npm ci && npm run build && npm start`, con un **volumen persistente** en
 `./data` (o la ruta de `DATA_DIR`). Ahí se guardan ediciones, mensajes y fotos.
+Sírvelo **detrás de un proxy inverso** (nginx, el de Railway/Render…) y ajusta
+`TRUSTED_PROXY_HOPS` (normalmente `1`): los límites anti‑abuso usan la IP que
+añade tu proxy, nunca la que declara el visitante.
 
 ## Fotos
 Las 7 fotos por defecto son bodegones generados con IA (Higgsfield · Z‑Image),

@@ -123,6 +123,7 @@ async function calendlyGet(token: string, url: string): Promise<unknown> {
     res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
       cache: 'no-store',
+      redirect: 'error',
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
   } catch {
