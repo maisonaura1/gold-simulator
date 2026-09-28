@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { CircleCheck, LoaderCircle, Send } from 'lucide-react'
-import { useActionState, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
+import { useActionState, useEffect, useId, useRef, useSyncExternalStore } from 'react'
 import { sendContactMessage, type ContactField, type ContactState } from '@/app/(site)/contact/actions'
 import type { SiteContent } from '@/content/types'
 import { WhatsAppIcon } from '@/components/icons/brand'
@@ -18,13 +18,18 @@ const noopSubscribe = () => () => {}
 function topicFromQuery(query: string, topics: string[]): string | undefined {
   if (!query) return undefined
   const words = query.toLowerCase().split(/[-\s]+/).filter((w) => w.length > 3)
-  return topics.find((topic) => words.some((w) => topic.toLowerCase().includes(w)))
+  // Pick the topic matching the most words ("legal-english" → "Legal English", not "Business English").
+  let best: { topic: string; score: number } | undefined
+  for (const topic of topics) {
+    const score = words.filter((w) => topic.toLowerCase().includes(w)).length
+    if (score > 0 && (!best || score > best.score)) best = { topic, score }
+  }
+  return best?.topic
 }
 
 export function ContactForm({ copy }: { copy: SiteContent['contact']['form'] }) {
   const [state, formAction, pending] = useActionState(sendContactMessage, initialState)
   const { openConsultation, data } = useSite()
-  const [chosenTopic, setChosenTopic] = useState<string>()
   const startedAt = useRef<HTMLInputElement>(null)
   const id = useId()
 
@@ -34,7 +39,10 @@ export function ContactForm({ copy }: { copy: SiteContent['contact']['form'] }) 
     () => new URLSearchParams(window.location.search).get('topic') ?? '',
     () => '',
   )
-  const topic = chosenTopic ?? state.values?.topic ?? topicFromQuery(query, copy.topics) ?? ''
+  // Uncontrolled on purpose: React resets forms after each action, and a
+  // defaultValue survives that reset where a controlled value would not.
+  const presetTopic = topicFromQuery(query, copy.topics) ?? ''
+  const defaultTopic = state.values?.topic ?? presetTopic
   const source = query === 'freelance' ? 'freelance-page' : 'contact-page'
 
   // Time-to-submit spam check: stamp when the form became interactive.
@@ -136,10 +144,10 @@ export function ContactForm({ copy }: { copy: SiteContent['contact']['form'] }) 
           {copy.topicLabel}
         </label>
         <select
+          key={presetTopic}
           id={`${id}-topic`}
           name="topic"
-          value={topic}
-          onChange={(e) => setChosenTopic(e.target.value)}
+          defaultValue={defaultTopic}
           className={cn(fieldClass('topic'), 'appearance-none bg-[url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Cpath d=%27M4 6l4 4 4-4%27 fill=%27none%27 stroke=%27%234a5162%27 stroke-width=%271.5%27/%3E%3C/svg%3E")] bg-[length:1rem] bg-[right_1rem_center] bg-no-repeat pr-10')}
         >
           <option value="">—</option>
