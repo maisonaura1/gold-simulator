@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useRef, type CSSProperties, type ElementType, type ReactNode } from 'react'
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 
+// Rendered as `as as 'div'`: a plain string tag union, kept narrow so R3F's JSX typings don't widen it.
 type Tag = 'div' | 'section' | 'li' | 'article' | 'header' | 'p' | 'span' | 'ul' | 'ol' | 'h2'
 
 /**
@@ -10,7 +11,8 @@ type Tag = 'div' | 'section' | 'li' | 'article' | 'header' | 'p' | 'span' | 'ul'
  * to the browser; content is only hidden once JS is running (`.js` on <html>).
  */
 function useRevealOnView() {
-  const ref = useRef<HTMLElement>(null)
+  // Typed as a div for JSX purposes; the element may be any tag from `Tag`.
+  const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = ref.current
     if (!el) return
@@ -45,7 +47,7 @@ interface RevealProps {
 /** Fades content up as it enters the viewport (once). Honors prefers-reduced-motion. */
 export function Reveal({ children, as = 'div', delay = 0, y = 28, className, id }: RevealProps) {
   const ref = useRevealOnView()
-  const Component = as as ElementType
+  const Component = as as 'div'
   const style = { '--reveal-delay': `${delay}s`, '--reveal-y': `${y}px` } as CSSProperties
   return (
     <Component ref={ref} id={id} data-reveal="" className={className} style={style}>
@@ -57,7 +59,7 @@ export function Reveal({ children, as = 'div', delay = 0, y = 28, className, id 
 /** Staggers its direct <RevealItem> children as the group enters the viewport. */
 export function RevealGroup({ children, className, as = 'div' }: { children: ReactNode; className?: string; as?: Tag }) {
   const ref = useRevealOnView()
-  const Component = as as ElementType
+  const Component = as as 'div'
   return (
     <Component ref={ref} data-reveal-group="" className={className}>
       {children}
@@ -66,7 +68,7 @@ export function RevealGroup({ children, className, as = 'div' }: { children: Rea
 }
 
 export function RevealItem({ children, className, as = 'div' }: { children: ReactNode; className?: string; as?: Tag }) {
-  const Component = as as ElementType
+  const Component = as as 'div'
   return (
     <Component data-reveal-item="" className={className}>
       {children}

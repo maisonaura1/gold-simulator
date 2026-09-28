@@ -1,72 +1,97 @@
 'use client'
 
-import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useSpring, useTransform } from 'motion/react'
-import { useRef, type PointerEvent, type ReactNode } from 'react'
+import { useEffect, useRef, type PointerEvent, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
-const TILT_SPRING = { stiffness: 170, damping: 20, mass: 0.6 }
-const GLARE_SPRING = { stiffness: 110, damping: 24 }
+/** Fraction of the remaining distance covered each frame — a critically damped, spring-like ease. */
+const TILT_EASE = 0.14
+const GLARE_EASE = 0.1
 
 /**
- * Card that tilts in 3D toward the pointer (mouse/pen only), spring-smoothed,
+ * Card that tilts in 3D toward the pointer (mouse/pen only), smoothed per frame,
  * with a soft glare that follows the pointer across the surface.
- * Inert on touch and under prefers-reduced-motion.
+ * Inert on touch and under prefers-reduced-motion. No animation library needed.
  */
 export function TiltCard({ children, className, max = 7 }: { children: ReactNode; className?: string; max?: number }) {
-  const reduce = useReducedMotion()
+  const card = useRef<HTMLDivElement>(null)
   const glare = useRef<HTMLDivElement>(null)
+  // Targets (t*) and current values for pointer x/y (-0.5 … 0.5) and hover presence (0 … 1).
+  const motion = useRef({ tx: 0, ty: 0, tp: 0, x: 0, y: 0, p: 0, frame: 0 })
 
-  // Pointer position inside the card (-0.5 … 0.5) and hover presence (0 … 1).
-  const pointerX = useMotionValue(0)
-  const pointerY = useMotionValue(0)
-  const presence = useMotionValue(0)
-  const x = useSpring(pointerX, TILT_SPRING)
-  const y = useSpring(pointerY, TILT_SPRING)
-  const glareOpacity = useSpring(presence, GLARE_SPRING)
+  useEffect(() => {
+    const state = motion.current
+    return () => cancelAnimationFrame(state.frame)
+  }, [])
 
-  const rotateX = useTransform(() => -y.get() * max)
-  const rotateY = useTransform(() => x.get() * max)
-  const glareX = useTransform(x, (v) => `${((v + 0.5) * 100).toFixed(2)}%`)
-  const glareY = useTransform(y, (v) => `${((v + 0.5) * 100).toFixed(2)}%`)
-  const glareBackground = useMotionTemplate`radial-gradient(circle at ${glareX} ${glareY}, rgb(255 255 255 / 0.34), rgb(255 255 255 / 0.1) 26%, rgb(255 255 255 / 0) 52%, rgb(27 36 54 / 0.045) 100%)`
+  const step = () => {
+    const s = motion.current
+    const el = card.current
+    if (!el) return
+    s.x += (s.tx - s.x) * TILT_EASE
+    s.y += (s.ty - s.y) * TILT_EASE
+    s.p += (s.tp - s.p) * GLARE_EASE
+    el.style.transform = `perspective(900px) rotateX(${(-s.y * max).toFixed(3)}deg) rotateY(${(s.x * max).toFixed(3)}deg)`
+    if (glare.current) {
+      glare.current.style.opacity = s.p.toFixed(3)
+      glare.current.style.setProperty('--glare-x', `${((s.x + 0.5) * 100).toFixed(2)}%`)
+      glare.current.style.setProperty('--glare-y', `${((s.y + 0.5) * 100).toFixed(2)}%`)
+    }
+    const settled = Math.abs(s.tx - s.x) < 0.0005 && Math.abs(s.ty - s.y) < 0.0005 && Math.abs(s.tp - s.p) < 0.002
+    if (settled) {
+      s.frame = 0
+      if (s.tp === 0) el.style.transform = ''
+      return
+    }
+    s.frame = requestAnimationFrame(step)
+  }
+
+  const animate = () => {
+    if (!motion.current.frame) motion.current.frame = requestAnimationFrame(step)
+  }
+
+  const ignored = (event: PointerEvent) =>
+    event.pointerType === 'touch' || window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
   const track = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'touch' || reduce) return
+    if (ignored(event)) return
     const rect = event.currentTarget.getBoundingClientRect()
-    pointerX.set((event.clientX - rect.left) / rect.width - 0.5)
-    pointerY.set((event.clientY - rect.top) / rect.height - 0.5)
-    presence.set(1)
+    const s = motion.current
+    s.tx = (event.clientX - rect.left) / rect.width - 0.5
+    s.ty = (event.clientY - rect.top) / rect.height - 0.5
+    s.tp = 1
+    animate()
   }
 
   const enter = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'touch' || reduce) return
+    if (ignored(event)) return
     // Give the glare the same corners as the card it sits on.
-    const card = event.currentTarget.firstElementChild
-    if (glare.current && card instanceof HTMLElement) glare.current.style.borderRadius = getComputedStyle(card).borderRadius
+    const inner = event.currentTarget.firstElementChild
+    if (glare.current && inner instanceof HTMLElement) glare.current.style.borderRadius = getComputedStyle(inner).borderRadius
     track(event)
   }
 
   const leave = () => {
-    pointerX.set(0)
-    pointerY.set(0)
-    presence.set(0)
+    const s = motion.current
+    s.tx = 0
+    s.ty = 0
+    s.tp = 0
+    animate()
   }
 
   return (
-    <motion.div
-      className={cn('relative [transform-style:preserve-3d]', className)}
-      style={{ rotateX, rotateY, transformPerspective: 900 }}
+    <div
+      ref={card}
+      className={cn('relative [transform-style:preserve-3d] will-change-transform', className)}
       onPointerEnter={enter}
       onPointerMove={track}
       onPointerLeave={leave}
     >
       {children}
-      <motion.div
+      <div
         ref={glare}
         aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{ backgroundImage: glareBackground, opacity: glareOpacity, z: 1 }}
+        className="pointer-events-none absolute inset-0 [transform:translateZ(1px)] bg-[radial-gradient(circle_at_var(--glare-x,50%)_var(--glare-y,50%),rgb(255_255_255/0.34),rgb(255_255_255/0.1)_26%,rgb(255_255_255/0)_52%,rgb(27_36_54/0.045)_100%)] opacity-0"
       />
-    </motion.div>
+    </div>
   )
 }
