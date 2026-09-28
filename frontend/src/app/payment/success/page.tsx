@@ -2,6 +2,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Superwall from '@/lib/superwall';
+import { useAuthStore } from '@/store/auth.store';
 
 type Phase = 'syncing' | 'success' | 'error';
 
@@ -33,6 +34,10 @@ function PaymentSuccessInner() {
 
     async function confirm() {
       try {
+        // Fresh page load after the Stripe redirect: the auth store skips
+        // hydration, so load the saved session before any API call
+        await useAuthStore.persist.rehydrate();
+
         // 1. Sincronizar con Stripe y actualizar la DB
         const status = await Superwall.confirmPurchase();
 

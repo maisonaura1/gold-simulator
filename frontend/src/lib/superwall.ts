@@ -22,6 +22,7 @@
  */
 
 import { api } from '@/lib/api';
+import { useAuthStore } from '@/store/auth.store';
 
 // ── Tipos públicos ─────────────────────────────────────────────────────────────
 
@@ -120,6 +121,12 @@ class SuperwallAdapter {
   /** true si el usuario tiene acceso completo */
   get isSubscribed(): boolean {
     return this._status?.paid === true;
+  }
+
+  /** Olvida el estado en caché (logout): la siguiente cuenta lo vuelve a pedir */
+  reset(): void {
+    this._status = null;
+    this._emit(null);
   }
 
   /** Actualiza el estado localmente (tras pago exitoso, sin esperar webhook) */
@@ -250,4 +257,11 @@ class SuperwallAdapter {
 // ── Singleton exportado ──────────────────────────────────────────────────────
 
 const Superwall = new SuperwallAdapter();
+
+// Logout clears the tokens without a full page reload, so the singleton would
+// otherwise keep showing the previous account's plan
+useAuthStore.subscribe((state, prev) => {
+  if (prev.accessToken && !state.accessToken) Superwall.reset();
+});
+
 export default Superwall;

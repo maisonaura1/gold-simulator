@@ -125,6 +125,7 @@ export const translations = {
     placeholderNotes: 'Optional notes...',
     slRequired: 'SL and TP are required',
     simulateError: 'Simulation error',
+    freeLimitReached: 'You have used all your free simulations. Upgrade in the Account tab to keep practising.',
     buyAt: 'BUY at',
     sellAt: 'SELL at',
 
@@ -632,6 +633,7 @@ export const translations = {
     placeholderNotes: 'Optionele notities...',
     slRequired: 'SV en WD zijn verplicht',
     simulateError: 'Simulatiefout',
+    freeLimitReached: 'Je hebt al je gratis simulaties gebruikt. Upgrade via het tabblad Account om verder te oefenen.',
     buyAt: 'KOPEN op',
     sellAt: 'VERKOPEN op',
 

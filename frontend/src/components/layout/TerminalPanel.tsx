@@ -322,7 +322,7 @@ export function TerminalPanel() {
               {/* Avatar initials */}
               <div className="shrink-0 w-8 h-8 rounded-sm flex items-center justify-center font-bold text-sm font-mono"
                 style={{ background: '#1a1508', border: '1px solid #c9a84c44', color: '#c9a84c' }}>
-                {(account.user?.name ?? account.user?.email ?? '?')[0].toUpperCase()}
+                {(account.user?.name || account.user?.email || '?')[0].toUpperCase()}
               </div>
               {/* Name + email */}
               <div className="flex-1 min-w-0">
@@ -335,8 +335,7 @@ export function TerminalPanel() {
               </div>
               {/* Membership badge */}
               {(() => {
-                const plan = swStatus?.plan ?? 'free';
-                const isPro = plan === 'lifetime';
+                const isPro = swStatus?.paid === true;
                 return (
                   <div className="shrink-0 px-2 py-0.5 rounded-sm font-mono text-[9px] font-bold uppercase tracking-widest"
                     style={{

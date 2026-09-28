@@ -17,31 +17,38 @@ export function useReplay(allCandles: PriceTick[]) {
   const sourceRef   = useRef(allCandles);
   useEffect(() => { sourceRef.current = allCandles; }, [allCandles]);
 
+  // Full history captured when replay starts: while replaying, the store (and
+  // so allCandles) only holds the replayed slice
+  const snapshotRef = useRef<PriceTick[] | null>(null);
   const indexRef    = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    const src = sourceRef.current;
-
     if (!replayMode) {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      setCandles(src);
+      if (snapshotRef.current) {
+        setCandles(snapshotRef.current);
+        snapshotRef.current = null;
+      }
       return;
     }
+
+    // Speed changes re-run this effect: keep replaying the original snapshot
+    const src = snapshotRef.current ?? sourceRef.current;
+    snapshotRef.current = src;
 
     const startIdx = Math.max(0, src.length - 200);
     indexRef.current = startIdx + 50;
     setCandles(src.slice(startIdx, indexRef.current));
 
     intervalRef.current = setInterval(() => {
-      const s = sourceRef.current;
-      if (indexRef.current >= s.length) {
+      if (indexRef.current >= src.length) {
         indexRef.current = startIdx + 50;
-        setCandles(s.slice(startIdx, indexRef.current));
+        setCandles(src.slice(startIdx, indexRef.current));
         return;
       }
       indexRef.current++;
-      setCandles(s.slice(startIdx, indexRef.current));
+      setCandles(src.slice(startIdx, indexRef.current));
     }, replaySpeed);
 
     return () => {

@@ -118,6 +118,7 @@ const es = {
   placeholderNotes: 'Notas opcionales...',
   slRequired: 'SL y TP son obligatorios',
   simulateError: 'Error en simulación',
+  freeLimitReached: 'Has usado todas tus simulaciones gratuitas. Mejora tu plan en la pestaña Cuenta para seguir practicando.',
   buyAt: 'COMPRAR en',
   sellAt: 'VENDER en',
 

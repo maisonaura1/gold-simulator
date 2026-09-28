@@ -19,12 +19,17 @@ export function useIntradayCandles() {
   const [synthetic, setSynthetic] = useState(false);
   const cacheRef = useRef<Partial<Record<Timeframe, CacheEntry>>>({});
 
+  const isIntraday = INTRADAY_TFS.includes(timeframe);
+
+  // H1+: show the socket's H1 history, which usually arrives after mount
   useEffect(() => {
-    if (!INTRADAY_TFS.includes(timeframe)) {
-      setSynthetic(false);
-      if (h1Candles.length > 0) setCandles(h1Candles);
-      return;
-    }
+    if (isIntraday) return;
+    setSynthetic(false);
+    if (h1Candles.length > 0) setCandles(h1Candles);
+  }, [isIntraday, h1Candles, setCandles]);
+
+  useEffect(() => {
+    if (!isIntraday) return;
 
     const cached = cacheRef.current[timeframe];
     if (cached) {
@@ -33,6 +38,8 @@ export function useIntradayCandles() {
       return;
     }
 
+    // Set on timeframe change so a slow response can't overwrite the new chart
+    let cancelled = false;
     setLoading(true);
     setError(null);
 
@@ -60,11 +67,17 @@ export function useIntradayCandles() {
         if (!data) throw new Error('All intraday sources unavailable');
         const entry: CacheEntry = { candles: data.candles, synthetic: data.synthetic ?? false };
         cacheRef.current[timeframe] = entry;
+        if (cancelled) return;
         setCandles(entry.candles);
         setSynthetic(entry.synthetic);
       })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+      .catch((e) => { if (!cancelled) setError(e.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => {
+      cancelled = true;
+      setLoading(false);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeframe]);
 

@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
+import { api, API_URL } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 import { useLangStore } from '@/store/lang.store';
 import { landingT } from '@/lib/landing-i18n';
@@ -117,7 +117,7 @@ export default function LoginPage() {
           {/* Google OAuth button */}
           <button
             type="button"
-            onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL ?? ''}/auth/google`}
+            onClick={() => window.location.href = `${API_URL}/api/auth/google`}
             className="w-full flex items-center justify-center gap-3 py-2.5 mb-5 transition-colors"
             style={{
               background: '#0f1117', border: '1px solid #2a2f3d',

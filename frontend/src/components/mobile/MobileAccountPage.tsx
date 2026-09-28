@@ -19,13 +19,13 @@ export function MobileAccountPage() {
   const router = useRouter();
   const { clearTokens } = useAuthStore();
   const { account, reset } = useAccount();
-  const { status } = useSuperwall();
+  const { status, purchase } = useSuperwall();
   const chart = useChartStore();
   const { lang, setLang } = useLangStore();
 
   if (!account) return null;
 
-  const isPro = status?.plan === 'lifetime';
+  const isPro = status?.paid === true;
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4" style={{ overscrollBehavior: 'contain' }}>
@@ -40,7 +40,7 @@ export function MobileAccountPage() {
               background: '#1a1508', border: '1px solid #c9a84c44', color: '#c9a84c',
             }}
           >
-            {(account.user?.name ?? account.user?.email ?? '?')[0].toUpperCase()}
+            {(account.user?.name || account.user?.email || '?')[0].toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <div style={{ fontWeight: 700, color: '#e8ecf4', fontSize: 15, letterSpacing: '-0.01em' }}>
@@ -96,7 +96,7 @@ export function MobileAccountPage() {
             }} />
           </div>
           <button
-            onClick={() => router.push('/payment/checkout')}
+            onClick={() => purchase()}
             className="w-full mt-3 py-2.5 font-bold text-sm"
             style={{
               background: 'linear-gradient(135deg, #c9a84c 0%, #e8b84b 100%)',

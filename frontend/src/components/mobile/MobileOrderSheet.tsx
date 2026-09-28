@@ -44,10 +44,13 @@ export function MobileOrderSheet({ open, onClose, onResult }: Props) {
   const lotNum = parseFloat(lot) || 0.01;
   const balance = account?.currentBalance ?? 10000;
 
-  const slDistBuy  = slNum > 0 ? Math.max(0, ask - slNum) : 0;
-  const tpDistBuy  = tpNum > 0 ? Math.max(0, tpNum - ask) : 0;
-  const rr = slDistBuy > 0 && tpDistBuy > 0 ? tpDistBuy / slDistBuy : 0;
-  const riskUsd = slDistBuy * lotNum * 100;
+  // SL above the price means a SELL setup (entry at bid), below means BUY (ask)
+  const isSellSetup = slNum > currentPrice;
+  const entryRef = isSellSetup ? bid : ask;
+  const slDist   = slNum > 0 ? Math.abs(entryRef - slNum) : 0;
+  const tpDist   = tpNum > 0 ? Math.abs(tpNum - entryRef) : 0;
+  const rr = slDist > 0 && tpDist > 0 ? tpDist / slDist : 0;
+  const riskUsd = slDist * lotNum * 100;
   const riskPct = balance > 0 ? (riskUsd / balance) * 100 : 0;
   const canTrade = slNum > 0 && tpNum > 0;
 
@@ -93,7 +96,8 @@ export function MobileOrderSheet({ open, onClose, onResult }: Props) {
       setSl(''); setTp(''); setNotes('');
       onClose();
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? 'Error al ejecutar');
+      const message = e?.response?.data?.message;
+      setError(message === 'FREE_LIMIT_REACHED' ? t.freeLimitReached : message ?? t.simulateError);
     } finally {
       setLoading(false);
     }
@@ -246,7 +250,7 @@ export function MobileOrderSheet({ open, onClose, onResult }: Props) {
                   </span>
                   {slNum > 0 && (
                     <span style={{ fontSize: 10, color: '#e84040', fontFamily: 'monospace' }}>
-                      {slDistBuy.toFixed(2)} pts · ${riskUsd.toFixed(2)}
+                      {slDist.toFixed(2)} pts · ${riskUsd.toFixed(2)}
                     </span>
                   )}
                 </div>

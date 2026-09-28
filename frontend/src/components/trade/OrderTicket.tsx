@@ -171,9 +171,9 @@ export function OrderTicket({ onResult }: Props) {
   const suggestLot = useCallback((pips: number) => {
     if (!pips || !balance) return;
     const riskTarget = balance * 0.01;          // 1% del balance
-    const pipVal     = 1;                        // $1/pip por lote estándar en oro
-    const suggested  = riskTarget / (pips * pipVal);
-    return Math.max(0.01, parseFloat(suggested.toFixed(2)));
+    const usdPerLot  = pips * 100;               // distancia en $ × 100 oz por lote
+    const suggested  = riskTarget / usdPerLot;
+    return Math.min(10, Math.max(0.01, parseFloat(suggested.toFixed(2))));
   }, [balance]);
 
   const applySuggestion = useCallback((pips: number, direction: 'BUY' | 'SELL') => {

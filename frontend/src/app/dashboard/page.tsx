@@ -177,7 +177,7 @@ function DashboardInner() {
     Promise.all([
       api.get<Stats>('/stats').catch(() => null),
       api.get<AccountData>('/account').catch(() => null),
-      api.get<RecentTrade[]>('/trades/history').catch(() => null),
+      api.get<RecentTrade[]>('/trades').catch(() => null),
       api.get<PaymentStatus>('/payments/status').catch(() => null),
     ]).then(([s, a, tr, ps]) => {
       if (s)  setStats(s.data);

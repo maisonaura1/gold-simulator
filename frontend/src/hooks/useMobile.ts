@@ -8,8 +8,9 @@ export function useMobile(): boolean {
     const check = () => setMobile(window.innerWidth < 768);
     check();
     const mq = window.matchMedia('(max-width: 767px)');
-    mq.addEventListener('change', (e) => setMobile(e.matches));
-    return () => mq.removeEventListener('change', (e) => setMobile(e.matches));
+    const onChange = (e: MediaQueryListEvent) => setMobile(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
   }, []);
 
   return mobile;
