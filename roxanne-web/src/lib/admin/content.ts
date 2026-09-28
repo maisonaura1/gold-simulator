@@ -43,19 +43,22 @@ function emptyListPaths(value: unknown, path: string[] = []): string[][] {
 }
 
 /**
- * Lists that are empty in a course's original copy but hold blocks (title +
- * text) on other courses. The content store keeps only text lines in lists
- * that start empty, so the editor hides them instead of offering an "Add"
- * button whose items would be dropped on save.
+ * Item shapes for lists that are empty in a course's original copy but hold
+ * blocks (title + text) on other courses — e.g. the extra sections of the Legal
+ * page. The editor uses them as the template for its "Add" button (the data
+ * layer validates those lists with the same shape).
  */
-export function unsupportedListPaths(section: PageSection): string[] {
-  if (section.kind !== 'course') return []
-  return emptyListPaths(sectionDefaults(section))
-    .filter((path) =>
-      defaultContent.courseList.some((course) => {
-        const list = getIn(course, path)
-        return Array.isArray(list) && list.length > 0 && isObject(list[0])
-      }),
-    )
-    .map((path) => path.join('.'))
+export function listSamples(section: PageSection): Record<string, unknown> {
+  if (section.kind !== 'course') return {}
+  const samples: Record<string, unknown> = {}
+  for (const path of emptyListPaths(sectionDefaults(section))) {
+    for (const course of defaultContent.courseList) {
+      const list = getIn(course, path)
+      if (Array.isArray(list) && list.length > 0 && isObject(list[0])) {
+        samples[path.join('.')] = list[0]
+        break
+      }
+    }
+  }
+  return samples
 }

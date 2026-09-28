@@ -20,17 +20,31 @@ import { getStore } from './store'
 
 type ContentOverrides = Partial<Record<ContentSectionKey, unknown>>
 
+/**
+ * Validation templates for the courses. Some pages start with no extra sections,
+ * so `conform` would treat that empty list as plain text lines; give it the
+ * item shape (title + body) the other courses use.
+ */
+const COURSE_TEMPLATES: Course[] = defaultContent.courseList.map((course) => ({
+  ...course,
+  page: { ...course.page, sections: course.page.sections.length ? course.page.sections : [{ title: '', body: '' }] },
+}))
+
 function sanitizeSection<K extends ContentSectionKey>(key: K, value: unknown): SiteContent[K] {
-  const section = conform(defaultContent[key], value)
   if (key === 'courseList') {
-    // Courses are a fixed set: keep identity fields from the defaults.
-    const courses = section as Course[]
-    return defaultContent.courseList.map((base, i) => ({
-      ...(courses[i] ?? base),
-      slug: base.slug,
-      photo: base.photo,
-    })) as SiteContent[K]
+    const courses = conform(COURSE_TEMPLATES, value)
+    // Courses are a fixed set: keep identity fields from the defaults; drop blank extra sections.
+    return defaultContent.courseList.map((base, i) => {
+      const course = courses[i] ?? base
+      return {
+        ...course,
+        slug: base.slug,
+        photo: base.photo,
+        page: { ...course.page, sections: course.page.sections.filter((s) => s.title.trim() || s.body.trim()) },
+      }
+    }) as SiteContent[K]
   }
+  const section = conform(defaultContent[key], value)
   if (key === 'nav' || key === 'footer') {
     const withLinks = section as SiteContent['nav'] | SiteContent['footer']
     const list = 'items' in withLinks ? withLinks.items : withLinks.links

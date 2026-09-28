@@ -77,6 +77,7 @@ export function ContentEditor({
   initialValue,
   template,
   hiddenPaths,
+  listSamples = {},
   initiallyEdited,
 }: {
   section: Pick<PageSection, 'id' | 'label' | 'href' | 'description' | 'review'>
@@ -84,6 +85,8 @@ export function ContentEditor({
   initialValue: Value
   template: Value
   hiddenPaths: string[]
+  /** Item templates for lists that start empty (keyed by dotted path without list positions). */
+  listSamples?: Record<string, unknown>
   initiallyEdited: boolean
 }) {
   const toast = useToast()
@@ -99,7 +102,10 @@ export function ContentEditor({
 
   const onChange = useCallback((path: JsonPath, next: unknown) => setDraft((current) => setIn(current, path, next)), [])
 
-  const context = useMemo(() => ({ saved, template, hidden, labelRoot, onChange }), [saved, template, hidden, labelRoot, onChange])
+  const context = useMemo(
+    () => ({ saved, template, hidden, labelRoot, listSamples, onChange }),
+    [saved, template, hidden, labelRoot, listSamples, onChange],
+  )
   const cards = useMemo(() => buildCards(draft, hidden, labelRoot, section.label), [draft, hidden, labelRoot, section.label])
 
   const save = () => {

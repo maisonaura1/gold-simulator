@@ -18,6 +18,8 @@ interface EditorContextValue {
   hidden: Set<string>
   /** Prefix used to look up labels: the content section ("home") or "course". */
   labelRoot: string
+  /** Item templates for lists that start empty (dotted path without list positions). */
+  listSamples: Record<string, unknown>
   onChange: (path: JsonPath, value: unknown) => void
 }
 
@@ -271,12 +273,13 @@ function ItemControls({
 }
 
 function ListField({ path, value, hideLegend = false }: { path: JsonPath; value: unknown[]; hideLegend?: boolean }) {
-  const { saved, template, labelRoot, onChange } = useEditor()
+  const { saved, template, labelRoot, listSamples, onChange } = useEditor()
   const confirm = useConfirm()
   const copy = describe(labelRoot, path)
   const savedList = getIn(saved, path)
   const changed = !deepEqual(savedList, value)
-  const sample = value[0] ?? (getIn(template, path) as unknown[] | undefined)?.[0] ?? ''
+  const sample =
+    value[0] ?? (getIn(template, path) as unknown[] | undefined)?.[0] ?? listSamples[path.filter((p) => typeof p === 'string').join('.')] ?? ''
   const objects = isObject(sample)
   const itemNoun = (copy.add ?? 'Add an item').replace(/^Add (an? )?/, '')
 

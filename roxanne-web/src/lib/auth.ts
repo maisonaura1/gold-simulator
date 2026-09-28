@@ -100,6 +100,28 @@ export async function assertAdmin(): Promise<void> {
 
 /* ─────────────────────────── Rate limiting ─────────────────────────── */
 
+const failures = new Map<string, { count: number; resetAt: number }>()
+
+/** True once `key` has `limit` recorded failures inside the current window (successes never count). */
+export function tooManyFailures(key: string, limit: number): boolean {
+  const entry = failures.get(key)
+  return Boolean(entry && entry.resetAt > Date.now() && entry.count >= limit)
+}
+
+export function recordFailure(key: string, windowMs: number): void {
+  const now = Date.now()
+  const entry = failures.get(key)
+  if (!entry || entry.resetAt < now) failures.set(key, { count: 1, resetAt: now + windowMs })
+  else entry.count += 1
+  if (failures.size > 5000) {
+    for (const [k, e] of failures) if (e.resetAt < now) failures.delete(k)
+  }
+}
+
+export function clearFailures(key: string): void {
+  failures.delete(key)
+}
+
 const buckets = new Map<string, { count: number; resetAt: number }>()
 
 /**
