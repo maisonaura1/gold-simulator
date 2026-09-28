@@ -2,6 +2,10 @@ import type { NextConfig } from 'next'
 
 const isDev = process.env.NODE_ENV !== 'production'
 
+if (!isDev && !process.env.NEXT_PUBLIC_SITE_URL && !process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+  console.warn('\n⚠ NEXT_PUBLIC_SITE_URL is not set — canonical URLs, sitemap and social cards will point to localhost.\n')
+}
+
 // Generated photos live on the Higgsfield CDN until `npm run photos:localize`
 // copies them into /public/images.
 const PHOTO_CDN = 'd8j0ntlcm91z4.cloudfront.net'

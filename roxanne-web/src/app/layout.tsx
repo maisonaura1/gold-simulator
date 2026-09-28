@@ -5,6 +5,8 @@ import './globals.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
+  title: { default: 'RoxanneAlexia Language Coach — Law & Business English', template: '%s | RoxanneAlexia' },
+  description: 'Expert online English language courses for adults in business, law, and finance.',
   applicationName: 'RoxanneAlexia Language Coach',
   formatDetection: { telephone: false, email: false, address: false },
 }
