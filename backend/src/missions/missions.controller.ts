@@ -1,4 +1,4 @@
-import { Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, UseGuards, Headers, UnauthorizedException } from '@nestjs/common';
 import { MissionsService } from './missions.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -7,8 +7,11 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 export class MissionsController {
   constructor(private missionsService: MissionsService) {}
 
+  // Admin-only: overwrites mission definitions
   @Post('seed')
-  seed() {
+  seed(@Headers('x-admin-key') adminKey?: string) {
+    const key = process.env.ADMIN_RESET_KEY;
+    if (!key || adminKey !== key) throw new UnauthorizedException();
     return this.missionsService.seedMissions();
   }
 

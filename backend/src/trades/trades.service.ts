@@ -4,8 +4,11 @@ import { AccountService } from '../account/account.service';
 import { SimulatorService } from './simulator.service';
 import { PricesService } from '../prices/prices.service';
 import { CreateTradeDto } from './dto/create-trade.dto';
+import { ACCESS_SELECT, hasProAccess } from '../payments/access';
 
 const LOT_SIZE_XAU = 100;
+// Client-supplied fill prices must stay within this distance of the market price
+const MAX_PRICE_DEVIATION = 0.05;
 
 @Injectable()
 export class TradesService {
@@ -19,10 +22,9 @@ export class TradesService {
   private async enforceFreeTierLimit(userId: string): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { paidAt: true, subscriptionStatus: true, referralBonus: true },
+      select: { ...ACCESS_SELECT, referralBonus: true },
     });
-    const isPro = user?.subscriptionStatus === 'ACTIVE' || !!user?.paidAt;
-    if (isPro) return;
+    if (user && hasProAccess(user)) return;
     const count = await this.prisma.trade.count({ where: { userId } });
     const limit = 20 + (user?.referralBonus ?? 0);
     if (count >= limit) {
@@ -91,6 +93,7 @@ export class TradesService {
     if (!acct) throw new NotFoundException('Account not found');
 
     const entry   = dto.entryPrice || this.prices.getCurrentPrice();
+    this.assertNearMarket(entry, 'Entry');
     if (dto.sl && dto.tp) this.validateSlTp(dto.type, entry, dto.sl, dto.tp);
     const slDist  = dto.sl ? Math.abs(entry - dto.sl) : 0;
     const tpDist  = dto.tp ? Math.abs(dto.tp - entry) : 0;
@@ -119,28 +122,33 @@ export class TradesService {
     const acct = await this.prisma.simAccount.findUnique({ where: { userId } });
     if (!acct) throw new NotFoundException('Account not found');
 
-    const currentPrice = this.prices.getCurrentPrice();
-    // Reject exit prices that deviate more than 5% from current market price
-    if (exitPrice !== undefined) {
-      const deviation = Math.abs(exitPrice - currentPrice) / currentPrice;
-      if (deviation > 0.05) {
-        throw new BadRequestException(
-          `Exit price ${exitPrice} deviates more than 5% from current price ${currentPrice.toFixed(2)}`,
-        );
-      }
-    }
-    const price    = exitPrice ?? currentPrice;
+    if (exitPrice !== undefined) this.assertNearMarket(exitPrice, 'Exit');
+    const price    = exitPrice ?? this.prices.getCurrentPrice();
     const diff     = trade.type === 'BUY' ? price - trade.entryPrice : trade.entryPrice - price;
     const resultUsd = +(diff * trade.lot * LOT_SIZE_XAU).toFixed(2);
     const resultPct = +(resultUsd / acct.currentBalance * 100).toFixed(2);
 
-    const closed = await this.prisma.trade.update({
-      where: { id: tradeId },
-      data: { exitPrice: price, resultUsd, resultPct, status: 'CLOSED', exitAt: new Date() },
-    });
+    return this.prisma.$transaction(async (tx) => {
+      // Conditional on status so two concurrent close requests can't both
+      // credit the P&L: the second one matches no OPEN row
+      const { count } = await tx.trade.updateMany({
+        where: { id: tradeId, userId, status: 'OPEN' },
+        data: { exitPrice: price, resultUsd, resultPct, status: 'CLOSED', exitAt: new Date() },
+      });
+      if (count === 0) throw new NotFoundException('Open trade not found');
 
-    await this.account.applyTradeResult(userId, resultUsd);
-    return closed;
+      await this.account.applyTradeResult(userId, resultUsd, tx);
+      return tx.trade.findUniqueOrThrow({ where: { id: tradeId } });
+    });
+  }
+
+  private assertNearMarket(price: number, label: 'Entry' | 'Exit') {
+    const market = this.prices.getCurrentPrice();
+    if (Math.abs(price - market) / market > MAX_PRICE_DEVIATION) {
+      throw new BadRequestException(
+        `${label} price ${price} deviates more than ${MAX_PRICE_DEVIATION * 100}% from current price ${market.toFixed(2)}`,
+      );
+    }
   }
 
   async getHistory(userId: string) {

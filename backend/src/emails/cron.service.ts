@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailsService } from './emails.service';
+import { PaymentsService } from '../payments/payments.service';
 import { SubscriptionStatus } from '@prisma/client';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class CronService {
   constructor(
     private prisma: PrismaService,
     private emails: EmailsService,
+    private payments: PaymentsService,
   ) {}
 
   /** Runs daily at 10:00 UTC */
@@ -70,26 +72,21 @@ export class CronService {
         subscriptionStatus: SubscriptionStatus.ACTIVE,
         subscriptionEndsAt: { gte: fiveDaysFromNow, lt: sixDaysFromNow },
       },
-      // Fetch subscriptionId to detect annual (id contains 'annual' price) or
-      // use subscriptionEndsAt vs createdAt diff — here we use the DB directly.
-      select: { email: true, subscriptionEndsAt: true, subscriptionId: true, createdAt: true },
+      select: { email: true, subscriptionEndsAt: true, subscriptionId: true },
     });
 
     this.logger.log(`Pre-renewal emails: ${users.length} candidates`);
 
     for (const user of users) {
-      if (!user.subscriptionEndsAt) continue;
+      if (!user.subscriptionEndsAt || !user.subscriptionId) continue;
 
-      // Detect annual by comparing renewal date to account creation date.
-      // Annual subscriptions end ~365 days after the account was created or
-      // the last renewal; monthly end ~30 days after. We compare the window
-      // from createdAt to subscriptionEndsAt.
-      const daysSinceCreation = Math.round(
-        (user.subscriptionEndsAt.getTime() - user.createdAt.getTime()) / 86400000,
-      );
-      const isAnnual = daysSinceCreation > 300;
-      const plan  = isAnnual ? 'Pro Annual'  : 'Pro Monthly';
-      const price = isAnnual ? '€79'         : '€9.95';
+      // Plan and amount come from Stripe; skip subscriptions set to cancel
+      const renewal = await this.payments.getRenewalInfo(user.subscriptionId).catch((e) => {
+        this.logger.error(`Renewal lookup failed for ${user.email}: ${e}`);
+        return null;
+      });
+      if (!renewal) continue;
+      const { plan, price } = renewal;
 
       await this.emails.sendPreRenewalReminder(
         user.email, user.subscriptionEndsAt, plan, price,

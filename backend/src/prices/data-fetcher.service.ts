@@ -68,6 +68,12 @@ export class DataFetcherService implements OnModuleInit {
 
   // ── Twelve Data fetchers ──────────────────────────────────
 
+  /** Manual refresh (API endpoint): throttled so users can't burn the Twelve Data quota. */
+  async refreshHistorical(): Promise<void> {
+    if (Date.now() - this.lastFetchAt < 10 * 60_000) return;
+    await this.fetchHistorical();
+  }
+
   async fetchHistorical(): Promise<void> {
     if (!TD_KEY()) {
       this.logger.warn('TWELVE_DATA_API_KEY not set — using synthetic fallback');

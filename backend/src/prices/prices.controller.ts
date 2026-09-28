@@ -37,7 +37,7 @@ export class PricesController {
   @Post('refresh')
   @UseGuards(JwtAuthGuard)
   async refresh() {
-    await this.fetcher.fetchHistorical();
+    await this.fetcher.refreshHistorical();
     return { ok: true, candles: this.prices.getAllCandles().length };
   }
 }

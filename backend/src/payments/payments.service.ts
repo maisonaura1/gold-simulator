@@ -15,6 +15,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import Stripe = require('stripe');
 import { PrismaService } from '../prisma/prisma.service';
 import { SubscriptionStatus } from '@prisma/client';
+import { ACCESS_SELECT, hasLifetimeAccess, hasProAccess } from './access';
 
 // ── Stripe price IDs ─────────────────────────────────────────────────────────
 // Configure in Railway environment variables:
@@ -213,18 +214,16 @@ export class PaymentsService {
     if (!user) return;
 
     const status = this.mapStripeStatus(sub.status);
-    // current_period_end existe en el objeto runtime aunque las typedefs nuevas no lo expongan
-    const periodEnd: number | undefined = (sub as any).current_period_end;
-    const endsAt = periodEnd ? new Date(periodEnd * 1000) : null;
+    const periodEnd = this.periodEnd(sub);
 
+    // paidAt is reserved for lifetime purchases — setting it here would keep
+    // paid access after the subscription is cancelled.
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
         subscriptionId:     sub.id,
         subscriptionStatus: status,
-        subscriptionEndsAt: endsAt,
-        // Marcar paidAt si acaba de activarse
-        paidAt: status === SubscriptionStatus.ACTIVE ? (user.paidAt ?? new Date()) : user.paidAt,
+        subscriptionEndsAt: periodEnd ? new Date(periodEnd * 1000) : null,
       },
     });
   }
@@ -236,7 +235,7 @@ export class PaymentsService {
     });
     if (!user) return;
 
-    const cancelPeriodEnd: number | undefined = (sub as any).current_period_end;
+    const cancelPeriodEnd = this.periodEnd(sub);
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
@@ -275,6 +274,11 @@ export class PaymentsService {
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
+
+  /** Since API 2025-03-31 (basil) the billing period lives on subscription items. */
+  private periodEnd(sub: Stripe.Subscription): number | undefined {
+    return sub.items?.data?.[0]?.current_period_end ?? (sub as any).current_period_end;
+  }
 
   /** Convierte el estado de Stripe al enum interno */
   private mapStripeStatus(stripeStatus: Stripe.Subscription.Status): SubscriptionStatus {
@@ -317,9 +321,7 @@ export class PaymentsService {
       this.prisma.user.findUnique({
         where: { id: userId },
         select: {
-          paidAt:             true,
-          subscriptionStatus: true,
-          subscriptionId:     true,
+          ...ACCESS_SELECT,
           subscriptionEndsAt: true,
           referralBonus:      true,
         },
@@ -342,14 +344,14 @@ export class PaymentsService {
     const isActive = user.subscriptionStatus === SubscriptionStatus.ACTIVE;
     const isPastDue = user.subscriptionStatus === SubscriptionStatus.PAST_DUE;
 
-    const paid         = isActive || isPastDue || !!user.paidAt;
+    const paid         = hasProAccess(user);
     const bonus        = user.referralBonus ?? 0;
     const limit        = 20 + bonus;
     const canSimulate  = paid || simCount < limit;
 
     // Infer billing period from Stripe subscription interval if available
     let plan: 'free' | 'monthly' | 'annual' | 'lifetime' | 'propfirm' = 'free';
-    if (user.paidAt && !user.subscriptionId) {
+    if (hasLifetimeAccess(user)) {
       plan = 'lifetime';
     } else if ((isActive || isPastDue) && user.subscriptionId) {
       // Try to read plan from subscription metadata stored at creation
@@ -408,6 +410,27 @@ export class PaymentsService {
     }
 
     return { status: user.subscriptionStatus };
+  }
+
+  /**
+   * Datos para el email de pre-renovación, leídos de Stripe (plan e importe
+   * reales). Devuelve null si la suscripción no se va a renovar.
+   */
+  async getRenewalInfo(subscriptionId: string): Promise<{ plan: string; price: string } | null> {
+    const sub = await this.stripeClient.subscriptions.retrieve(subscriptionId);
+    if (sub.status !== 'active' || sub.cancel_at_period_end) return null;
+
+    const price = sub.items.data[0]?.price;
+    if (!price?.unit_amount) return null;
+
+    const plan = sub.metadata?.plan === 'propfirm' ? 'Prop Firm'
+      : price.recurring?.interval === 'year' ? 'Pro Annual'
+      : 'Pro Monthly';
+    const amount = new Intl.NumberFormat('es-ES', {
+      style: 'currency', currency: price.currency.toUpperCase(),
+    }).format(price.unit_amount / 100);
+
+    return { plan, price: amount };
   }
 
   /**

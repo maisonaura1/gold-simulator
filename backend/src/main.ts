@@ -1,28 +1,22 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
+import { corsOrigin } from './common/cors';
+
+const REQUIRED_ENV = ['JWT_SECRET', 'JWT_REFRESH_SECRET'];
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
+  if (missing.length) throw new Error(`Missing required env vars: ${missing.join(', ')}`);
 
-  const allowedOrigins = [
-    process.env.FRONTEND_URL,
-    'https://goldtradermt.app',
-    'https://www.goldtradermt.app',
-    'https://frontend-eight-phi-90.vercel.app',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-  ].filter(Boolean) as string[];
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
 
-  app.enableCors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true);
-      const isElectron = /^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin);
-      const isAllowed = isElectron || allowedOrigins.includes(origin);
-      cb(isAllowed ? null : new Error(`CORS blocked: ${origin}`), isAllowed);
-    },
-    credentials: true,
-  });
+  // Behind Railway's proxy: use X-Forwarded-For so rate limits apply per client,
+  // not to the proxy address shared by every user
+  app.set('trust proxy', 1);
+
+  app.enableCors({ origin: corsOrigin, credentials: true });
 
   app.useGlobalPipes(
     new ValidationPipe({

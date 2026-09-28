@@ -46,12 +46,18 @@ export class SimulatorService {
     const startIdx = Math.max(0, Math.min(seed, candles.length - 200));
     const window   = candles.slice(startIdx, startIdx + 200);
 
+    // The window can be months old and sit at a very different price level.
+    // Shift it so it opens at the entry price: we replay the real movement,
+    // not the absolute prices of that period.
+    const off = entryPrice - window[0].open;
+
     let outcome: SimulationResult['outcome'] = 'NEUTRAL';
     let exitPrice = entryPrice;
     let candlesTraversed = 0;
 
-    for (const candle of window) {
+    for (const raw of window) {
       candlesTraversed++;
+      const candle = { open: raw.open + off, high: raw.high + off, low: raw.low + off };
 
       if (type === 'BUY') {
         // Intrabar order: if both SL and TP are within this candle,
@@ -86,7 +92,7 @@ export class SimulatorService {
       if (outcome !== 'NEUTRAL') break;
     }
 
-    if (outcome === 'NEUTRAL') exitPrice = window.at(-1)?.close ?? entryPrice;
+    if (outcome === 'NEUTRAL') exitPrice = (window.at(-1)?.close ?? window[0].open) + off;
 
     const priceDiff = type === 'BUY' ? exitPrice - entryPrice : entryPrice - exitPrice;
     const resultUsd = +(priceDiff * lot * LOT_SIZE_XAU).toFixed(2);

@@ -9,6 +9,10 @@ import { EmailsService } from '../emails/emails.service';
 
 const REFERRAL_BONUS = 5;
 
+function hashToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
 function genReferralCode(): string {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
@@ -97,6 +101,7 @@ export class AuthService {
   async findOrCreateGoogleUser(profile: {
     googleId: string;
     email: string;
+    emailVerified: boolean;
     name: string;
     avatar: string | null;
   }) {
@@ -104,6 +109,11 @@ export class AuthService {
     let user = await this.prisma.user.findUnique({ where: { googleId: profile.googleId } });
 
     if (!user) {
+      // Linking by email (or creating an account for it) requires Google to
+      // have verified that the address belongs to this Google account.
+      if (!profile.email || !profile.emailVerified) {
+        throw new UnauthorizedException('Google account email is not verified');
+      }
       user = await this.prisma.user.findUnique({ where: { email: profile.email } });
       if (user) {
         // Link Google to existing email account
@@ -148,9 +158,10 @@ export class AuthService {
     const token   = crypto.randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
 
+    // Only the hash is stored, so a DB leak doesn't expose usable reset links
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { resetToken: token, resetTokenExp: expires } as any,
+      data: { resetToken: hashToken(token), resetTokenExp: expires },
     });
 
     const resetUrl = `${process.env.FRONTEND_URL ?? 'http://localhost:3001'}/auth/reset-password?token=${token}`;
@@ -159,14 +170,15 @@ export class AuthService {
   }
 
   async resetPasswordByToken(token: string, newPassword: string) {
-    const user = await (this.prisma.user as any).findFirst({
-      where: { resetToken: token, resetTokenExp: { gt: new Date() } },
+    if (!token) throw new NotFoundException('Token inválido o expirado');
+    const user = await this.prisma.user.findFirst({
+      where: { resetToken: hashToken(token), resetTokenExp: { gt: new Date() } },
     });
     if (!user) throw new NotFoundException('Token inválido o expirado');
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash, resetToken: null, resetTokenExp: null } as any,
+      data: { passwordHash, resetToken: null, resetTokenExp: null },
     });
     return { message: 'Contraseña actualizada' };
   }

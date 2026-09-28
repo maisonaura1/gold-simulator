@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Resend } from 'resend';
 
 const FROM = 'GoldTrader <hello@goldtrader.app>';
+const APP_URL = 'https://goldtradermt.app';
 
 @Injectable()
 export class EmailsService {
@@ -17,7 +18,9 @@ export class EmailsService {
   private async send(to: string, subject: string, html: string) {
     if (!this.resend) return;
     try {
-      await this.resend.emails.send({ from: FROM, to, subject, html });
+      // Resend reports API errors in the result instead of throwing
+      const { error } = await this.resend.emails.send({ from: FROM, to, subject, html });
+      if (error) this.logger.error(`Email send failed to ${to}: ${error.message}`);
     } catch (e: any) {
       this.logger.error(`Email send failed to ${to}: ${e.message}`);
     }
@@ -57,7 +60,7 @@ export class EmailsService {
         </td></tr>
         <!-- CTA -->
         <tr><td style="padding:28px 32px">
-          <a href="https://goldtrader.app/trade"
+          <a href="${APP_URL}/trade"
             style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#a8893c);color:#000;font-weight:800;font-size:13px;padding:12px 28px;border-radius:4px;text-decoration:none">
             Simular ahora →
           </a>
@@ -66,7 +69,7 @@ export class EmailsService {
         <tr><td style="padding:0 32px 32px">
           <p style="color:#3a3f4d;font-size:11px;line-height:1.6;margin:0">
             Recibes este email porque tienes una cuenta en GoldTrader.
-            <a href="https://goldtrader.app/account" style="color:#3a3f4d">Gestionar preferencias</a>
+            <a href="${APP_URL}/account" style="color:#3a3f4d">Gestionar preferencias</a>
           </p>
         </td></tr>
       </table>
@@ -111,7 +114,7 @@ export class EmailsService {
           </div>
         </td></tr>
         <tr><td style="padding:28px 32px">
-          <a href="https://goldtrader.app/account"
+          <a href="${APP_URL}/account"
             style="display:inline-block;background:#141720;color:#c9a84c;font-weight:700;font-size:13px;padding:12px 28px;border-radius:4px;text-decoration:none;border:1px solid #2c2410">
             Gestionar suscripción →
           </a>
@@ -196,18 +199,18 @@ export class EmailsService {
             ].map(([n, text, href]) => `
             <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:10px">
               <span style="color:#c9a84c;font-family:monospace;font-weight:700;font-size:11px;flex-shrink:0;margin-top:1px">${n}</span>
-              <a href="https://goldtrader.app${href}" style="color:#c8cdd8;font-size:13px;text-decoration:none">${text}</a>
+              <a href="${APP_URL}${href}" style="color:#c8cdd8;font-size:13px;text-decoration:none">${text}</a>
             </div>`).join('')}
           </div>
-          <a href="https://goldtrader.app/trade"
+          <a href="${APP_URL}/trade"
             style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#a8893c);color:#000;font-weight:800;font-size:13px;padding:12px 28px;border-radius:4px;text-decoration:none">
             Empezar a simular →
           </a>
         </td></tr>
         <tr><td style="padding:0 32px 32px">
           <p style="color:#3a3f4d;font-size:11px;line-height:1.6;margin:0">
-            GoldTrader · goldtrader.app ·
-            <a href="https://goldtrader.app/account" style="color:#3a3f4d">Gestionar cuenta</a>
+            GoldTrader · goldtradermt.app ·
+            <a href="${APP_URL}/account" style="color:#3a3f4d">Gestionar cuenta</a>
           </p>
         </td></tr>
       </table>

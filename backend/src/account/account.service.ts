@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma, SimAccount } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -62,21 +63,25 @@ export class AccountService {
     });
   }
 
-  async applyTradeResult(userId: string, resultUsd: number) {
-    const account = await this.prisma.simAccount.findUnique({ where: { userId } });
-    if (!account) return;
+  async applyTradeResult(userId: string, resultUsd: number, tx?: Prisma.TransactionClient): Promise<SimAccount> {
+    if (!tx) return this.prisma.$transaction((t) => this.applyTradeResult(userId, resultUsd, t));
+
+    const xpGain = resultUsd > 0 ? 10 : 2;
+    // Atomic increment: the row stays locked until the transaction commits, so
+    // concurrent trades can't overwrite each other's balance update
+    const acct = await tx.simAccount.update({
+      where: { userId },
+      data: { currentBalance: { increment: resultUsd }, xp: { increment: xpGain } },
+    });
 
     // Never allow balance to go below 0 (no margin debt in a simulator)
-    const newBalance = Math.max(0, account.currentBalance + resultUsd);
-    const xpGain = resultUsd > 0 ? 10 : 2;
-
-    return this.prisma.simAccount.update({
+    const newBalance = Math.max(0, acct.currentBalance);
+    return tx.simAccount.update({
       where: { userId },
       data: {
         currentBalance: newBalance,
         equity: newBalance,
-        xp: { increment: xpGain },
-        level: Math.floor((account.xp + xpGain) / 100) + 1,
+        level: Math.floor(acct.xp / 100) + 1,
       },
     });
   }
