@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Mis Gastos 💖</title>
+<style>
+:root{--bg:#fff0f6;--card:#fff;--p1:#ff6fa5;--p2:#ff9ec4;--p3:#ffd1e3;--ink:#5a1f3a;--mut:#a5688a;--ok:#2fbf8f;--bad:#e5365f;--sh:0 6px 20px rgba(255,111,165,.18)}
+@media(prefers-color-scheme:dark){:root{--bg:#2a0f1d;--card:#3b1629;--p3:#5c2340;--ink:#ffe3ef;--mut:#d79ab6;--sh:0 6px 20px rgba(0,0,0,.35)}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px}
+h1{margin:0;font-size:1.6rem}h1 span{color:var(--p1)}
+.card{background:var(--card);border-radius:20px;padding:16px;box-shadow:var(--sh);margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:1.05rem}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.kpi{text-align:center}.kpi .e{font-size:2.2rem}.kpi .v{font-size:1.5rem;font-weight:800;color:var(--p1)}.kpi .l{color:var(--mut);font-size:.85rem}
+button,select,input{font:inherit;border-radius:12px;border:2px solid var(--p3);padding:9px 12px;background:var(--card);color:var(--ink)}
+button{cursor:pointer;background:var(--p1);color:#fff;border-color:var(--p1);font-weight:700}
+button.ghost{background:transparent;color:var(--p1)}button:hover{filter:brightness(1.08)}
+input:focus,select:focus{outline:none;border-color:var(--p1)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.cats{display:flex;flex-wrap:wrap;gap:8px}.cat{padding:8px 12px;border-radius:999px;border:2px solid var(--p3);background:var(--card);color:var(--ink);font-weight:600}
+.cat.on{background:var(--p1);color:#fff;border-color:var(--p1)}
+.bars{display:flex;align-items:flex-end;gap:6px;height:180px}.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:.7rem;color:var(--mut)}
+.bar i{display:block;width:100%;border-radius:10px 10px 0 0;background:linear-gradient(var(--p1),var(--p2));min-height:2px}
+.bar.cur i{outline:3px solid var(--p3)}
+.hrow{display:flex;align-items:center;gap:8px;margin:6px 0}.hrow .n{width:130px;flex:none}.hrow .t{flex:1;background:var(--p3);border-radius:99px;height:14px;overflow:hidden}.hrow .t b{display:block;height:100%;background:linear-gradient(90deg,var(--p1),var(--p2))}.hrow .a{width:90px;text-align:right;flex:none;font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:7px 6px;text-align:right;border-bottom:1px solid var(--p3)}th:first-child,td:first-child{text-align:left}
+.up{color:var(--bad)}.down{color:var(--ok)}
+.list{max-height:360px;overflow:auto}.item{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--p3)}.item .e{font-size:1.5rem}.item .m{flex:1}.item small{color:var(--mut)}
+.x{background:transparent;border:none;color:var(--mut);padding:4px 8px}
+.blur .amt{filter:blur(7px)}
+#lock{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:9;flex-direction:column;gap:12px;text-align:center}
+#lock .big{font-size:4rem}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.hint{color:var(--mut);font-size:.85rem}
+</style>
+</head>
+<body>
+<div id="lock"><div class="big">🔒💖</div><h2 id="lockTitle">Tu espacio privado</h2><p class="hint" id="lockHint"></p>
+<input id="pin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="off" style="text-align:center;width:180px"><button id="pinBtn">Entrar</button><p id="pinErr" class="hint"></p></div>
+
+<div class="wrap" id="app">
+<header>
+  <h1>💖 <span>Mis Gastos</span></h1>
+  <div class="row">
+    <select id="year"></select>
+    <button class="ghost" id="hide">🙈 Ocultar</button>
+    <button class="ghost" id="cfg">⚙️</button>
+  </div>
+</header>
+
+<div class="grid" id="kpis"></div>
+
+<div class="card" style="margin-top:14px">
+  <h2>➕ Nuevo gasto</h2>
+  <div class="cats" id="catPick"></div>
+  <div class="row" style="margin-top:10px">
+    <input id="amt" type="number" step="0.01" min="0" placeholder="Importe 💸" style="width:140px">
+    <input id="date" type="date">
+    <input id="note" placeholder="Nota (opcional) 📝" style="flex:1;min-width:160px">
+    <button id="add">Guardar 💕</button>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card"><h2>📅 Gasto por mes</h2><div class="bars" id="months"></div></div>
+  <div class="card"><h2>🌸 Por categoría</h2><div id="cats"></div></div>
+</div>
+
+<div class="card"><h2>📚 Histórico año tras año</h2><div style="overflow:auto"><table id="hist"></table></div></div>
+<div class="card"><h2>🗂️ Categorías por año</h2><div style="overflow:auto"><table id="matrix"></table></div></div>
+
+<div class="card"><h2>🧾 Movimientos</h2>
+  <div class="row" style="margin-bottom:8px"><select id="fMonth"></select><select id="fCat"></select></div>
+  <div class="list" id="list"></div></div>
+
+<div class="card" id="settings" style="display:none"><h2>⚙️ Ajustes y privacidad</h2>
+  <p class="hint">🔐 Todo se guarda solo en este navegador (localStorage). Nada se envía a ningún servidor.</p>
+  <div class="row"><label>Presupuesto mensual 🎯 <input id="budget" type="number" min="0" style="width:120px"></label>
+  <label>Moneda <input id="cur" style="width:70px"></label><button id="saveCfg">Guardar</button></div>
+  <div class="row" style="margin-top:10px"><input id="newPin" type="password" inputmode="numeric" placeholder="Nuevo PIN (vacío = sin PIN)" style="width:230px"><button id="savePin">🔒 Cambiar PIN</button></div>
+  <div class="row" style="margin-top:10px"><button class="ghost" id="exJson">⬇️ Copia (JSON)</button><button class="ghost" id="exCsv">⬇️ CSV</button>
+  <label class="ghost" style="cursor:pointer">⬆️ Restaurar <input id="imp" type="file" accept=".json" hidden></label>
+  <button class="ghost" id="wipe">🗑️ Borrar todo</button></div>
+  <p class="hint">⚠️ Si borras los datos del navegador se pierden: haz copias (JSON) a menudo.</p>
+</div>
+</div>
+
+<script>
+const CATS=[["🛒","Compras"],["🍽️","Comida fuera"],["🏠","Casa"],["🚗","Transporte"],["💊","Salud"],["👗","Ropa"],["💅","Belleza"],["🎉","Ocio"],["📱","Suscripciones"],["✈️","Viajes"],["🎁","Regalos"],["🐶","Mascotas"],["📚","Formación"],["💡","Facturas"],["✨","Otros"]];
+const MN=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+const K="misgastos.v1",P="misgastos.pin";
+const $=id=>document.getElementById(id);
+let db=load(),sel=CATS[0][0],hidden=false;
+function load(){try{return Object.assign({exp:[],budget:0,cur:"€"},JSON.parse(localStorage.getItem(K)||"{}"))}catch{return{exp:[],budget:0,cur:"€"}}}
+function save(){localStorage.setItem(K,JSON.stringify(db))}
+const fmt=n=>n.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+db.cur;
+const A=n=>`<span class="amt">${fmt(n)}</span>`;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const catName=e=>(CATS.find(c=>c[0]===e)||[0,"Otros"])[1];
+const sum=a=>a.reduce((s,x)=>s+x.amount,0);
+const yr=x=>+x.date.slice(0,4),mo=x=>+x.date.slice(5,7)-1;
+function mood(p){return p<=.5?"😍":p<=.8?"😊":p<=1?"😐":p<=1.2?"😟":"😱"}
+
+/* PIN */
+async function sha(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("misgastos:"+s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function lock(){const h=localStorage.getItem(P);if(!h){$("lock").style.display="none";return}
+ $("lock").style.display="flex";$("app").style.display="none";$("pin").value="";$("pin").focus()}
+async function tryPin(){const ok=await sha($("pin").value)===localStorage.getItem(P);
+ if(ok){$("lock").style.display="none";$("app").style.display="";$("pinErr").textContent=""}else $("pinErr").textContent="PIN incorrecto 🙅‍♀️"}
+$("pinBtn").onclick=tryPin;$("pin").onkeydown=e=>e.key==="Enter"&&tryPin();
+$("savePin").onclick=async()=>{const v=$("newPin").value.trim();if(v){localStorage.setItem(P,await sha(v));alert("PIN guardado 🔒")}else{localStorage.removeItem(P);alert("PIN eliminado")}$("newPin").value=""};
+let idle;function bump(){clearTimeout(idle);if(localStorage.getItem(P))idle=setTimeout(lock,5*60e3)}
+["click","keydown","touchstart"].forEach(e=>addEventListener(e,bump));
+
+/* UI */
+function years(){const s=new Set(db.exp.map(yr));s.add(new Date().getFullYear());return[...s].sort((a,b)=>b-a)}
+function fillYear(){const cur=$("year").value;$("year").innerHTML=years().map(y=>`<option>${y}</option>`).join("");if(cur&&years().includes(+cur))$("year").value=cur}
+function render(){
+ document.body.classList.toggle("blur",hidden);
+ const Y=+$("year").value,ex=db.exp.filter(x=>yr(x)===Y),tot=sum(ex);
+ const byM=Array.from({length:12},(_,i)=>sum(ex.filter(x=>mo(x)===i)));
+ const now=new Date(),isCur=Y===now.getFullYear(),m=isCur?now.getMonth():11;
+ const activeM=isCur?now.getMonth()+1:byM.filter(v=>v>0).length||12;
+ const cm=byM[m],pct=db.budget?cm/db.budget:0;
+ const byC={};ex.forEach(x=>byC[x.cat]=(byC[x.cat]||0)+x.amount);
+ const top=Object.entries(byC).sort((a,b)=>b[1]-a[1]);
+ const prev=sum(db.exp.filter(x=>yr(x)===Y-1)),dl=prev?(tot-prev)/prev*100:null;
+ $("kpis").innerHTML=[
+  [db.budget?mood(pct):"💗",A(cm),`${MN[m]} ${Y}`+(db.budget?` · ${Math.round(pct*100)}% del presupuesto`:"")],
+  ["💰",A(tot),`Total ${Y}`+(dl===null?"":` · <b class="${dl>0?"up":"down"}">${dl>0?"▲":"▼"} ${Math.abs(dl).toFixed(0)}%</b> vs ${Y-1}`)],
+  ["📊",A(tot/activeM),"Media mensual"],
+  [top[0]?top[0][0]:"🌸",top[0]?catName(top[0][0]):"—","Categoría top"+(top[0]?` · ${A(top[0][1])}`:"")]
+ ].map(([e,v,l])=>`<div class="card kpi"><div class="e">${e}</div><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+ const mx=Math.max(...byM,1);
+ $("months").innerHTML=byM.map((v,i)=>`<div class="bar ${isCur&&i===now.getMonth()?"cur":""}" title="${MN[i]}: ${fmt(v)}"><span class="amt">${v?Math.round(v):""}</span><i style="height:${v/mx*140}px"></i>${MN[i]}</div>`).join("");
+ $("cats").innerHTML=top.length?top.map(([e,v])=>`<div class="hrow"><span class="n">${e} ${catName(e)}</span><span class="t"><b style="width:${v/top[0][1]*100}%"></b></span><span class="a">${A(v)}</span></div>`).join(""):`<p class="hint">Aún no hay gastos en ${Y} 🌷</p>`;
+ // historico
+ const ys=years().slice().reverse();let last=null;
+ $("hist").innerHTML=`<tr><th>Año</th><th>Total</th><th>Media/mes</th><th>vs año ant.</th><th>Mayor categoría</th></tr>`+ys.map(y=>{
+  const e=db.exp.filter(x=>yr(x)===y),t=sum(e),c={};e.forEach(x=>c[x.cat]=(c[x.cat]||0)+x.amount);
+  const tc=Object.entries(c).sort((a,b)=>b[1]-a[1])[0],d=last?(t-last)/last*100:null;last=t||last;
+  const nm=y===now.getFullYear()?now.getMonth()+1:new Set(e.map(mo)).size||1;
+  return`<tr><td><b>${y}</b></td><td>${A(t)}</td><td>${A(t/nm)}</td><td class="${d>0?"up":"down"}">${d===null?"—":(d>0?"▲ ":"▼ ")+Math.abs(d).toFixed(0)+"%"}</td><td>${tc?tc[0]+" "+catName(tc[0]):"—"}</td></tr>`}).reverse().join("");
+ $("matrix").innerHTML=`<tr><th></th>${ys.map(y=>`<th>${y}</th>`).join("")}</tr>`+CATS.map(([e,n])=>`<tr><td>${e} ${n}</td>${ys.map(y=>{const t=sum(db.exp.filter(x=>yr(x)===y&&x.cat===e));return`<td>${t?A(t):"·"}</td>`}).join("")}</tr>`).join("");
+ // lista
+ const fm=$("fMonth").value,fc=$("fCat").value;
+ const li=ex.filter(x=>(fm===""||mo(x)===+fm)&&(fc===""||x.cat===fc)).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+ $("list").innerHTML=li.length?li.map(x=>`<div class="item"><span class="e">${x.cat}</span><div class="m"><b>${A(x.amount)}</b> <small>${catName(x.cat)}</small><br><small>${x.date}${x.note?" · "+esc(x.note):""}</small></div><button class="x" data-del="${x.id}">🗑️</button></div>`).join(""):`<p class="hint">Sin movimientos 🌷</p>`;
+}
+$("catPick").innerHTML=CATS.map(([e,n])=>`<button class="cat ${e===sel?"on":""}" data-c="${e}">${e} ${n}</button>`).join("");
+$("catPick").onclick=e=>{const b=e.target.closest("[data-c]");if(!b)return;sel=b.dataset.c;[...$("catPick").children].forEach(c=>c.classList.toggle("on",c.dataset.c===sel))};
+$("fMonth").innerHTML=`<option value="">Todo el año</option>`+MN.map((m,i)=>`<option value="${i}">${m}</option>`).join("");
+$("fCat").innerHTML=`<option value="">Todas las categorías</option>`+CATS.map(([e,n])=>`<option value="${e}">${e} ${n}</option>`).join("");
+$("date").valueAsDate=new Date();
+$("add").onclick=()=>{const a=parseFloat($("amt").value);if(!(a>0)||!$("date").value){alert("Pon un importe y una fecha 💕");return}
+ db.exp.push({id:Date.now(),amount:a,cat:sel,date:$("date").value,note:$("note").value.trim()});save();
+ $("amt").value="";$("note").value="";const y=$("date").value.slice(0,4);fillYear();$("year").value=y;render()};
+$("list").onclick=e=>{const b=e.target.closest("[data-del]");if(!b||!confirm("¿Borrar este gasto?"))return;db.exp=db.exp.filter(x=>x.id!==+b.dataset.del);save();fillYear();render()};
+["year","fMonth","fCat"].forEach(i=>$(i).onchange=render);
+$("hide").onclick=()=>{hidden=!hidden;$("hide").textContent=hidden?"👀 Mostrar":"🙈 Ocultar";render()};
+$("cfg").onclick=()=>{const s=$("settings");s.style.display=s.style.display==="none"?"":"none";$("budget").value=db.budget||"";$("cur").value=db.cur};
+$("saveCfg").onclick=()=>{db.budget=+$("budget").value||0;db.cur=$("cur").value||"€";save();render()};
+function dl(name,text,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click()}
+$("exJson").onclick=()=>dl(`mis-gastos-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(db),"application/json");
+$("exCsv").onclick=()=>dl("mis-gastos.csv","fecha,categoria,importe,nota\n"+db.exp.map(x=>[x.date,catName(x.cat),x.amount,'"'+x.note.replace(/"/g,'""')+'"'].join(",")).join("\n"),"text/csv");
+$("imp").onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);if(!Array.isArray(d.exp))throw 0;if(confirm("Esto reemplaza tus datos actuales. ¿Seguir?")){db=Object.assign({exp:[],budget:0,cur:"€"},d);save();fillYear();render()}}catch{alert("Archivo no válido")}})};
+$("wipe").onclick=()=>{if(confirm("¿Borrar TODOS los gastos?")&&confirm("Seguro, no se puede deshacer 😢")){db.exp=[];save();fillYear();render()}};
+fillYear();render();lock();bump();
+</script>
+</body>
+</html>
