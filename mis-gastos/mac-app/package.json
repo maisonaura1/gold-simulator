@@ -1,0 +1,20 @@
+{
+  "name": "mis-gastos",
+  "productName": "Mis Gastos",
+  "version": "1.0.0",
+  "description": "Dashboard privado de gastos personales 💖",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --mac"
+  },
+  "build": {
+    "appId": "com.misgastos.app",
+    "productName": "Mis Gastos",
+    "icon": "../icon/icon.icns",
+    "files": ["main.js", "../index.html", "../icon/**"],
+    "extraResources": [{ "from": "../index.html", "to": "app/index.html" }, { "from": "../icon", "to": "app/icon" }],
+    "mac": { "category": "public.app-category.finance", "target": ["dmg"] }
+  },
+  "devDependencies": { "electron": "^33.0.0", "electron-builder": "^25.0.0" }
+}
