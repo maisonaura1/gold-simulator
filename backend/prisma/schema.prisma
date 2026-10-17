@@ -35,6 +35,7 @@ model User {
   trades       Trade[]
   userMissions UserMission[]
   statsSnaps   StatsSnapshot[]
+  lessons      LessonProgress[]
 
   @@map("users")
 }
@@ -246,4 +247,24 @@ model StatsSnapshot {
   avgPnlPerTrade Float   @map("avg_pnl_per_trade")
 
   @@map("stats_snapshots")
+}
+
+// ─── Academia ─────────────────────────────────────────────────────────
+
+// Progreso de cada alumno en las lecciones de la academia.
+// lesson_id es el id del contenido estático del frontend (p. ej. "n2-regla-del-1").
+model LessonProgress {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId     String    @map("lesson_id")
+  quizScore    Float?    @map("quiz_score")
+  practiceDone Boolean   @default(false) @map("practice_done")
+  completedAt  DateTime? @map("completed_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@map("lesson_progress")
 }

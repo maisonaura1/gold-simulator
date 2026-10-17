@@ -1,52 +1,56 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useChartStore } from '@/store/chart.store';
 import { usePricesStore } from '@/store/prices.store';
-import type { PriceTick } from '@/types';
+
+const H1 = 3_600_000;
+const WINDOW = 1500; // velas visibles hacia atrás desde el cursor
 
 /**
- * Modo replay: reproduce candles históricas una por una como si fueran en vivo.
- * Cuando se activa, guarda las candles actuales y las reproduce desde el inicio.
- * Cuando se desactiva, restaura todas las candles.
+ * Modo replay: muestra el histórico H1 solo hasta `replayCursor` y lo avanza vela a
+ * vela (automático o paso a paso). Al salir se restaura el gráfico completo.
  */
-export function useReplay(allCandles: PriceTick[]) {
-  const { replayMode, replaySpeed } = useChartStore();
-  const { setCandles }              = usePricesStore();
+export function useReplay() {
+  const replayMode = useChartStore((s) => s.replayMode);
+  const cursor = useChartStore((s) => s.replayCursor);
+  const playing = useChartStore((s) => s.replayPlaying);
+  const speed = useChartStore((s) => s.replaySpeed);
 
-  // Keep a ref so the effect can read the latest candles without re-triggering
-  const sourceRef   = useRef(allCandles);
-  useEffect(() => { sourceRef.current = allCandles; }, [allCandles]);
-
-  const indexRef    = useRef(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
+  // Pintar hasta el cursor
   useEffect(() => {
-    const src = sourceRef.current;
+    if (!replayMode) return;
+    const all = usePricesStore.getState().h1Candles;
+    if (all.length === 0) return;
+    const end = Math.max(1, Math.min(cursor, all.length));
+    const slice = all.slice(Math.max(0, end - WINDOW), end);
+    usePricesStore.getState().setCandles(slice, H1);
+    const last = slice.at(-1);
+    if (last) usePricesStore.setState({ currentPrice: last.close });
+  }, [replayMode, cursor]);
 
-    if (!replayMode) {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      setCandles(src);
-      return;
-    }
-
-    const startIdx = Math.max(0, src.length - 200);
-    indexRef.current = startIdx + 50;
-    setCandles(src.slice(startIdx, indexRef.current));
-
-    intervalRef.current = setInterval(() => {
-      const s = sourceRef.current;
-      if (indexRef.current >= s.length) {
-        indexRef.current = startIdx + 50;
-        setCandles(s.slice(startIdx, indexRef.current));
+  // Reproducción automática
+  useEffect(() => {
+    if (!replayMode || !playing) return;
+    const id = setInterval(() => {
+      const { replayCursor, setReplayCursor, setReplayPlaying } = useChartStore.getState();
+      const total = usePricesStore.getState().h1Candles.length;
+      if (replayCursor >= total) {
+        setReplayPlaying(false);
         return;
       }
-      indexRef.current++;
-      setCandles(s.slice(startIdx, indexRef.current));
-    }, replaySpeed);
+      setReplayCursor(replayCursor + 1);
+    }, speed);
+    return () => clearInterval(id);
+  }, [replayMode, playing, speed]);
 
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [replayMode, replaySpeed, setCandles]);
+  // Al salir del replay, volver al histórico completo
+  useEffect(() => {
+    if (replayMode) return;
+    const { h1Candles } = usePricesStore.getState();
+    const tf = useChartStore.getState().timeframe;
+    if (h1Candles.length > 0 && !tf.startsWith('M')) {
+      usePricesStore.getState().setCandles(h1Candles, H1);
+      usePricesStore.setState({ currentPrice: h1Candles.at(-1)!.close });
+    }
+  }, [replayMode]);
 }

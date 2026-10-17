@@ -1,34 +1,33 @@
 'use client';
-import { useEffect, Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { FullScreenLoader } from '@/components/ui/Spinner';
 
 export default function GoogleSuccessPage() {
-  return <Suspense><GoogleSuccessInner /></Suspense>;
+  return (
+    <Suspense fallback={<FullScreenLoader />}>
+      <GoogleInner />
+    </Suspense>
+  );
 }
 
-function GoogleSuccessInner() {
+function GoogleInner() {
   const router = useRouter();
   const params = useSearchParams();
-  const { setTokens } = useAuthStore();
 
   useEffect(() => {
-    const accessToken  = params.get('accessToken');
+    const accessToken = params.get('accessToken');
     const refreshToken = params.get('refreshToken');
     if (accessToken && refreshToken) {
-      setTokens({ accessToken, refreshToken });
+      useAuthStore.getState().setTokens({ accessToken, refreshToken });
+      // Limpia los tokens de la URL antes de seguir
+      window.history.replaceState(null, '', '/auth/google/success');
       router.replace('/dashboard');
     } else {
       router.replace('/auth/login?error=google');
     }
-  }, [params, router, setTokens]);
+  }, [params, router]);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#07080c' }}>
-      <div className="text-center">
-        <div style={{ fontSize: 32, marginBottom: 12 }}>◆</div>
-        <p style={{ color: '#6b7385', fontSize: 14 }}>Signing in with Google…</p>
-      </div>
-    </div>
-  );
+  return <FullScreenLoader />;
 }

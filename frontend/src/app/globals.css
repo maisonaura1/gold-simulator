@@ -2,150 +2,85 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap');
-
-/* ── MT4/MT5 Color System ─────────────────────────────── */
 :root {
-  /* Backgrounds — layered like MT */
-  --mt-bg:         #1a1d23;   /* main window */
-  --mt-panel:      #22262e;   /* side panels */
-  --mt-toolbar:    #1e2128;   /* top toolbar */
-  --mt-chart:      #131722;   /* chart area  */
-  --mt-tab:        #2a2e38;   /* tab bars    */
-  --mt-tab-active: #1a1d23;
-  --mt-input:      #12151a;
-  --mt-hover:      #2d3240;
-
-  /* Borders */
-  --mt-border:     #2e3340;
-  --mt-sep:        #3a3f4d;
-
-  /* Text */
-  --mt-text:       #c8cdd8;
-  --mt-text-dim:   #6b7385;
-  --mt-text-label: #8893a8;
-  --mt-white:      #e8ecf4;
-
-  /* Accent */
-  --mt-blue:       #4a6cf7;
-  --mt-blue-dim:   #2a3a7a;
-
-  /* Trade colors */
-  --mt-buy:        #1a6b3a;
-  --mt-buy-hover:  #1e7d44;
-  --mt-buy-text:   #2dcc6f;
-  --mt-sell:       #7a1a1a;
-  --mt-sell-hover: #8f1f1f;
-  --mt-sell-text:  #e84040;
-
-  /* P&L */
-  --mt-green:      #2dcc6f;
-  --mt-red:        #e84040;
-  --mt-yellow:     #f0b429;
-  --mt-cyan:       #33c2ff;
+  color-scheme: dark;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body { height: 100%; width: 100%; overflow: auto; }
+html,
+body {
+  min-height: 100%;
+  background: #08090c;
+}
 
 body {
-  background: var(--mt-bg);
-  color: var(--mt-text);
-  font-family: 'Roboto', 'Segoe UI', system-ui, sans-serif;
-  font-size: 14px;
-  -webkit-font-smoothing: antialiased;
-  user-select: none;
+  @apply bg-ink-950 text-fg antialiased;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* ── MT-style scrollbar (panels/tables) ─────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--mt-sep); border-radius: 3px; }
-::-webkit-scrollbar-corner { background: transparent; }
+::selection {
+  background: rgba(221, 181, 74, 0.35);
+}
 
-/* ── Landing page scroll container ──────────────────────── */
-.landing-scroll {
-  height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scroll-behavior: smooth;
-  overscroll-behavior-y: none;
+/* Barras de scroll discretas */
+* {
   scrollbar-width: thin;
-  scrollbar-color: #2a2d38 transparent;
+  scrollbar-color: #343946 transparent;
 }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #262a35; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #343946; }
 
-.landing-scroll::-webkit-scrollbar { width: 4px; }
-.landing-scroll::-webkit-scrollbar-track { background: transparent; }
-.landing-scroll::-webkit-scrollbar-thumb {
-  background: #c9a84c22;
-  border-radius: 2px;
-  transition: background 0.3s;
-}
-.landing-scroll:hover::-webkit-scrollbar-thumb { background: #c9a84c55; }
-
-/* ── Utility ─────────────────────────────────────────────── */
 @layer components {
-  /* Toolbar button — flat, icon+text like MT */
-  .mt-btn {
-    @apply flex items-center gap-1.5 px-3 py-1.5 text-[var(--mt-text)]
-           hover:bg-[var(--mt-hover)] border border-transparent
-           hover:border-[var(--mt-sep)] transition-colors duration-100 cursor-pointer text-xs;
+  .card {
+    @apply rounded-2xl border border-ink-700/70 bg-ink-850 shadow-card;
   }
-
-  /* BUY button — characteristic MT green */
-  .mt-btn-buy {
-    @apply px-5 py-2.5 font-bold text-sm text-[var(--mt-buy-text)]
-           bg-[var(--mt-buy)] hover:bg-[var(--mt-buy-hover)]
-           border border-[#1e7d44]/50 transition-colors duration-100 cursor-pointer;
+  .card-pad {
+    @apply p-5 sm:p-6;
   }
-
-  /* SELL button — characteristic MT red */
-  .mt-btn-sell {
-    @apply px-5 py-2.5 font-bold text-sm text-[var(--mt-sell-text)]
-           bg-[var(--mt-sell)] hover:bg-[var(--mt-sell-hover)]
-           border border-[#8f1f1f]/50 transition-colors duration-100 cursor-pointer;
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-gold-400;
   }
-
-  /* Input field — dark MT style */
-  .mt-input {
-    @apply bg-[var(--mt-input)] border border-[var(--mt-border)]
-           text-[var(--mt-white)] px-2 py-1.5 text-sm w-full
-           focus:outline-none focus:border-[var(--mt-blue)] transition-colors;
+  .num {
+    font-variant-numeric: tabular-nums;
   }
-
-  /* Panel with header bar */
-  .mt-panel {
-    @apply bg-[var(--mt-panel)] border border-[var(--mt-border)] flex flex-col overflow-hidden;
+  .input {
+    @apply w-full rounded-xl border border-ink-700 bg-ink-900 px-3.5 py-2.5 text-[15px] text-fg placeholder:text-fg-dim
+      outline-none transition focus:border-gold-500/70 focus:ring-2 focus:ring-gold-500/20;
   }
-
-  .mt-panel-header {
-    @apply bg-[var(--mt-toolbar)] border-b border-[var(--mt-border)] px-3 py-1.5
-           text-[var(--mt-text-label)] text-sm font-medium tracking-wide uppercase flex items-center justify-between;
+  .label {
+    @apply mb-1.5 block text-[13px] font-medium text-fg-muted;
   }
-
-  /* Tab bar like MT bottom panel */
-  .mt-tab {
-    @apply px-4 py-1.5 text-sm text-[var(--mt-text-dim)] cursor-pointer
-           border-b-2 border-transparent hover:text-[var(--mt-text)] transition-colors;
+  .link {
+    @apply text-gold-300 underline-offset-4 hover:underline;
   }
-
-  .mt-tab-active {
-    @apply text-[var(--mt-white)] border-b-2 border-[var(--mt-blue)];
+  .gold-text {
+    background: linear-gradient(180deg, #f8ecc7 0%, #ddb54a 55%, #a8842d 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
+}
 
-  /* Table row */
-  .mt-row {
-    @apply flex items-center border-b border-[var(--mt-border)]/40
-           hover:bg-[var(--mt-hover)] transition-colors;
-  }
+/* Inputs numéricos sin flechas */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}
 
-  .mt-cell {
-    @apply px-2 py-1.5 text-sm font-mono truncate;
-  }
-
-  /* Price display — large numbers like MT order ticket */
-  .mt-price-big {
-    @apply font-mono font-bold text-[var(--mt-white)] tracking-tight;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

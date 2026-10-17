@@ -1,13 +1,13 @@
-import { MetadataRoute } from 'next';
+import type { MetadataRoute } from 'next';
+import { SITE_URL } from '@/lib/config';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = 'https://goldtradermt.app';
+  const now = new Date();
   return [
-    { url: base,               lastModified: new Date(), changeFrequency: 'weekly',  priority: 1 },
-    { url: `${base}/auth/login`,    lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${base}/auth/register`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.9 },
-    { url: `${base}/guide`,         lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${base}/privacy`,       lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
-    { url: `${base}/terms`,         lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
+    { url: SITE_URL, lastModified: now, changeFrequency: 'weekly', priority: 1 },
+    { url: `${SITE_URL}/auth/register`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${SITE_URL}/auth/login`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${SITE_URL}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${SITE_URL}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
   ];
 }

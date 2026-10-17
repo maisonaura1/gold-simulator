@@ -2,6 +2,11 @@ User-agent: *
 Allow: /
 Disallow: /dashboard
 Disallow: /onboarding
+Disallow: /academy
+Disallow: /trade
+Disallow: /journal
+Disallow: /account
+Disallow: /payment
 Disallow: /api/
 
 Sitemap: https://goldtradermt.app/sitemap.xml

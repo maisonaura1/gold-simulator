@@ -1,52 +1,52 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { CatalogProvider } from '@/components/academy/CatalogProvider';
+import { buildCatalog } from '@/lib/academy';
+
+const catalog = buildCatalog();
+
+const SITE = 'https://goldtradermt.app';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://goldtradermt.app'),
-  title: 'GoldTrader MT — XAUUSD Simulator | Practice Prop Firm Challenges',
-  description: 'Would you pass the FTMO or Funded Next challenge? Practice on real XAUUSD data, master drawdown and consistency score — without risking real capital.',
-  keywords: 'gold trading simulator, XAUUSD practice, prop firm challenge, FTMO prep, Funded Next, trading education, risk management, gold spot simulator, trader score',
-  icons: {
-    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+  metadataBase: new URL(SITE),
+  title: {
+    default: 'GoldTrader MT — Aprende a operar oro y practica sin riesgo',
+    template: '%s · GoldTrader MT',
   },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-  },
+  description:
+    'Academia de trading de oro (XAU/USD) en español con simulador de datos reales. Aprende paso a paso, practica cada lección y mide tu progreso sin arriesgar dinero.',
+  keywords:
+    'academia trading oro, aprender trading, XAUUSD, simulador trading, gestión del riesgo, análisis técnico, curso trading español',
+  icons: { icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }] },
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'GoldTrader' },
   openGraph: {
-    title: 'GoldTrader MT — XAUUSD Simulator',
-    description: 'Would you pass the challenge? Practice on real gold data. Drawdown, consistency, Trader Score — zero capital at risk.',
+    title: 'GoldTrader MT — Academia de trading de oro',
+    description: 'Aprende a operar oro paso a paso y practica cada lección en un simulador con datos reales.',
     type: 'website',
-    url: 'https://goldtradermt.app',
+    url: SITE,
     siteName: 'GoldTrader MT',
-    locale: 'en_US',
+    locale: 'es_ES',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'GoldTrader MT — XAUUSD Simulator',
-    description: 'Would you pass the FTMO challenge? Practice on real XAUUSD data. 20 free simulations, zero capital at risk.',
-    site: '@goldtradermt',
+    title: 'GoldTrader MT — Academia de trading de oro',
+    description: 'Aprende, practica y mide tu progreso sin arriesgar dinero.',
   },
-  alternates: {
-    canonical: 'https://goldtradermt.app',
-  },
+  alternates: { canonical: SITE },
 };
 
-// Viewport must be a separate export in Next.js 14 — not inside metadata
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  maximumScale: 1,
-  userScalable: false,
-  themeColor: '#07080b',
+  themeColor: '#08090c',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full">
-      <body className="h-full" suppressHydrationWarning>
-        {children}
+    <html lang="es">
+      <body suppressHydrationWarning>
+        <CatalogProvider catalog={catalog}>{children}</CatalogProvider>
       </body>
     </html>
   );

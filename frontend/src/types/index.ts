@@ -1,8 +1,4 @@
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-}
+// Tipos que devuelve el backend (NestJS). Mantener alineados con backend/src.
 
 export interface SimAccount {
   id: string;
@@ -14,7 +10,7 @@ export interface SimAccount {
   xp: number;
   dailyPnl: number;
   totalPnlPct: number;
-  user: { name: string; email: string };
+  user: { name: string | null; email: string };
 }
 
 export type TradeType = 'BUY' | 'SELL';
@@ -86,6 +82,30 @@ export interface Stats {
   maxDrawdown: number;
 }
 
+export interface DailyStats {
+  days: { date: string; pnl: number; trades: number; winRate: number }[];
+  months: { month: string; pnl: number }[];
+}
+
+export type PlanId = 'free' | 'monthly' | 'annual' | 'lifetime' | 'propfirm';
+export type SubscriptionStatus = 'FREE' | 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'EXPIRED';
+
+export interface PaymentStatus {
+  paid: boolean;
+  subscriptionStatus: SubscriptionStatus;
+  subscriptionEndsAt: string | null;
+  simulationsUsed: number;
+  simulationsLimit: number;
+  canSimulate: boolean;
+  plan: PlanId;
+}
+
+export interface ReferralInfo {
+  code: string;
+  bonus: number;
+  referredCount: number;
+}
+
 export interface PriceTick {
   timestamp: number;
   price: number;
@@ -99,4 +119,12 @@ export interface PriceTick {
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
+}
+
+/** Progreso de una lección (servidor o local). */
+export interface LessonProgress {
+  lessonId: string;
+  completedAt: string | null;
+  quizScore: number | null;
+  practiceDone: boolean;
 }

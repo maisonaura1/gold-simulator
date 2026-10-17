@@ -13,6 +13,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { TradeDeskModule } from './trade-desk/trade-desk.module';
 import { ReferralModule } from './referral/referral.module';
 import { EmailsModule } from './emails/emails.module';
+import { AcademyModule } from './academy/academy.module';
 import { CronService } from './emails/cron.service';
 
 @Module({
@@ -30,6 +31,7 @@ import { CronService } from './emails/cron.service';
     TradeDeskModule,
     ReferralModule,
     EmailsModule,
+    AcademyModule,
   ],
   providers: [
     // Activate rate limiting globally — without this APP_GUARD the
