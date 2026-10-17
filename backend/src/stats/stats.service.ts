@@ -102,7 +102,10 @@ export class StatsService {
     if (data.winRate > 60 && data.avgRR < 1) {
       findings.push('🎲 Winrate alto pero R/R pobre — podrías estar cerrando profits demasiado pronto.');
     }
-    if (findings.length === 0) {
+    if (findings.length === 0 && data.trades.length < 10) {
+      // Con pocas operaciones el porcentaje de acierto no dice nada todavía
+      findings.push(`📊 Llevas ${data.trades.length} operaciones. Con menos de 10 aún no hay conclusiones: sigue practicando con las mismas reglas.`);
+    } else if (findings.length === 0) {
       findings.push('✅ Tu estadística se ve saludable. Mantén la disciplina.');
     }
 

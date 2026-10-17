@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { Check, Circle, Minus, Plus } from 'lucide-react';
 import { usePricesStore } from '@/store/prices.store';
+import { useChartStore } from '@/store/chart.store';
 import { useChartLines } from '@/store/chart-lines.store';
 import { useBilling } from '@/store/billing.store';
 import { useApi } from '@/hooks/useApi';
@@ -87,6 +88,21 @@ export function OrderPanel({
     const l = lotsForRisk(balance, riskTarget, dist);
     setLots(l >= MIN_LOT ? l.toFixed(2) : MIN_LOT.toFixed(2));
   }, [autoSize, slN, riskTarget, balance]);
+
+  // Al entrar o salir del replay el precio salta: los niveles anteriores ya no sirven
+  // (se mantienen al avanzar vela a vela, se borran al saltar a otra fecha)
+  const replayMode = useChartStore((s) => s.replayMode);
+  const replayCursor = useChartStore((s) => s.replayCursor);
+  const prevReplay = useRef({ mode: replayMode, cursor: replayCursor });
+  useEffect(() => {
+    const prev = prevReplay.current;
+    const jumped = prev.mode !== replayMode || (replayMode && Math.abs(replayCursor - prev.cursor) > 1);
+    prevReplay.current = { mode: replayMode, cursor: replayCursor };
+    if (jumped) {
+      setSl('');
+      setTp('');
+    }
+  }, [replayMode, replayCursor]);
 
   useEffect(() => {
     setPreview({ entryPrice: entry || null, sl: slN || null, tp: tpN || null, tradeType: side });

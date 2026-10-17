@@ -27,7 +27,8 @@ export function fmtPct(v: number | null | undefined, opts: { sign?: boolean; dec
 
 export function fmtRR(v: number | null | undefined): string {
   if (v == null || !isFinite(v) || v <= 0) return '—';
-  return `1:${v.toFixed(v >= 10 ? 0 : 1)}`;
+  // 2 → "1:2", 1.5 → "1:1.5", 2.04 → "1:2"
+  return `1:${Number(v.toFixed(v >= 10 ? 0 : 1))}`;
 }
 
 const dateFmt = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' });

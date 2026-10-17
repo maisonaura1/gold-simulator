@@ -18,6 +18,8 @@ export function IndicatorPane({ kind, candles }: { kind: 'rsi' | 'macd'; candles
     if (!box.current) return;
     const c = createChart(box.current, {
       ...baseOptions(box.current.clientWidth, box.current.clientHeight || 110),
+      // El logotipo de atribución ya aparece en el gráfico principal
+      layout: { ...baseOptions(0, 0).layout, attributionLogo: false },
       rightPriceScale: { borderColor: CHART.border, scaleMargins: { top: 0.12, bottom: 0.08 } },
       timeScale: { visible: false },
       handleScroll: false,

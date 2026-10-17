@@ -18,7 +18,8 @@ function Tip({ active, payload, label, kind }: { active?: boolean; payload?: { v
 }
 
 export function EquityChart({ data, start }: { data: { date: string; balance: number }[]; start: number }) {
-  const points = [{ date: 'Inicio', balance: start }, ...data];
+  // Eje X por número de operación (varias operaciones pueden caer el mismo día)
+  const points = [{ date: 'Inicio', balance: start }, ...data.map((d, i) => ({ date: `Op. ${i + 1}`, balance: d.balance }))];
   return (
     <ResponsiveContainer width="100%" height={220}>
       <AreaChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
@@ -45,7 +46,12 @@ export function WeeklyChart({ data }: { data: { week: string; pnl: number }[] })
       <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <CartesianGrid stroke="#1d2029" vertical={false} />
         <XAxis dataKey="week" {...axis} minTickGap={16} />
-        <YAxis {...axis} width={64} tickFormatter={(v: number) => fmtUsd(v, { decimals: 0 })} />
+        <YAxis
+          {...axis}
+          width={64}
+          domain={[(min: number) => Math.min(0, min), (max: number) => Math.max(0, max)]}
+          tickFormatter={(v: number) => fmtUsd(v, { decimals: 0 })}
+        />
         <ReferenceLine y={0} stroke="#4b5263" />
         <Tooltip content={<Tip kind="pnl" />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
         <Bar dataKey="pnl" radius={[4, 4, 0, 0]}>

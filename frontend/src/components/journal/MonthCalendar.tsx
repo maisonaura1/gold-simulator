@@ -7,6 +7,7 @@ import type { DailyStats } from '@/types';
 
 const WEEKDAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 const monthFmt = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' });
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export function MonthCalendar({ data }: { data: DailyStats | undefined }) {
   const [cursor, setCursor] = useState(() => {
@@ -30,7 +31,7 @@ export function MonthCalendar({ data }: { data: DailyStats | undefined }) {
           <ChevronLeft className="h-4 w-4" />
         </button>
         <div className="text-center">
-          <div className="text-[14px] font-semibold capitalize text-fg">{monthFmt.format(cursor)}</div>
+          <div className="text-[14px] font-semibold text-fg">{capitalize(monthFmt.format(cursor))}</div>
           <div className={clsx('text-[12px] num', monthTotal > 0 ? 'text-green-400' : monthTotal < 0 ? 'text-red-400' : 'text-fg-dim')}>
             {monthTotal ? fmtUsd(monthTotal, { sign: true }) : 'Sin operaciones'}
           </div>

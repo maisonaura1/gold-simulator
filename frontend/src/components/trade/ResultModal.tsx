@@ -17,6 +17,12 @@ export interface PracticeOutcome {
   needed: number;
 }
 
+function duration(h: number): string {
+  if (h <= 1) return 'se resolvió en la primera hora';
+  if (h < 48) return `duró unas ${h} horas`;
+  return `duró unos ${Math.round(h / 24)} días de mercado`;
+}
+
 function feedback(o: SubmittedOrder): { ok: boolean; text: string }[] {
   const out: { ok: boolean; text: string }[] = [];
   if (o.riskPct <= 1) out.push({ ok: true, text: `Riesgo del ${fmtPct(o.riskPct, { decimals: 2 })}: conservador, así sobrevives a las rachas malas.` });
@@ -65,7 +71,7 @@ export function ResultModal({
           {fmtUsd(s.resultUsd, { sign: true })}
         </div>
         <div className="text-[13px] text-fg-dim">
-          {fmtPct(s.resultPct, { sign: true, decimals: 2 })} de la cuenta · duró unas {s.candlesTraversed} h
+          {fmtPct(s.resultPct, { sign: true, decimals: 2 })} de la cuenta · {duration(s.candlesTraversed)}
         </div>
       </div>
 
